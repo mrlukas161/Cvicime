@@ -3,6 +3,7 @@ package sk.havrila.cvicime.ui.obrazovky
 import android.app.Application
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -100,6 +101,7 @@ class OnboardingModel(app: Application) : AndroidViewModel(app) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun OnboardingObrazovka(hotovo: () -> Unit, model: OnboardingModel = viewModel()) {
     val zrucnosti by model.zrucnosti.collectAsStateWithLifecycle()

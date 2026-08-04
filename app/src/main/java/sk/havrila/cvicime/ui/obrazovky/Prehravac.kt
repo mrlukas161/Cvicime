@@ -24,6 +24,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -288,9 +291,7 @@ fun PrehravacObrazovka(minuty: Int, hotovo: () -> Unit, model: PrehravacModel = 
 @Composable
 private fun Cvicenie(krok: KrokTreningu, koniec: Long, hotovo: () -> Unit) {
     val naCas = Meranie.z(krok.polozka.cvik.meranie) == Meranie.VYDRZ
-    var zostava by androidx.compose.runtime.remember(koniec) {
-        androidx.compose.runtime.mutableIntStateOf(krok.polozka.ciel)
-    }
+    var zostava by remember(koniec) { mutableIntStateOf(krok.polozka.ciel) }
 
     if (naCas && koniec > 0) {
         LaunchedEffect(koniec) {
@@ -381,9 +382,7 @@ private fun OtazkaRezervy(krok: KrokTreningu, odpoved: (Rir, Int?) -> Unit) {
 
 @Composable
 private fun Pauza(koniec: Long, dalsi: KrokTreningu?, hotovo: () -> Unit) {
-    var zostava by androidx.compose.runtime.remember(koniec) {
-        androidx.compose.runtime.mutableIntStateOf(0)
-    }
+    var zostava by remember(koniec) { mutableIntStateOf(0) }
     LaunchedEffect(koniec) {
         while (true) {
             val ms = koniec - SystemClock.elapsedRealtime()
@@ -417,5 +416,4 @@ private fun Pauza(koniec: Long, dalsi: KrokTreningu?, hotovo: () -> Unit) {
             textAlign = TextAlign.Center,
         )
     }
-    Spacer(Modifier.size(0.dp))
 }
