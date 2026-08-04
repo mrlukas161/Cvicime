@@ -13,11 +13,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,6 +34,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import sk.havrila.cvicime.data.Repozitar
 import sk.havrila.cvicime.data.denik.CielEntity
@@ -40,16 +43,44 @@ import sk.havrila.cvicime.data.model.DruhCiela
 import sk.havrila.cvicime.data.model.Naradie
 import sk.havrila.cvicime.data.model.Partia
 
+/** Čo už má používateľ uložené - obrazovka sa tým predvyplní. */
+data class UlozenyVyber(
+    val zrucnosti: List<String>,
+    val partie: List<Partia>,
+    val naradie: List<Naradie>,
+    val vahaKg: String,
+    val vyskaCm: String,
+)
+
 class OnboardingModel(app: Application) : AndroidViewModel(app) {
 
     private val repo = Repozitar.ziskaj(app)
 
+    /** Sleduje katalóg tokom - pri prvom spustení sa ešte nemusí byť načítaný. */
     private val _zrucnosti = MutableStateFlow<List<RebrikEntity>>(emptyList())
     val zrucnosti = _zrucnosti.asStateFlow()
 
+    private val _ulozene = MutableStateFlow<UlozenyVyber?>(null)
+    val ulozene = _ulozene.asStateFlow()
+
     init {
         viewModelScope.launch {
-            _zrucnosti.value = repo.rebriky().filter { it.jeZrucnost }
+            repo.rebrikyTok().collectLatest { rebriky ->
+                _zrucnosti.value = rebriky.filter { it.jeZrucnost }
+            }
+        }
+        viewModelScope.launch {
+            val profil = repo.profil()
+            val ciele = repo.denik.aktivneCiele()
+            _ulozene.value = UlozenyVyber(
+                zrucnosti = ciele.filter { DruhCiela.z(it.druh) == DruhCiela.ZRUCNOST }.map { it.kluc },
+                partie = ciele.filter { DruhCiela.z(it.druh) == DruhCiela.PARTIA }
+                    .mapNotNull { Partia.z(it.kluc) },
+                naradie = profil.naradie.split(",").mapNotNull { Naradie.z(it.trim()) }
+                    .filter { it != Naradie.ZIADNE },
+                vahaKg = profil.vahaKg.toString().removeSuffix(".0"),
+                vyskaCm = profil.vyskaCm.toString(),
+            )
         }
     }
 
@@ -62,9 +93,9 @@ class OnboardingModel(app: Application) : AndroidViewModel(app) {
         hotovo: () -> Unit,
     ) {
         viewModelScope.launch {
-            val zrucnostiMapa = repo.rebriky().associateBy { it.id }
+            val nazvy = repo.rebriky().associate { it.id to it.nazov }
 
-            // Ciele sa vždy prepíšu celé - inak by po zmene ostávali visieť staré.
+            // Ciele sa prepisujú celé - inak by po zmene ostávali visieť staré.
             repo.denik.aktivneCiele().forEach { repo.zmazCiel(it.kluc) }
 
             vybraneZrucnosti.forEachIndexed { i, id ->
@@ -72,15 +103,13 @@ class OnboardingModel(app: Application) : AndroidViewModel(app) {
                     CielEntity(
                         druh = DruhCiela.ZRUCNOST.kluc,
                         kluc = id,
-                        nazov = zrucnostiMapa[id]?.nazov ?: id,
+                        nazov = nazvy[id] ?: id,
                         priorita = i + 1,
                     )
                 )
             }
             vybranePartie.forEach { p ->
-                repo.ulozCiel(
-                    CielEntity(druh = DruhCiela.PARTIA.kluc, kluc = p.kluc, nazov = p.nazov)
-                )
+                repo.ulozCiel(CielEntity(druh = DruhCiela.PARTIA.kluc, kluc = p.kluc, nazov = p.nazov))
             }
 
             val profil = repo.profil()
@@ -92,7 +121,11 @@ class OnboardingModel(app: Application) : AndroidViewModel(app) {
                         .distinct()
                         .joinToString(","),
                     bielkovinyCielG = repo.odporucaneBielkoviny(vahaKg),
-                    zaciatokEpochDen = if (profil.zaciatokEpochDen == 0L) repo.dnes() else profil.zaciatokEpochDen,
+                    zaciatokEpochDen = if (profil.zaciatokEpochDen == 0L) {
+                        repo.dnes()
+                    } else {
+                        profil.zaciatokEpochDen
+                    },
                     onboardingHotovy = true,
                 )
             )
@@ -105,14 +138,30 @@ class OnboardingModel(app: Application) : AndroidViewModel(app) {
 @Composable
 fun OnboardingObrazovka(hotovo: () -> Unit, model: OnboardingModel = viewModel()) {
     val zrucnosti by model.zrucnosti.collectAsStateWithLifecycle()
+    val ulozene by model.ulozene.collectAsStateWithLifecycle()
 
     val vybraneZrucnosti = remember { mutableListOf<String>().toMutableStateList() }
     val vybranePartie = remember { mutableListOf<Partia>().toMutableStateList() }
-    val vybraneNaradie = remember {
-        mutableListOf(Naradie.HRAZDA, Naradie.JEDNORUCKY, Naradie.PODLOZKA).toMutableStateList()
+    val vybraneNaradie = remember { mutableListOf<Naradie>().toMutableStateList() }
+    var vaha by remember { mutableStateOf("") }
+    var vyska by remember { mutableStateOf("") }
+    var predvyplnene by remember { mutableStateOf(false) }
+
+    // Predvyplnenie uloženým stavom. Bez tohto sa obrazovka po opätovnom otvorení
+    // tvárila prázdna a vyzeralo to, že sa ciele neuložili.
+    LaunchedEffect(ulozene) {
+        val u = ulozene ?: return@LaunchedEffect
+        if (predvyplnene) return@LaunchedEffect
+        vybraneZrucnosti.clear(); vybraneZrucnosti.addAll(u.zrucnosti)
+        vybranePartie.clear(); vybranePartie.addAll(u.partie)
+        vybraneNaradie.clear()
+        vybraneNaradie.addAll(
+            u.naradie.ifEmpty { listOf(Naradie.HRAZDA, Naradie.JEDNORUCKY, Naradie.PODLOZKA) }
+        )
+        vaha = u.vahaKg
+        vyska = u.vyskaCm
+        predvyplnene = true
     }
-    var vaha by remember { mutableStateOf("80") }
-    var vyska by remember { mutableStateOf("180") }
 
     Column(
         modifier = Modifier
@@ -135,13 +184,17 @@ fun OnboardingObrazovka(hotovo: () -> Unit, model: OnboardingModel = viewModel()
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(Modifier.height(8.dp))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            zrucnosti.forEach { r ->
-                FilterChip(
-                    selected = r.id in vybraneZrucnosti,
-                    onClick = { prepni(vybraneZrucnosti, r.id) },
-                    label = { Text(r.nazov) },
-                )
+        if (zrucnosti.isEmpty()) {
+            CircularProgressIndicator()
+        } else {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                zrucnosti.forEach { r ->
+                    FilterChip(
+                        selected = r.id in vybraneZrucnosti,
+                        onClick = { prepni(vybraneZrucnosti, r.id) },
+                        label = { Text(r.nazov) },
+                    )
+                }
             }
         }
 
@@ -157,6 +210,12 @@ fun OnboardingObrazovka(hotovo: () -> Unit, model: OnboardingModel = viewModel()
         }
 
         Nadpis("Čo máš doma")
+        Text(
+            "Bez zapnutého náradia ostanú len cviky na zemi — hrazdu a jednoručky si zapni.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(8.dp))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Naradie.entries.filter { it != Naradie.ZIADNE }.forEach { n ->
                 FilterChip(
@@ -206,7 +265,7 @@ fun OnboardingObrazovka(hotovo: () -> Unit, model: OnboardingModel = viewModel()
                 .fillMaxWidth()
                 .height(60.dp),
         ) {
-            Text("Uložiť", style = MaterialTheme.typography.titleLarge)
+            Text("Uložiť a pokračovať", style = MaterialTheme.typography.titleLarge)
         }
         Spacer(Modifier.height(24.dp))
     }

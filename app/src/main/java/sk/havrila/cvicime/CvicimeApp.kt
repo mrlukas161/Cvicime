@@ -19,9 +19,12 @@ class CvicimeApp : Application() {
         super.onCreate()
         vytvorKanaly()
         scope.launch {
-            KatalogLoader.nacitajAkTreba(this@CvicimeApp)
-            // Profil musí existovať od prvého spustenia, inak by sa UI muselo všade vetviť.
-            Repozitar.ziskaj(this@CvicimeApp).profil()
+            // Celé zabalené: neošetrená výnimka v tejto korutine by zhodila appku pri štarte.
+            runCatching {
+                KatalogLoader.nacitajAkTreba(this@CvicimeApp)
+                // Profil musí existovať od prvého spustenia, inak by sa UI muselo všade vetviť.
+                Repozitar.ziskaj(this@CvicimeApp).profil()
+            }.onFailure { android.util.Log.e("CvicimeApp", "Štart zlyhal: ${it.message}", it) }
         }
     }
 

@@ -37,15 +37,19 @@ object KatalogLoader {
     private const val KLUC_VERZIA = "nacitana_verzia"
 
     /** Vráti počet načítaných cvikov, alebo -1 ak sa načítanie nevykonalo (netreba). */
-    suspend fun nacitajAkTreba(context: Context): Int {
+    suspend fun nacitajAkTreba(context: Context): Int = try {
+        nacitaj(context)
+    } catch (t: Throwable) {
+        // Chybný katalóg nesmie zhodiť celú appku. Appka sa spustí s prázdnou knižnicou
+        // a obrazovka "Dnes" to používateľovi povie priamo, namiesto tichého pádu.
+        Log.e(TAG, "Katalóg sa nepodarilo načítať: ${t.message}", t)
+        -1
+    }
+
+    private suspend fun nacitaj(context: Context): Int {
         val dao = KatalogDatabase.ziskaj(context).dao()
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        val json = try {
-            context.assets.open(SUBOR).bufferedReader().use { it.readText() }
-        } catch (t: Throwable) {
-            Log.e(TAG, "Katalóg sa nedá otvoriť: ${t.message}", t)
-            return -1
-        }
+        val json = context.assets.open(SUBOR).bufferedReader().use { it.readText() }
 
         val koren = JSONObject(json)
         val verziaSuboru = koren.optInt("verzia", 1)

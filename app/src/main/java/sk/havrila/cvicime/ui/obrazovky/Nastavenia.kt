@@ -30,6 +30,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import sk.havrila.cvicime.BuildConfig
 import sk.havrila.cvicime.data.Repozitar
@@ -49,11 +50,16 @@ class NastaveniaModel(app: Application) : AndroidViewModel(app) {
     private val _pocetCvikov = MutableStateFlow(0)
     val pocetCvikov = _pocetCvikov.asStateFlow()
 
+    // Tokom, nie jednorazovo - inak by po zmene cieľov obrazovka ukazovala staré hodnoty.
     init {
         viewModelScope.launch {
-            _profil.value = repo.profil()
-            _ciele.value = repo.denik.aktivneCiele()
-            _pocetCvikov.value = repo.katalog.pocetCvikov()
+            repo.profilTok().collectLatest { _profil.value = it ?: repo.profil() }
+        }
+        viewModelScope.launch {
+            repo.cieleTok().collectLatest {
+                _ciele.value = it
+                _pocetCvikov.value = repo.katalog.pocetCvikov()
+            }
         }
     }
 
@@ -61,7 +67,6 @@ class NastaveniaModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             val p = repo.profil()
             repo.ulozProfil(p.copy(vstupnyTestHotovy = false))
-            _profil.value = repo.profil()
         }
     }
 

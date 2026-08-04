@@ -343,32 +343,73 @@ private fun Cvicenie(krok: KrokTreningu, koniec: Long, hotovo: () -> Unit) {
 }
 
 /**
- * Rezerva sa pýta troma tlačidlami, nie posuvníkom.
- * Jemnejšia škála by u začiatočníka aj tak merala šum - a udýchaný človek
- * nemá trafiť posuvník. Odpoveď je len korekcia, hlavný signál sú opakovania.
+ * Zapisuje sa SKUTOČNE dosiahnutý počet, nie plánovaný - inak by appka pri nesplnenej sérii
+ * zapísala plán, uverila, že cieľ padol, a posunula používateľa o stupeň vyššie.
+ * Skutočné opakovania sú zároveň hlavný signál progresie; rezerva je len korekcia,
+ * lebo jej odhad je u začiatočníka podľa literatúry sporný.
+ *
+ * Rezerva má tri tlačidlá, nie posuvník - jemnejšia škála by aj tak merala šum
+ * a udýchaný človek posuvník netrafí.
  */
 @Composable
 private fun OtazkaRezervy(krok: KrokTreningu, odpoved: (Rir, Int?) -> Unit) {
+    val naCas = Meranie.z(krok.polozka.cvik.meranie) == Meranie.VYDRZ
+    var hodnota by remember(krok.polozka.cvik.id, krok.cisloSerie) {
+        mutableIntStateOf(krok.polozka.ciel)
+    }
+    val krokZmeny = if (naCas) 5 else 1
+
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-            "Koľko si mal ešte v sebe?",
+            krok.polozka.cvik.nazov,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(14.dp))
+        Text(
+            if (naCas) "Koľko sekúnd si vydržal?" else "Koľko si spravil?",
             style = MaterialTheme.typography.headlineMedium,
             textAlign = TextAlign.Center,
         )
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(10.dp))
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            OutlinedButton(
+                onClick = { hodnota = (hodnota - krokZmeny).coerceAtLeast(0) },
+                modifier = Modifier.size(64.dp),
+            ) {
+                Text("−", style = MaterialTheme.typography.headlineMedium)
+            }
+            Text(
+                "$hodnota",
+                style = MaterialTheme.typography.displayLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = 20.dp),
+            )
+            OutlinedButton(
+                onClick = { hodnota += krokZmeny },
+                modifier = Modifier.size(64.dp),
+            ) {
+                Text("+", style = MaterialTheme.typography.headlineMedium)
+            }
+        }
         Text(
-            krok.polozka.cvik.nazov,
+            "plán bol ${krok.polozka.ciel}",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(Modifier.height(28.dp))
+
+        Spacer(Modifier.height(22.dp))
+        Text("Koľko si mal ešte v sebe?", style = MaterialTheme.typography.titleLarge)
+        Spacer(Modifier.height(8.dp))
         listOf(Rir.NIC, Rir.JEDNO_DVE, Rir.TRI_A_VIAC).forEach { r ->
             Button(
-                onClick = { odpoved(r, krok.polozka.ciel) },
+                onClick = { odpoved(r, hodnota) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(64.dp)
-                    .padding(vertical = 4.dp),
+                    .height(60.dp)
+                    .padding(vertical = 3.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer,

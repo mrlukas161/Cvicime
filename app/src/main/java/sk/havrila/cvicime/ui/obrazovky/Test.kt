@@ -17,9 +17,12 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
@@ -29,6 +32,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import sk.havrila.cvicime.data.Repozitar
 import sk.havrila.cvicime.data.katalog.CvikEntity
@@ -44,15 +48,24 @@ class TestModel(app: Application) : AndroidViewModel(app) {
     private val _rebriky = MutableStateFlow<List<RebrikSCvikmi>>(emptyList())
     val rebriky = _rebriky.asStateFlow()
 
+    /** Už nastavené úrovne - obrazovka nimi predvyplní výber. */
+    private val _urovne = MutableStateFlow<Map<String, Int>>(emptyMap())
+    val urovne = _urovne.asStateFlow()
+
+    // Katalóg sa načítava na pozadí pri štarte appky, takže sa naň čaká tokom,
+    // nie jednorazovým čítaním - inak by test pri prvom spustení ostal prázdny.
     init {
         viewModelScope.launch {
             val zaujimave = setOf(
                 Skupina.TLAK, Skupina.TAH, Skupina.NOHY, Skupina.STRED, Skupina.ZRUCNOST,
             )
-            _rebriky.value = repo.rebriky()
-                .filter { Skupina.z(it.skupina) in zaujimave }
-                .map { r -> RebrikSCvikmi(r, repo.cvikyRebrika(r.id).filter { !it.jeDetsky }) }
-                .filter { it.cviky.isNotEmpty() }
+            repo.rebrikyTok().collectLatest { vsetky ->
+                _rebriky.value = vsetky
+                    .filter { Skupina.z(it.skupina) in zaujimave }
+                    .map { r -> RebrikSCvikmi(r, repo.cvikyRebrika(r.id).filter { !it.jeDetsky }) }
+                    .filter { it.cviky.isNotEmpty() }
+                _urovne.value = repo.denik.urovne().associate { it.rebrikId to it.uroven }
+            }
         }
     }
 
@@ -79,7 +92,15 @@ class TestModel(app: Application) : AndroidViewModel(app) {
 @Composable
 fun TestObrazovka(hotovo: () -> Unit, model: TestModel = viewModel()) {
     val rebriky by model.rebriky.collectAsStateWithLifecycle()
+    val urovne by model.urovne.collectAsStateWithLifecycle()
     val vyber = remember { mutableStateMapOf<String, Int>() }
+    var predvyplnene by remember { mutableStateOf(false) }
+
+    LaunchedEffect(urovne) {
+        if (predvyplnene || urovne.isEmpty()) return@LaunchedEffect
+        vyber.putAll(urovne)
+        predvyplnene = true
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         Column(Modifier.padding(20.dp)) {
@@ -91,6 +112,10 @@ fun TestObrazovka(hotovo: () -> Unit, model: TestModel = viewModel()) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            if (rebriky.isEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                Text("Načítavam knižnicu cvikov…", style = MaterialTheme.typography.bodyMedium)
+            }
         }
 
         LazyColumn(modifier = Modifier.weight(1f)) {

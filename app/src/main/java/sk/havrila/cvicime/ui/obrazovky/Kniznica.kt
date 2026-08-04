@@ -25,6 +25,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import sk.havrila.cvicime.data.Repozitar
 import sk.havrila.cvicime.data.katalog.CvikEntity
@@ -41,10 +42,15 @@ class KniznicaModel(app: Application) : AndroidViewModel(app) {
     private val _urovne = MutableStateFlow<Map<String, Int>>(emptyMap())
     val urovne = _urovne.asStateFlow()
 
+    // Tokom, nie jednorazovo: katalóg sa načítava na pozadí a úrovne sa menia po každom tréningu.
     init {
         viewModelScope.launch {
-            _rebriky.value = repo.rebriky()
-            _urovne.value = repo.denik.urovne().associate { it.rebrikId to it.uroven }
+            repo.rebrikyTok().collectLatest { _rebriky.value = it }
+        }
+        viewModelScope.launch {
+            repo.denik.urovneTok().collectLatest { zoznam ->
+                _urovne.value = zoznam.associate { it.rebrikId to it.uroven }
+            }
         }
     }
 }
