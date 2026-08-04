@@ -53,6 +53,6 @@ room = [
 
 [plugins]
 android = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+# POZOR: org.jetbrains.kotlin.android sa pri AGP 9 NESMIE aplikovať - Kotlin je zabudovaný v AGP.
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
