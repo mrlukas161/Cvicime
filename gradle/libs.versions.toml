@@ -13,6 +13,12 @@ room = "2.8.4"
 work = "2.11.2"
 coreKtx = "1.17.0"
 
+# Testy (verzie overene proti Maven metadata 04.08.2026)
+junit = "4.13.2"
+robolectric = "4.16.1"
+testCore = "1.7.0"
+coroutinesTest = "1.11.0"
+
 # compileSdk 37 vyzaduje lifecycle 2.11 (a bude ho vyzadovat aj Compose 1.12).
 # targetSdk zamerne ostava 36 - to je ina vec a menilo by to runtime spravanie appky.
 compileSdk = "37"
@@ -40,6 +46,12 @@ androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref =
 
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 
+junit = { module = "junit:junit", version.ref = "junit" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+androidx-test-core = { module = "androidx.test:core", version.ref = "testCore" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutinesTest" }
+androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "room" }
+
 [bundles]
 compose = [
     "compose-ui",
@@ -51,6 +63,13 @@ compose = [
 room = [
     "androidx-room-runtime",
     "androidx-room-ktx",
+]
+test = [
+    "junit",
+    "robolectric",
+    "androidx-test-core",
+    "kotlinx-coroutines-test",
+    "androidx-room-testing",
 ]
 
 [plugins]

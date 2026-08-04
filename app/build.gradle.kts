@@ -69,6 +69,14 @@ android {
     packaging {
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
     }
+
+    // Robolectric potrebuje prístup k assets (knižnica cvikov) aj k resources.
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            isReturnDefaultValues = true
+        }
+    }
 }
 
 ksp {
@@ -90,4 +98,6 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     implementation(libs.androidx.work.runtime.ktx)
+
+    testImplementation(libs.bundles.test)
 }

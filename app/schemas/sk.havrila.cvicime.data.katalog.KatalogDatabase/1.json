@@ -1,0 +1,171 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "dafe71a90eebd3c30d4039608862ff5e",
+    "entities": [
+      {
+        "tableName": "rebrik",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `nazov` TEXT NOT NULL, `popis` TEXT NOT NULL, `skupina` TEXT NOT NULL, `je_zrucnost` INTEGER NOT NULL, `poradie` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nazov",
+            "columnName": "nazov",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "popis",
+            "columnName": "popis",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "skupina",
+            "columnName": "skupina",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "jeZrucnost",
+            "columnName": "je_zrucnost",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "poradie",
+            "columnName": "poradie",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "cvik",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `rebrik_id` TEXT NOT NULL, `uroven` INTEGER NOT NULL, `nazov` TEXT NOT NULL, `meranie` TEXT NOT NULL, `ciel_min` INTEGER NOT NULL, `ciel_max` INTEGER NOT NULL, `naradie` TEXT NOT NULL, `partie` TEXT NOT NULL, `cue` TEXT NOT NULL, `chyby` TEXT NOT NULL, `je_detsky` INTEGER NOT NULL, `zviera` TEXT, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rebrikId",
+            "columnName": "rebrik_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "uroven",
+            "columnName": "uroven",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nazov",
+            "columnName": "nazov",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "meranie",
+            "columnName": "meranie",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cielMin",
+            "columnName": "ciel_min",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cielMax",
+            "columnName": "ciel_max",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "naradie",
+            "columnName": "naradie",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "partie",
+            "columnName": "partie",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cue",
+            "columnName": "cue",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "chyby",
+            "columnName": "chyby",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "jeDetsky",
+            "columnName": "je_detsky",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "zviera",
+            "columnName": "zviera",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_cvik_rebrik_id",
+            "unique": false,
+            "columnNames": [
+              "rebrik_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_cvik_rebrik_id` ON `${TABLE_NAME}` (`rebrik_id`)"
+          },
+          {
+            "name": "index_cvik_rebrik_id_uroven",
+            "unique": true,
+            "columnNames": [
+              "rebrik_id",
+              "uroven"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_cvik_rebrik_id_uroven` ON `${TABLE_NAME}` (`rebrik_id`, `uroven`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'dafe71a90eebd3c30d4039608862ff5e')"
+    ]
+  }
+}

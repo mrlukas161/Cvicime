@@ -1,5 +1,6 @@
 *.iml
 .gradle/
+# local.properties obsahuje cestu k SDK na konkretnom pocitaci - do repozitara nepatri
 local.properties
 .idea/
 .DS_Store
