@@ -52,13 +52,25 @@ class GeneratorTest {
     )
 
     private val cviky = mapOf(
-        "rozcvicka" to listOf(cvik("rozcvicka", 1, "")),
+        // Rozohriatie je zásobník, nie progresia - v jednom rebríku ich je viac.
+        "rozcvicka" to listOf(
+            cvik("rozcvicka", 1, ""),
+            cvik("rozcvicka", 2, ""),
+            cvik("rozcvicka", 3, ""),
+            cvik("rozcvicka", 4, ""),
+            cvik("rozcvicka", 5, ""),
+        ),
         "kliky" to listOf(cvik("kliky", 1, "hrudnik:1.0,triceps:0.5")),
         "pritahy" to listOf(cvik("pritahy", 1, "chrbat:1.0,biceps:0.5", naradie = "hrazda")),
         "drep" to listOf(cvik("drep", 1, "stehna:1.0,zadok:0.5")),
         "lytka" to listOf(cvik("lytka", 1, "lytka:1.0", naradie = "schod")),
         "plank" to listOf(cvik("plank", 1, "stred:1.0", meranie = "vydrz")),
-        "lsit" to listOf(cvik("lsit", 1, "stred:1.0", meranie = "vydrz")),
+        // Stupeň 2 vyžaduje schod - používa sa na test ústupu na dostupný stupeň.
+        "lsit" to listOf(
+            cvik("lsit", 1, "stred:1.0", meranie = "vydrz"),
+            cvik("lsit", 2, "stred:1.0", meranie = "vydrz", naradie = "schod"),
+            cvik("lsit", 3, "stred:1.0", meranie = "vydrz"),
+        ),
         "stojka" to listOf(cvik("stojka", 1, "ramena:1.0", meranie = "vydrz", naradie = "stena")),
         "ramena-mobilita" to listOf(cvik("ramena-mobilita", 1, "", meranie = "vydrz")),
     )
@@ -165,6 +177,88 @@ class GeneratorTest {
         val silove = Generator.zostav(vstup(minuty = 60))
             .bloky.first { it.blok == Blok.SILA }.polozky.map { it.rebrikId }
         assertEquals(silove.distinct().size, silove.size)
+    }
+
+    // ---------------------------------------------------------------- regresie z testu na emulátore 04.08.2026
+
+    /**
+     * Chyba nájdená na emulátore: zvolená zručnosť z tréningu ticho zmizla,
+     * lebo práve ten stupeň vyžadoval náradie, ktoré používateľ nemal.
+     */
+    @Test
+    fun `zrucnost ustupi na dostupny stupen namiesto toho aby zmizla`() {
+        // Používateľ je na stupni 2, ktorý vyžaduje schod - a ten práve nemá.
+        val v = vstup(
+            ciele = listOf("lsit"),
+            naradie = setOf(Naradie.ZIADNE, Naradie.HRAZDA, Naradie.STENA),
+        ).copy(urovne = mapOf("lsit" to 2))
+        val plan = Generator.zostav(v)
+        val skill = plan.bloky.firstOrNull { it.blok == Blok.SKILL }
+        assertTrue("skill blok úplne zmizol", skill != null)
+        assertEquals("mal ustúpiť na stupeň 1", 1, skill!!.polozky.first().cvik.uroven)
+    }
+
+    /**
+     * Chyba nájdená na emulátore: lýtka boli zvolené ako cieľ, náradie na ne bolo,
+     * a aj tak sa do tréningu nedostali - viackĺbový cvik sčíta príspevky z dvoch partií
+     * a izolovaný jednopartiový nikdy nevyhrá.
+     */
+    @Test
+    fun `zvolena partia sa naozaj dostane do treningu`() {
+        val plan = Generator.zostav(vstup(minuty = 30, prioritne = setOf(Partia.LYTKA)))
+        val zatazuje = plan.bloky
+            .filter { it.blok == Blok.SILA }
+            .flatMap { it.polozky }
+            .any { it.cvik.partie.contains("lytka") }
+        val cviky = plan.bloky.first { it.blok == Blok.SILA }.polozky.map { it.cvik.nazov }
+        assertTrue("lýtka sú cieľ, ale v silovom bloku nie sú: $cviky", zatazuje)
+    }
+
+    /**
+     * Chyba nájdená na emulátore: po zvýhodnení prioritnej partie sa do silového bloku
+     * dostali dva tlaky a žiadny ťah. Nerovnováha tlak/ťah je najčastejší zdroj
+     * problémov s ramenami - engine ju nesmie vyrobiť sám.
+     */
+    @Test
+    fun `silovy blok pokryje tlak aj tah skor nez zdvojí skupinu`() {
+        val plan = Generator.zostav(vstup(minuty = 30, prioritne = setOf(Partia.LYTKA)))
+        val skupiny = plan.bloky.first { it.blok == Blok.SILA }.polozky
+            .map { p -> rebriky.first { it.id == p.rebrikId }.skupina }
+        assertTrue("chýba tlak: $skupiny", skupiny.contains("tlak"))
+        assertTrue("chýba ťah: $skupiny", skupiny.contains("tah"))
+    }
+
+    /** Cieľ, na ktorý nie je náradie, sa nesmie zamlčať. */
+    @Test
+    fun `nesplnitelny ciel sa oznami v zdovodneni`() {
+        val plan = Generator.zostav(
+            vstup(naradie = setOf(Naradie.ZIADNE), ciele = listOf("stojka"), prioritne = setOf(Partia.LYTKA))
+        )
+        val text = plan.zdovodnenie.joinToString(" ")
+        assertTrue("nepovedal, že stojka sa nedá: $text", text.contains("Stojka") || text.contains("stojka"))
+        assertTrue("nepovedal, že lýtka sa nedajú: $text", text.contains("Lýtka") || text.contains("lýtka"))
+    }
+
+    /**
+     * Chyba nájdená na emulátore: voľba prioritnej partie dvíhala len strop objemu,
+     * na ktorý sa rampa v prvých týždňoch ani nedostane - takže nerobila nič.
+     */
+    @Test
+    fun `prioritna partia ma vyssi ciel objemu hned od zaciatku`() {
+        val prioritna = Objem.cielSerii(Partia.LYTKA, prioritna = true, tyzdnovOdZaciatku = 0)
+        val bezna = Objem.cielSerii(Partia.LYTKA, prioritna = false, tyzdnovOdZaciatku = 0)
+        assertTrue("priorita v prvom týždni nemá žiadny efekt", prioritna > bezna)
+    }
+
+    /**
+     * Chyba nájdená na emulátore: rozcvička dala jediný cvik, lebo engine bral
+     * z rebríka len aktuálny stupeň. Rozohriatie ale nie je progresia, je to zásobník.
+     */
+    @Test
+    fun `rozohriatie berie viac cvikov z jedneho rebrika`() {
+        val rozohriatie = Generator.zostav(vstup(minuty = 30))
+            .bloky.first { it.blok == Blok.ROZOHRIATIE }
+        assertTrue("rozcvička má len ${rozohriatie.polozky.size} cvik(y)", rozohriatie.polozky.size >= 3)
     }
 
     @Test

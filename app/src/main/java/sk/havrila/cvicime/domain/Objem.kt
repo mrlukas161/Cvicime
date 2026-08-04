@@ -17,6 +17,13 @@ object Objem {
     /** Štartovací týždenný objem na partiu pre začiatočníka. */
     const val START_SERII = 8.0
 
+    /**
+     * O koľko vyššie štartuje partia, ktorú si používateľ zvolil ako cieľ.
+     * Bez tohto by voľba cieľovej partie prvé týždne nerobila vôbec nič -
+     * dvíhať iba strop nemá zmysel, kým sa naň rampa ani nedostane.
+     */
+    private const val PRIRAZKA_PRIORITY = 3.0
+
     /** O koľko sérií sa cieľ dvíha za každé 2 týždne pravidelného tréningu. */
     private const val PRIRASTOK_ZA_2_TYZDNE = 1.0
 
@@ -48,7 +55,8 @@ object Objem {
             prioritna -> STROP_PRIORITNA
             else -> STROP_BEZNA
         }
-        val rampa = START_SERII + (tyzdnovOdZaciatku / 2) * PRIRASTOK_ZA_2_TYZDNE
+        val start = if (prioritna) START_SERII + PRIRAZKA_PRIORITY else START_SERII
+        val rampa = start + (tyzdnovOdZaciatku / 2) * PRIRASTOK_ZA_2_TYZDNE
         val ciel = minOf(rampa, strop)
         return if (deload) ciel * 0.6 else ciel
     }

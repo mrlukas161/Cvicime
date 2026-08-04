@@ -101,8 +101,17 @@ class PravidlaTest {
     @Test
     fun `objem zacina nizko a rastie pomaly`() {
         val p = sk.havrila.cvicime.data.model.Partia.HRUDNIK
-        assertTrue(Objem.cielSerii(p, true, 0) == 8.0)
-        assertTrue(Objem.cielSerii(p, true, 2) == 9.0)
-        assertTrue(Objem.cielSerii(p, true, 4) == 10.0)
+        assertTrue(Objem.cielSerii(p, false, 0) == 8.0)
+        assertTrue(Objem.cielSerii(p, false, 2) == 9.0)
+        assertTrue(Objem.cielSerii(p, false, 4) == 10.0)
+    }
+
+    /** Prioritná partia musí mať vyšší cieľ hneď, nie až keď rampa dorastie na strop. */
+    @Test
+    fun `prioritna partia startuje vyssie ale stale pod stropom`() {
+        val p = sk.havrila.cvicime.data.model.Partia.HRUDNIK
+        val prioritna = Objem.cielSerii(p, true, 0)
+        assertTrue("priorita nemá efekt v prvom týždni", prioritna > Objem.cielSerii(p, false, 0))
+        assertTrue("priorita nesmie hneď preskočiť strop", prioritna <= 16.0)
     }
 }

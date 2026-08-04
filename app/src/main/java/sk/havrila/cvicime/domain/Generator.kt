@@ -62,6 +62,9 @@ data class PlanTreningu(
  */
 object Generator {
 
+    /** O koľko sa zvýhodní cvik zaťažujúci partiu, ktorú si používateľ zvolil ako cieľ. */
+    private const val PRIORITNY_NASOBOK = 1.6
+
     fun zostav(v: VstupGeneratora): PlanTreningu {
         val zdovodnenie = mutableListOf<String>()
         val rozpocet = rozdelCas(v.dostupneMinuty)
@@ -83,6 +86,7 @@ object Generator {
         if (v.dostupneMinuty <= 15) {
             zdovodnenie += "Málo času: vypadol kondičný blok a ubrali sa série. Zručnosť ostáva — je lacná na únavu."
         }
+        zdovodnenie += nesplnitelneCiele(v)
 
         val bloky = listOfNotNull(
             rozohriatie.takeIf { it.isNotEmpty() }?.let { PlanBloku(Blok.ROZOHRIATIE, it) },
@@ -127,7 +131,7 @@ object Generator {
             minuty <= 5 -> 4
             else -> 5
         }
-        return dostupneCviky(v, Skupina.ROZOHRIATIE)
+        return zasobnikCvikov(v, Skupina.ROZOHRIATIE)
             .take(pocet)
             .map { (rebrik, cvik) ->
                 PlanPolozka(
@@ -201,23 +205,17 @@ object Generator {
                 Skupina.z(rebrik.skupina) in setOf(Skupina.TLAK, Skupina.TAH, Skupina.NOHY, Skupina.STRED)
             }
 
+        // Skóre cviku = koľko deficitu pokryje, s penalizáciou za nedávnu záťaž tých istých partií.
+        val zoradene = kandidati
+            .map { (rebrik, cvik) -> Triple(rebrik, cvik, skoreCviku(cvik, deficity, v)) }
+            .filter { it.third > 0.0 }
+            .sortedByDescending { it.third }
+
         val vybrane = mutableListOf<PlanPolozka>()
         val pouziteRebriky = mutableSetOf<String>()
         val pokryteSkupiny = mutableSetOf<Skupina>()
 
-        // Skóre cviku = koľko deficitu pokryje, mínus penalizácia za nedávnu záťaž tých istých partií.
-        val zoradene = kandidati
-            .map { (rebrik, cvik) -> Triple(rebrik, cvik, skoreCviku(cvik, deficity, v)) }
-            .sortedByDescending { it.third }
-
-        for ((rebrik, cvik, skore) in zoradene) {
-            if (vybrane.size >= pocetCvikov) break
-            if (rebrik.id in pouziteRebriky) continue
-            if (skore <= 0.0) continue
-            val skupina = Skupina.z(rebrik.skupina)
-            // Aspoň tlak a ťah sa snažíme mať oba - inak vzniknú svalové nerovnováhy.
-            if (skupina in pokryteSkupiny && pokryteSkupiny.size < 3 && vybrane.size < pocetCvikov - 1) continue
-
+        fun pridaj(rebrik: RebrikEntity, cvik: CvikEntity) {
             vybrane += PlanPolozka(
                 cvik = cvik,
                 rebrikId = rebrik.id,
@@ -228,7 +226,24 @@ object Generator {
                 cielRir = if (v.deload) 3 else Pravidla.CIEL_RIR_SILA,
             )
             pouziteRebriky += rebrik.id
-            pokryteSkupiny += skupina
+            pokryteSkupiny += Skupina.z(rebrik.skupina)
+        }
+
+        // PRVÝ PRIECHOD: z každej pohybovej skupiny najlepší cvik.
+        // Bez tohto by sa do tréningu dostali dva tlaky a žiadny ťah - a práve
+        // nerovnováha medzi tlakom a ťahom je najčastejší zdroj problémov s ramenami.
+        for ((rebrik, cvik, _) in zoradene) {
+            if (vybrane.size >= pocetCvikov) break
+            if (rebrik.id in pouziteRebriky) continue
+            if (Skupina.z(rebrik.skupina) in pokryteSkupiny) continue
+            pridaj(rebrik, cvik)
+        }
+
+        // DRUHÝ PRIECHOD: zvyšné miesta doplní najvyššie skórujúci cvik bez ohľadu na skupinu.
+        for ((rebrik, cvik, _) in zoradene) {
+            if (vybrane.size >= pocetCvikov) break
+            if (rebrik.id in pouziteRebriky) continue
+            pridaj(rebrik, cvik)
         }
 
         val najvacsiDeficit = deficity.maxByOrNull { it.value }
@@ -264,7 +279,8 @@ object Generator {
     private fun zostavMobilitu(v: VstupGeneratora, minuty: Int): List<PlanPolozka> {
         if (minuty <= 0) return emptyList()
         val pocet = if (minuty >= 4) 3 else 2
-        return dostupneCviky(v, Skupina.MOBILITA)
+        return zasobnikCvikov(v, Skupina.MOBILITA)
+            .distinctBy { it.first.id }
             .take(pocet)
             .map { (rebrik, cvik) ->
                 PlanPolozka(
@@ -292,19 +308,69 @@ object Generator {
             .filter { Skupina.z(it.skupina) != Skupina.DETSKY }
             .filter { skupina != null || !it.jeZrucnost } // zručnosti rieši skill blok
             .mapNotNull { rebrik -> aktualnyCvik(v, rebrik)?.let { rebrik to it } }
-            .filter { (_, cvik) -> maNaradie(v.naradie, cvik) }
             .toList()
 
-    private fun jeDostupny(v: VstupGeneratora, rebrik: RebrikEntity): Boolean =
-        aktualnyCvik(v, rebrik)?.let { maNaradie(v.naradie, it) } == true
+    /**
+     * Rozohriatie a mobilita NIE SÚ progresné rebríky - je to zásobník cvikov.
+     * Brať z nich len "aktuálny stupeň" by dalo jediný cvik na celú rozcvičku.
+     */
+    private fun zasobnikCvikov(
+        v: VstupGeneratora,
+        skupina: Skupina,
+    ): List<Pair<RebrikEntity, CvikEntity>> =
+        v.rebriky
+            .filter { Skupina.z(it.skupina) == skupina }
+            .flatMap { rebrik ->
+                (v.cvikyPodlaRebrika[rebrik.id] ?: emptyList())
+                    .filter { !it.jeDetsky && maNaradie(v.naradie, it) }
+                    .map { rebrik to it }
+            }
 
-    /** Cvik na úrovni, na ktorej používateľ v danom rebríku je (alebo najnižší, ak ešte netestoval). */
+    private fun jeDostupny(v: VstupGeneratora, rebrik: RebrikEntity): Boolean =
+        aktualnyCvik(v, rebrik) != null
+
+    /**
+     * Cvik, ktorý má používateľ v danom rebríku robiť.
+     *
+     * Kľúčové: vyberá sa LEN z cvikov, ktoré sa dajú spraviť s dostupným náradím.
+     * Ak presne ten stupeň náradie nemá (napr. L-sit na vyvýšených rukách potrebuje schod),
+     * ustúpi sa na najbližší nižší dostupný - nikdy sa celý rebrík ticho nezahodí.
+     */
     private fun aktualnyCvik(v: VstupGeneratora, rebrik: RebrikEntity): CvikEntity? {
         val cviky = v.cvikyPodlaRebrika[rebrik.id]?.filter { !it.jeDetsky } ?: return null
-        if (cviky.isEmpty()) return null
+        val dostupne = cviky.filter { maNaradie(v.naradie, it) }
+        if (dostupne.isEmpty()) return null
         val uroven = v.urovne[rebrik.id] ?: 1
-        return cviky.firstOrNull { it.uroven == uroven }
-            ?: cviky.minByOrNull { kotlin.math.abs(it.uroven - uroven) }
+        dostupne.firstOrNull { it.uroven == uroven }?.let { return it }
+        return dostupne.filter { it.uroven < uroven }.maxByOrNull { it.uroven }
+            ?: dostupne.minByOrNull { it.uroven }
+    }
+
+    /**
+     * Ciele, ktoré sa do tréningu nedostali, lebo na ne nie je náradie.
+     * Appka to musí povedať nahlas - ticho zahodený cieľ je horší než žiadny.
+     */
+    private fun nesplnitelneCiele(v: VstupGeneratora): List<String> {
+        val chyba = mutableListOf<String>()
+
+        for (id in v.cieleZrucnosti) {
+            val rebrik = v.rebriky.firstOrNull { it.id == id } ?: continue
+            if (aktualnyCvik(v, rebrik) == null) {
+                chyba += "„${rebrik.nazov}\" sa dnes nedá trénovať — žiadny jeho stupeň " +
+                    "sa nezaobíde bez náradia, ktoré nemáš zapnuté."
+            }
+        }
+
+        for (partia in v.prioritnePartie) {
+            val jePreNu = dostupneCviky(v, null).any { (_, cvik) ->
+                rozparsujPartie(cvik.partie).any { (kluc, vaha) -> kluc == partia.kluc && vaha >= 1.0 }
+            }
+            if (!jePreNu) {
+                chyba += "Na partiu „${partia.nazov}\" nemáš zapnuté potrebné náradie, " +
+                    "takže sa do tréningu nedostane."
+            }
+        }
+        return chyba
     }
 
     private fun maNaradie(dostupne: Set<Naradie>, cvik: CvikEntity): Boolean {
@@ -336,6 +402,10 @@ object Generator {
             val partia = Partia.z(kluc) ?: continue
             val deficit = deficity[partia] ?: 0.0
             var prispevok = deficit * vaha
+            // Bez tohto izolovaná partia (lýtka, predlaktia) nikdy nevyhrá nad viackĺbovým
+            // cvikom, ktorý sčíta príspevky z dvoch partií - a zvolený cieľ by sa
+            // do tréningu nedostal, hoci naň náradie je.
+            if (partia in v.prioritnePartie) prispevok *= PRIORITNY_NASOBOK
             // Partia zaťažená včera alebo dnes sa penalizuje - potrebuje regeneráciu.
             val posledna = v.poslednaZataz[partia]
             if (posledna != null) {
