@@ -13,7 +13,9 @@ room = "2.8.4"
 work = "2.11.2"
 coreKtx = "1.17.0"
 
-compileSdk = "36"
+# compileSdk 37 vyzaduje lifecycle 2.11 (a bude ho vyzadovat aj Compose 1.12).
+# targetSdk zamerne ostava 36 - to je ina vec a menilo by to runtime spravanie appky.
+compileSdk = "37"
 targetSdk = "36"
 minSdk = "26"
 
