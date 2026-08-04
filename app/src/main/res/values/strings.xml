@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Cvičíme</string>
+
+    <!-- Navigacia -->
+    <string name="nav_domov">Dnes</string>
+    <string name="nav_progres">Progres</string>
+    <string name="nav_kniznica">Cviky</string>
+    <string name="nav_nastavenia">Nastavenia</string>
+
+    <!-- Notifikacie -->
+    <string name="kanal_trening">Prebiehajúci tréning</string>
+    <string name="kanal_trening_popis">Odpočítavanie sérií a pauz počas tréningu.</string>
+    <string name="kanal_pripomienky">Pripomienky</string>
+    <string name="kanal_pripomienky_popis">Pripomienka tréningu, retestu a bielkovín.</string>
+</resources>

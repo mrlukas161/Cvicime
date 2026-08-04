@@ -1,0 +1,64 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Decode keystore
+        run: echo "${{ secrets.SIGNING_KEYSTORE_BASE64 }}" | base64 -d > "${{ runner.temp }}/cvicime.jks"
+
+      - name: Build release APK
+        env:
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_STORE_FILE: ${{ runner.temp }}/cvicime.jks
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Locate APK
+        id: apk
+        run: echo "path=$(ls app/build/outputs/apk/release/*.apk | head -n1)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cvicime-release-apk
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(grep '^VERSION_NAME=' gradle.properties | cut -d'=' -f2)
+          TAG="v${VERSION}-build${{ github.run_number }}"
+          gh release create "$TAG" "${{ steps.apk.outputs.path }}" \
+            --repo "${{ github.repository }}" \
+            --title "Cvičíme ${VERSION} (build ${{ github.run_number }})" \
+            --notes "Automaticky postavený podpísaný build. Stiahni a nainštaluj APK nižšie."

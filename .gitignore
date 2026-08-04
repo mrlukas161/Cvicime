@@ -1,0 +1,17 @@
+*.iml
+.gradle/
+local.properties
+.idea/
+.DS_Store
+build/
+captures/
+.externalNativeBuild
+.cxx
+*.apk
+*.aab
+
+# Podpisovaci kluc sa do repozitara NIKDY nedostane
+*.jks
+*.keystore
+keystore.properties
+*.jks.base64
