@@ -86,6 +86,24 @@ object AppUpdater {
         }
     }
 
+    /**
+     * Android pustí inštaláciu z appky len s povolením „inštalovať neznáme aplikácie".
+     * Kontroluje sa PRED sťahovaním - inak by sa zbytočne stiahlo 12 MB a používateľ
+     * by narazil na stenu až na konci.
+     */
+    fun smieInstalovat(context: Context): Boolean =
+        android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O ||
+            context.packageManager.canRequestPackageInstalls()
+
+    /** Otvorí systémovú obrazovku, kde sa to povolenie zapína. */
+    fun otvorPovolenie(context: Context) {
+        val intent = Intent(
+            android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+            android.net.Uri.parse("package:${context.packageName}"),
+        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        runCatching { context.startActivity(intent) }
+    }
+
     /** Stiahne APK do cache a otvorí systémový inštalátor. Všetko mimo hlavného vlákna. */
     suspend fun stiahniANainstaluj(
         context: Context,

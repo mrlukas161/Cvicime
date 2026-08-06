@@ -102,15 +102,20 @@ private fun Aktualizacia() {
     }
 
     val v = novaVerzia ?: return
+    val smie = AppUpdater.smieInstalovat(kontext)
     AlertDialog(
         onDismissRequest = { if (!stahuje) novaVerzia = null },
         title = { Text("Nová verzia ${v.nazovVerzie}") },
         text = {
             Column {
-                if (stahuje) {
-                    Text("Sťahujem… $percenta %")
-                } else {
-                    Text(chyba ?: "Aktualizácia sa stiahne a systém sa spýta na inštaláciu.")
+                when {
+                    stahuje -> Text("Sťahujem… $percenta %")
+                    chyba != null -> Text(chyba!!)
+                    !smie -> Text(
+                        "Android najprv potrebuje povolenie inštalovať aplikácie z tejto appky. " +
+                            "Zapneš ho jedným prepínačom a viac sa už nebude pýtať."
+                    )
+                    else -> Text("Aktualizácia sa stiahne a systém sa spýta na inštaláciu.")
                 }
             }
         },
@@ -118,6 +123,10 @@ private fun Aktualizacia() {
             TextButton(
                 enabled = !stahuje,
                 onClick = {
+                    if (!smie) {
+                        AppUpdater.otvorPovolenie(kontext)
+                        return@TextButton
+                    }
                     stahuje = true
                     chyba = null
                     rozsah.launch {
@@ -126,7 +135,7 @@ private fun Aktualizacia() {
                         if (problem != null) chyba = problem else novaVerzia = null
                     }
                 },
-            ) { Text("Aktualizovať") }
+            ) { Text(if (!smie) "Povoliť" else "Aktualizovať") }
         },
         dismissButton = {
             TextButton(enabled = !stahuje, onClick = { novaVerzia = null }) { Text("Neskôr") }

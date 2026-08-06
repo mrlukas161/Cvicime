@@ -162,6 +162,11 @@ fun NastaveniaObrazovka(naOnboarding: () -> Unit, model: NastaveniaModel = viewM
                     if (nova == null) {
                         hladam = false
                         stavAktualizacie = "Máš najnovšiu verziu."
+                    } else if (!AppUpdater.smieInstalovat(kontext)) {
+                        hladam = false
+                        stavAktualizacie = "Je nová verzia ${nova.nazovVerzie}, ale Android najprv " +
+                            "potrebuje povolenie inštalovať aplikácie z tejto appky. Otváram nastavenie."
+                        AppUpdater.otvorPovolenie(kontext)
                     } else {
                         stavAktualizacie = "Sťahujem ${nova.nazovVerzie}…"
                         val problem = AppUpdater.stiahniANainstaluj(kontext, nova)
