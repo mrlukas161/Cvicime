@@ -63,6 +63,9 @@ class OnboardingModel(app: Application) : AndroidViewModel(app) {
     private val _ulozene = MutableStateFlow<UlozenyVyber?>(null)
     val ulozene = _ulozene.asStateFlow()
 
+    private val _prveSpustenie = MutableStateFlow(false)
+    val prveSpustenie = _prveSpustenie.asStateFlow()
+
     init {
         viewModelScope.launch {
             repo.rebrikyTok().collectLatest { rebriky ->
@@ -72,6 +75,10 @@ class OnboardingModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             val profil = repo.profil()
             val ciele = repo.denik.aktivneCiele()
+            // Pri PRVOM spustení sa ignoruje východzí profil ("ziadne,podlozka") a ponúknu sa
+            // rozumné predvoľby. Inak by prvý používateľ videl zapnutú len podložku
+            // a appka by mu vedela poskladať len cviky na zemi.
+            _prveSpustenie.value = !profil.onboardingHotovy
             _ulozene.value = UlozenyVyber(
                 zrucnosti = ciele.filter { DruhCiela.z(it.druh) == DruhCiela.ZRUCNOST }.map { it.kluc },
                 partie = ciele.filter { DruhCiela.z(it.druh) == DruhCiela.PARTIA }
@@ -139,6 +146,7 @@ class OnboardingModel(app: Application) : AndroidViewModel(app) {
 fun OnboardingObrazovka(hotovo: () -> Unit, model: OnboardingModel = viewModel()) {
     val zrucnosti by model.zrucnosti.collectAsStateWithLifecycle()
     val ulozene by model.ulozene.collectAsStateWithLifecycle()
+    val prveSpustenie by model.prveSpustenie.collectAsStateWithLifecycle()
 
     val vybraneZrucnosti = remember { mutableListOf<String>().toMutableStateList() }
     val vybranePartie = remember { mutableListOf<Partia>().toMutableStateList() }
@@ -155,9 +163,11 @@ fun OnboardingObrazovka(hotovo: () -> Unit, model: OnboardingModel = viewModel()
         vybraneZrucnosti.clear(); vybraneZrucnosti.addAll(u.zrucnosti)
         vybranePartie.clear(); vybranePartie.addAll(u.partie)
         vybraneNaradie.clear()
-        vybraneNaradie.addAll(
-            u.naradie.ifEmpty { listOf(Naradie.HRAZDA, Naradie.JEDNORUCKY, Naradie.PODLOZKA) }
+        val odporucane = listOf(
+            Naradie.HRAZDA, Naradie.JEDNORUCKY, Naradie.PODLOZKA,
+            Naradie.STENA, Naradie.SCHOD, Naradie.STOLICKA,
         )
+        vybraneNaradie.addAll(if (prveSpustenie || u.naradie.isEmpty()) odporucane else u.naradie)
         vaha = u.vahaKg
         vyska = u.vyskaCm
         predvyplnene = true
