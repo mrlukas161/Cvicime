@@ -16,16 +16,28 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Today
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
+import sk.havrila.cvicime.aktualizacia.AppUpdater
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -57,6 +69,7 @@ class MainActivity : ComponentActivity() {
             CvicimeTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     Aplikacia()
+                    Aktualizacia()
                 }
             }
         }
@@ -69,6 +82,56 @@ class MainActivity : ComponentActivity() {
             ziadostONotifikacie.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
+}
+
+/**
+ * Kontrola novej verzie raz denne pri otvorení appky.
+ * Zámerne nenápadná: keď nič nie je, nič sa neukáže; keď zlyhá sieť, tiež nič.
+ */
+@Composable
+private fun Aktualizacia() {
+    val kontext = LocalContext.current
+    val rozsah = rememberCoroutineScope()
+    var novaVerzia by remember { mutableStateOf<AppUpdater.NovaVerzia?>(null) }
+    var stahuje by remember { mutableStateOf(false) }
+    var percenta by remember { mutableIntStateOf(0) }
+    var chyba by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        novaVerzia = AppUpdater.zisti(kontext, nasilu = false)
+    }
+
+    val v = novaVerzia ?: return
+    AlertDialog(
+        onDismissRequest = { if (!stahuje) novaVerzia = null },
+        title = { Text("Nová verzia ${v.nazovVerzie}") },
+        text = {
+            Column {
+                if (stahuje) {
+                    Text("Sťahujem… $percenta %")
+                } else {
+                    Text(chyba ?: "Aktualizácia sa stiahne a systém sa spýta na inštaláciu.")
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = !stahuje,
+                onClick = {
+                    stahuje = true
+                    chyba = null
+                    rozsah.launch {
+                        val problem = AppUpdater.stiahniANainstaluj(kontext, v) { percenta = it }
+                        stahuje = false
+                        if (problem != null) chyba = problem else novaVerzia = null
+                    }
+                },
+            ) { Text("Aktualizovať") }
+        },
+        dismissButton = {
+            TextButton(enabled = !stahuje, onClick = { novaVerzia = null }) { Text("Neskôr") }
+        },
+    )
 }
 
 private data class Zalozka(val cesta: String, val popis: String, val ikona: ImageVector)

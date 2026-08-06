@@ -19,11 +19,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import sk.havrila.cvicime.aktualizacia.AppUpdater
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
@@ -78,11 +80,13 @@ fun NastaveniaObrazovka(naOnboarding: () -> Unit, model: NastaveniaModel = viewM
     val profil by model.profil.collectAsStateWithLifecycle()
     val ciele by model.ciele.collectAsStateWithLifecycle()
     val pocetCvikov by model.pocetCvikov.collectAsStateWithLifecycle()
-    @Suppress("UNUSED_VARIABLE")
     val kontext = LocalContext.current
+    val rozsah = rememberCoroutineScope()
 
     var vibracie by remember { mutableStateOf(model.prefs.vibracieZapnute) }
     var obrazovka by remember { mutableStateOf(model.prefs.obrazovkaStaleZapnuta) }
+    var hladam by remember { mutableStateOf(false) }
+    var stavAktualizacie by remember { mutableStateOf<String?>(null) }
 
     Column(
         modifier = Modifier
@@ -135,6 +139,42 @@ fun NastaveniaObrazovka(naOnboarding: () -> Unit, model: NastaveniaModel = viewM
         )
         Spacer(Modifier.height(10.dp))
         OutlinedButton(onClick = model::zopakujTest) { Text("Spraviť test znova") }
+
+        Spacer(Modifier.height(24.dp))
+        HorizontalDivider()
+        Spacer(Modifier.height(16.dp))
+
+        Text("Aktualizácie", style = MaterialTheme.typography.titleLarge)
+        Spacer(Modifier.height(4.dp))
+        Text(
+            "Appka sa raz denne sama pozrie, či nie je novšia verzia. Tu ju vieš skontrolovať hneď.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(10.dp))
+        OutlinedButton(
+            enabled = !hladam,
+            onClick = {
+                hladam = true
+                stavAktualizacie = null
+                rozsah.launch {
+                    val nova = AppUpdater.zisti(kontext, nasilu = true)
+                    if (nova == null) {
+                        hladam = false
+                        stavAktualizacie = "Máš najnovšiu verziu."
+                    } else {
+                        stavAktualizacie = "Sťahujem ${nova.nazovVerzie}…"
+                        val problem = AppUpdater.stiahniANainstaluj(kontext, nova)
+                        hladam = false
+                        stavAktualizacie = problem ?: "Stiahnuté — potvrď inštaláciu."
+                    }
+                }
+            },
+        ) { Text(if (hladam) "Kontrolujem…" else "Skontrolovať aktualizácie") }
+        stavAktualizacie?.let {
+            Spacer(Modifier.height(8.dp))
+            Text(it, style = MaterialTheme.typography.bodyMedium)
+        }
 
         Spacer(Modifier.height(24.dp))
         HorizontalDivider()
