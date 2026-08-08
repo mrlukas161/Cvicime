@@ -1,7 +1,9 @@
 package sk.havrila.cvicime.ui.obrazovky
 
 import android.app.Application
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,8 +11,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.clip
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -245,36 +251,25 @@ fun DomovObrazovka(
                         Text("Otvoriť ciele a náradie")
                     }
                 } else {
+                    // Plán ako farebná časová os: každý blok má bodku a zvislú linku vo svojej farbe.
                     Card {
-                        Column(Modifier.padding(16.dp)) {
+                        Column(Modifier.padding(18.dp)) {
                             Text(
-                                "Odhad ${plan?.odhadMinut ?: 0} min",
-                                style = MaterialTheme.typography.labelLarge,
+                                "≈ ${plan?.odhadMinut ?: 0} min",
+                                style = MaterialTheme.typography.headlineMedium,
                                 color = MaterialTheme.colorScheme.primary,
                             )
-                            Spacer(Modifier.height(10.dp))
-                            bloky.forEach { blok ->
-                                Text(
-                                    blok.blok.nazov,
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.SemiBold,
-                                )
-                                blok.polozky.forEach { polozka ->
-                                    val jednotka = if (polozka.cvik.meranie == "vydrz") "s" else "×"
-                                    Text(
-                                        "• ${polozka.cvik.nazov} — ${polozka.serie}× ${polozka.ciel}$jednotka",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                    )
-                                }
-                                Spacer(Modifier.height(10.dp))
+                            Spacer(Modifier.height(14.dp))
+                            bloky.forEachIndexed { i, blok ->
+                                RiadokBloku(blok = blok, posledny = i == bloky.lastIndex)
                             }
                             plan?.zdovodnenie?.forEach {
+                                Spacer(Modifier.height(6.dp))
                                 Text(
                                     it,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
-                                Spacer(Modifier.height(6.dp))
                             }
                         }
                     }
@@ -387,6 +382,49 @@ fun DomovObrazovka(
                 androidx.compose.material3.TextButton(onClick = model::zavriPrekazku) { Text("Zavrieť") }
             },
         )
+    }
+}
+
+/** Jeden blok plánu na farebnej časovej osi: bodka + zvislá linka + obsah. */
+@Composable
+private fun RiadokBloku(blok: sk.havrila.cvicime.domain.PlanBloku, posledny: Boolean) {
+    val farba = sk.havrila.cvicime.ui.theme.FarbyBlokov.pre(blok.blok)
+    // IntrinsicSize dá riadku pevnú výšku, aby zvislá linka vedela vyplniť zvyšok.
+    Row(Modifier.height(androidx.compose.foundation.layout.IntrinsicSize.Min)) {
+        Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
+            Box(
+                Modifier
+                    .padding(top = 7.dp)
+                    .size(12.dp)
+                    .clip(CircleShape)
+                    .background(farba)
+            )
+            if (!posledny) {
+                Box(
+                    Modifier
+                        .padding(top = 4.dp)
+                        .width(3.dp)
+                        .weight(1f)
+                        .clip(CircleShape)
+                        .background(farba.copy(alpha = 0.25f))
+                )
+            }
+        }
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.padding(bottom = if (posledny) 0.dp else 14.dp)) {
+            Text(
+                blok.blok.nazov,
+                style = MaterialTheme.typography.titleLarge,
+                color = farba,
+            )
+            blok.polozky.forEach { polozka ->
+                val jednotka = if (polozka.cvik.meranie == "vydrz") "s" else "×"
+                Text(
+                    "${polozka.cvik.nazov} — ${polozka.serie}× ${polozka.ciel}$jednotka",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
     }
 }
 

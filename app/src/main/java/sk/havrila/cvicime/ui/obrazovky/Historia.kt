@@ -1,7 +1,9 @@
 package sk.havrila.cvicime.ui.obrazovky
 
 import android.app.Application
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,9 +11,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -20,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
@@ -189,11 +194,18 @@ private fun DetailTreningu(serie: List<RiadokSerie>?) {
         )
         else -> Column {
             serie.groupBy { it.blokNazov }.forEach { (blokNazov, riadky) ->
-                Text(
-                    blokNazov,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                val blok = Blok.entries.firstOrNull { it.nazov == blokNazov }
+                val farba = blok?.let { sk.havrila.cvicime.ui.theme.FarbyBlokov.pre(it) }
+                    ?: MaterialTheme.colorScheme.onSurfaceVariant
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(8.dp).background(farba, CircleShape))
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        blokNazov,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = farba,
+                    )
+                }
                 riadky.forEach { r ->
                     Row(
                         Modifier

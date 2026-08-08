@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -378,16 +379,30 @@ fun PrehravacObrazovka(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         if (kroky.isNotEmpty() && stav != StavPrehravaca.HOTOVO) {
+            val farbaBloku = krok?.blok?.let { sk.havrila.cvicime.ui.theme.FarbyBlokov.pre(it) }
+                ?: MaterialTheme.colorScheme.primary
             LinearProgressIndicator(
                 progress = { (index.toFloat() / kroky.size).coerceIn(0f, 1f) },
-                modifier = Modifier.fillMaxWidth(),
+                color = farbaBloku,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp)),
             )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "${krok?.blok?.nazov ?: ""} · séria ${krok?.cisloSerie ?: 0}/${krok?.zoSerii ?: 0}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Spacer(Modifier.height(10.dp))
+            // Farebná kapsula bloku - tréning sa dá čítať podľa farby aj z diaľky.
+            Box(
+                Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(farbaBloku.copy(alpha = 0.16f))
+                    .padding(horizontal = 14.dp, vertical = 5.dp)
+            ) {
+                Text(
+                    "${krok?.blok?.nazov ?: ""} · séria ${krok?.cisloSerie ?: 0}/${krok?.zoSerii ?: 0}",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = farbaBloku,
+                )
+            }
         }
 
         Spacer(Modifier.height(8.dp))
@@ -462,14 +477,24 @@ private fun Cvicenie(
         }
     }
 
+    val farbaBloku = sk.havrila.cvicime.ui.theme.FarbyBlokov.pre(krok.blok)
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Postavicka(
-            rebrikId = krok.polozka.rebrikId,
-            modifier = Modifier.size(120.dp),
-            farba = MaterialTheme.colorScheme.onSurface,
-            farbaAkcent = MaterialTheme.colorScheme.primary,
-        )
-        Spacer(Modifier.height(8.dp))
+        // Postavička v tónovanom kruhu vo farbe bloku - vizuálna kotva obrazovky.
+        Box(
+            modifier = Modifier
+                .size(148.dp)
+                .clip(CircleShape)
+                .background(farbaBloku.copy(alpha = 0.13f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Postavicka(
+                rebrikId = krok.polozka.rebrikId,
+                modifier = Modifier.size(118.dp),
+                farba = MaterialTheme.colorScheme.onSurface,
+                farbaAkcent = farbaBloku,
+            )
+        }
+        Spacer(Modifier.height(10.dp))
         Text(
             krok.polozka.cvik.nazov,
             style = MaterialTheme.typography.headlineMedium,
