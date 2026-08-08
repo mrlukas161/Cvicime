@@ -37,6 +37,12 @@ enum class Partia(val kluc: String, val nazov: String) {
 enum class Naradie(val kluc: String, val nazov: String) {
     ZIADNE("ziadne", "Bez náradia"),
     HRAZDA("hrazda", "Hrazda"),
+    /**
+     * Hrazda s voľným priestorom NAD ňou (workout ihrisko), ktorá znesie prácu v podpore.
+     * Oddelené od bežnej hrazdy zámerne: dverová hrazda neznesie muscle-up, ale ťahové
+     * a prechodové drilly áno - takto sa dá cieľ trénovať doma a vrchné stupne na ihrisku.
+     */
+    PEVNA_HRAZDA("pevna_hrazda", "Pevná hrazda (vonku)"),
     JEDNORUCKY("jednorucky", "Jednoručky"),
     PODLOZKA("podlozka", "Podložka"),
     STOLICKA("stolicka", "Stolička"),

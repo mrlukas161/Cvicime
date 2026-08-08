@@ -112,11 +112,15 @@ class RebrikModel(app: Application) : AndroidViewModel(app) {
     private val _uroven = MutableStateFlow(1)
     val uroven = _uroven.asStateFlow()
 
+    private val _naradie = MutableStateFlow<Set<sk.havrila.cvicime.data.model.Naradie>>(emptySet())
+    val naradie = _naradie.asStateFlow()
+
     fun nacitaj(rebrikId: String) {
         viewModelScope.launch {
             _rebrik.value = repo.katalog.rebrik(rebrikId)
             _cviky.value = repo.cvikyRebrika(rebrikId)
             _uroven.value = repo.urovenVRebriku(rebrikId)
+            _naradie.value = repo.naradie()
         }
     }
 }
@@ -126,6 +130,7 @@ fun RebrikObrazovka(rebrikId: String, spat: () -> Unit, model: RebrikModel = vie
     val rebrik by model.rebrik.collectAsStateWithLifecycle()
     val cviky by model.cviky.collectAsStateWithLifecycle()
     val uroven by model.uroven.collectAsStateWithLifecycle()
+    val naradie by model.naradie.collectAsStateWithLifecycle()
 
     androidx.compose.runtime.LaunchedEffect(rebrikId) { model.nacitaj(rebrikId) }
 
@@ -137,6 +142,21 @@ fun RebrikObrazovka(rebrikId: String, spat: () -> Unit, model: RebrikModel = vie
                 rebrik?.popis?.takeIf { it.isNotBlank() }?.let {
                     Spacer(Modifier.height(6.dp))
                     Text(it, style = MaterialTheme.typography.bodyMedium)
+                }
+                // Cviky vyžadujúce náradie, ktoré nemá zapnuté, sa nezamlčia - označia sa.
+                val chybajuce = cviky
+                    .flatMap { it.naradie.split(",") }
+                    .mapNotNull { sk.havrila.cvicime.data.model.Naradie.z(it.trim()) }
+                    .distinct()
+                    .filter { it != sk.havrila.cvicime.data.model.Naradie.ZIADNE && it !in naradie }
+                if (chybajuce.isNotEmpty()) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Stupne označené 🔒 potrebujú: ${chybajuce.joinToString { it.nazov }}. " +
+                            "Zapína sa v Nastaveniach → ciele a náradie.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
         }
@@ -156,8 +176,15 @@ fun RebrikObrazovka(rebrikId: String, spat: () -> Unit, model: RebrikModel = vie
                 },
             ) {
                 Column(Modifier.padding(14.dp)) {
+                    val zamknuty = c.naradie.split(",")
+                        .mapNotNull { sk.havrila.cvicime.data.model.Naradie.z(it.trim()) }
+                        .any { it != sk.havrila.cvicime.data.model.Naradie.ZIADNE && it !in naradie }
                     Text(
-                        "${c.uroven}. ${c.nazov}" + if (aktualny) "   ← tu si" else "",
+                        buildString {
+                            append("${c.uroven}. ${c.nazov}")
+                            if (zamknuty) append("  🔒")
+                            if (aktualny) append("   ← tu si")
+                        },
                         style = MaterialTheme.typography.titleLarge,
                     )
                     val jednotka = if (c.meranie == "vydrz") "s" else "opakovaní"

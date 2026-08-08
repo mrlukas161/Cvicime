@@ -110,6 +110,8 @@ class KatalogAUkladanieTest {
 
     @Test
     fun `ulozene ciele sa objavia v toku a onboarding sa oznaci ako hotovy`() = runTest {
+        // Repozitar je singleton a testy zdieľajú databázu - stav cieľov treba najprv vyčistiť.
+        repo.denik.aktivneCiele().forEach { repo.zmazCiel(it.kluc) }
         repo.ulozCiel(CielEntity(druh = DruhCiela.ZRUCNOST.kluc, kluc = "lsit", nazov = "L-sit"))
         repo.ulozCiel(CielEntity(druh = DruhCiela.PARTIA.kluc, kluc = "lytka", nazov = "Lýtka"))
         val profil = repo.profil()
@@ -245,6 +247,51 @@ class KatalogAUkladanieTest {
         val vaha = 82.0
         val ciel = repo.odporucaneBielkoviny(vaha)
         assertTrue("cieľ $ciel g je mimo pásma", ciel >= vaha * 1.6 && ciel <= vaha * 2.2)
+    }
+
+    /**
+     * Lukášova realita (08.08.2026): dverová hrazda neznesie muscle-up.
+     * Rebrík musí byť rozložený tak, aby sa DOMA (hrazda+podložka+stolička) dalo
+     * trénovať aspoň 8 stupňov, a stupne nad hrazdou vyžadovali pevnú hrazdu.
+     */
+    @Test
+    fun `muscleup sa da trenovat na dverovej hrazde do stupna 8`() = runTest {
+        val cviky = repo.cvikyRebrika("muscleup")
+        assertTrue("rebrík má mať 12 stupňov, má ${cviky.size}", cviky.size == 12)
+
+        val doma = setOf("hrazda", "podlozka", "stolicka")
+        fun dostupny(c: sk.havrila.cvicime.data.katalog.CvikEntity) =
+            c.naradie.split(",").filter { it.isNotBlank() && it != "ziadne" }.all { it in doma }
+
+        val dostupneDoma = cviky.filter { dostupny(it) }.map { it.uroven }
+        assertEquals("doma majú ísť stupne 1–8", (1..8).toList(), dostupneDoma)
+
+        val vrchne = cviky.filter { it.uroven >= 9 }
+        assertTrue(
+            "stupne 9+ majú vyžadovať pevnú hrazdu",
+            vrchne.all { it.naradie.contains("pevna_hrazda") },
+        )
+        // A engine z toho zloží tréning: s domácim náradím ustúpi na stupeň <= 8.
+        val profil = repo.profil()
+        repo.ulozProfil(
+            profil.copy(
+                naradie = "ziadne,podlozka,hrazda,stolicka",
+                onboardingHotovy = true,
+                vstupnyTestHotovy = true,
+            )
+        )
+        repo.ulozCiel(
+            sk.havrila.cvicime.data.denik.CielEntity(
+                druh = DruhCiela.ZRUCNOST.kluc, kluc = "muscleup", nazov = "Muscle-up",
+            )
+        )
+        repo.nastavUroven("muscleup", 11) // používateľ bol na ihrisku vyššie, doma musí ustúpiť
+        val plan = repo.zostavPlan(30)
+        val skill = plan.bloky.firstOrNull { it.blok.kluc == "skill" }
+        assertTrue("skill blok chýba", skill != null)
+        val mu = skill!!.polozky.firstOrNull { it.rebrikId == "muscleup" }
+        assertTrue("muscle-up nie je v skill bloku", mu != null)
+        assertTrue("mal ustúpiť na stupeň <= 8, je na ${mu!!.cvik.uroven}", mu.cvik.uroven <= 8)
     }
 
     @Test
