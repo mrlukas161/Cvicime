@@ -139,6 +139,23 @@ interface DenikDao {
     @Query("SELECT * FROM test ORDER BY epoch_den DESC")
     fun vsetkyTestyTok(): Flow<List<TestEntity>>
 
+    @Query("SELECT * FROM test ORDER BY epoch_den")
+    suspend fun vsetkyTesty(): List<TestEntity>
+
+    @Query("SELECT * FROM miera ORDER BY epoch_den")
+    suspend fun vsetkyMiery(): List<MieraEntity>
+
+    /** Najlepšia séria daného rebríka po dňoch - podklad grafu sily. */
+    @Query(
+        """
+        SELECT epoch_den AS den, MAX(skutocna_hodnota) AS hodnota FROM seria
+        WHERE rebrik_id = :rebrikId AND skutocna_hodnota IS NOT NULL AND preskocena = 0
+          AND blok IN ('sila', 'skill')
+        GROUP BY epoch_den ORDER BY epoch_den
+        """
+    )
+    suspend fun grafRebrika(rebrikId: String): List<BodGrafu>
+
     @Query("SELECT * FROM test WHERE je_vstupny = 1 ORDER BY epoch_den LIMIT 1")
     suspend fun prvyVstupnyTest(): TestEntity?
 
@@ -211,3 +228,5 @@ interface DenikDao {
 }
 
 data class PocetPrekazok(val druh: String, val pocet: Int)
+
+data class BodGrafu(val den: Long, val hodnota: Int)

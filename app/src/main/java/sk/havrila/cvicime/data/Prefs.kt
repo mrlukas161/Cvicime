@@ -41,4 +41,9 @@ class Prefs(context: Context) {
     var beziaciTreningId: Long
         get() = p.getLong("beziaci_trening_id", -1)
         set(v) = p.edit().putLong("beziaci_trening_id", v).apply()
+
+    /** Deň, kedy sa naposledy položila otázka na prekážku - aby sa nepýtala dvakrát. */
+    var prekazkaDen: Long
+        get() = p.getLong("prekazka_den", 0)
+        set(v) = p.edit().putLong("prekazka_den", v).apply()
 }

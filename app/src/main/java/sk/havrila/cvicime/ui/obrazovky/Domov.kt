@@ -11,9 +11,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -76,7 +78,28 @@ class DomovModel(app: Application) : AndroidViewModel(app) {
     private val _pocetTyzdna = MutableStateFlow(0)
     val pocetTyzdna = _pocetTyzdna.asStateFlow()
 
+    private val _deti = MutableStateFlow<List<sk.havrila.cvicime.data.denik.DietaEntity>>(emptyList())
+    val deti = _deti.asStateFlow()
+
+    private val _bielkoviny = MutableStateFlow(false)
+    val bielkoviny = _bielkoviny.asStateFlow()
+
+    /** Koľko dní vypadlo - podnet na otázku o prekážke. null = nepýtať sa. */
+    private val _dniPauzy = MutableStateFlow<Long?>(null)
+    val dniPauzy = _dniPauzy.asStateFlow()
+
     init {
+        viewModelScope.launch {
+            repo.detiTok().collectLatest { _deti.value = it }
+        }
+        viewModelScope.launch {
+            _bielkoviny.value = repo.bielkovinyDnes()
+            // Otázka na prekážku: po 4+ dňoch pauzy, najviac raz denne.
+            val dni = repo.dniOdTreningu()
+            if (dni != null && dni >= 4 && repo.prefs.prekazkaDen != repo.dnes()) {
+                _dniPauzy.value = dni
+            }
+        }
         viewModelScope.launch {
             combine(repo.profilTok(), repo.cieleTok(), _minuty) { p, c, m -> Triple(p, c, m) }
                 .collectLatest { (p, c, m) ->
@@ -100,13 +123,32 @@ class DomovModel(app: Application) : AndroidViewModel(app) {
         repo.prefs.poslednyCasMinut = m
         _minuty.value = m
     }
+
+    fun prepniBielkoviny() {
+        viewModelScope.launch { _bielkoviny.value = repo.prepniBielkoviny() }
+    }
+
+    /** Odpoveď na prekážku. Pri „nemal som čas" sa rovno prepne na 15 minút. */
+    fun zapisPrekazku(druh: String) {
+        repo.prefs.prekazkaDen = repo.dnes()
+        _dniPauzy.value = null
+        viewModelScope.launch {
+            repo.zapisPrekazku(druh)
+            if (druh == "cas") nastavCas(15)
+        }
+    }
+
+    fun zavriPrekazku() {
+        repo.prefs.prekazkaDen = repo.dnes()
+        _dniPauzy.value = null
+    }
 }
 
 @Composable
 fun DomovObrazovka(
     naOnboarding: () -> Unit,
     naTest: () -> Unit,
-    naPrehravac: (Int) -> Unit,
+    naPrehravac: (Int, Long) -> Unit,
     model: DomovModel = viewModel(),
 ) {
     val profil by model.profil.collectAsStateWithLifecycle()
@@ -116,6 +158,12 @@ fun DomovObrazovka(
     val prvyMesiac by model.prvyMesiac.collectAsStateWithLifecycle()
     val pocetTyzdna by model.pocetTyzdna.collectAsStateWithLifecycle()
     val minuty by model.minuty.collectAsStateWithLifecycle()
+    val deti by model.deti.collectAsStateWithLifecycle()
+    val bielkoviny by model.bielkoviny.collectAsStateWithLifecycle()
+    val dniPauzy by model.dniPauzy.collectAsStateWithLifecycle()
+
+    // Rodinný režim: max jedno aktívne dieťa na tréning (deti sa nestriedajú o displej).
+    var sDietatom by remember { mutableStateOf<Long?>(null) }
 
     Column(
         modifier = Modifier
@@ -232,15 +280,68 @@ fun DomovObrazovka(
                     }
                 }
 
+                // Rodinný režim - deti cvičia v tvojich pauzách, ten istý tréning.
+                if (deti.isNotEmpty()) {
+                    Spacer(Modifier.height(14.dp))
+                    Text("Cvičí niekto s tebou?", style = MaterialTheme.typography.titleLarge)
+                    Spacer(Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(
+                            selected = sDietatom == null,
+                            onClick = { sDietatom = null },
+                            label = { Text("Sám") },
+                        )
+                        deti.forEach { d ->
+                            FilterChip(
+                                selected = sDietatom == d.id,
+                                onClick = { sDietatom = d.id },
+                                label = { Text(d.meno) },
+                            )
+                        }
+                    }
+                }
+
                 Spacer(Modifier.height(20.dp))
                 Button(
-                    onClick = { naPrehravac(minuty) },
+                    onClick = { naPrehravac(minuty, sDietatom ?: -1L) },
                     enabled = bloky.isNotEmpty(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(64.dp),
                 ) {
-                    Text("Poďme", style = MaterialTheme.typography.titleLarge)
+                    Text(
+                        if (sDietatom != null) "Poďme spolu" else "Poďme",
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                }
+
+                // Bielkoviny: jedno číslo, jedno ťuknutie. Žiadny jedálniček.
+                Spacer(Modifier.height(14.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = if (bielkoviny) {
+                        CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        )
+                    } else {
+                        CardDefaults.cardColors()
+                    },
+                ) {
+                    Row(
+                        Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Bielkoviny dnes", style = MaterialTheme.typography.titleLarge)
+                            Text(
+                                "cieľ ~${p.bielkovinyCielG} g (1,6–2,2 g na kilo)",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Checkbox(checked = bielkoviny, onCheckedChange = { model.prepniBielkoviny() })
+                    }
                 }
             }
         }
@@ -250,6 +351,42 @@ fun DomovObrazovka(
             PrvyMesiacKarta()
         }
         Spacer(Modifier.height(24.dp))
+    }
+
+    // Otázka na prekážku po výpadku. Nie „prečo si zlyhal", ale „čo prekážalo" -
+    // riešenie prekážky je podľa meta-regresie najúčinnejšia zložka udržania návyku.
+    dniPauzy?.let { dni ->
+        AlertDialog(
+            onDismissRequest = model::zavriPrekazku,
+            title = { Text("$dni dní pauza — čo prekážalo?") },
+            text = {
+                Column {
+                    Text(
+                        "Nie je to výčitka. Podľa odpovede upravím, čo ti nabudúce ponúknem.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    listOf(
+                        "cas" to "Nemal som čas",
+                        "bolest" to "Niečo ma bolelo",
+                        "nechcelo_sa" to "Nechcelo sa mi",
+                        "prec" to "Boli sme preč",
+                    ).forEach { (druh, popis) ->
+                        OutlinedButton(
+                            onClick = { model.zapisPrekazku(druh) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 3.dp),
+                        ) { Text(popis) }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = model::zavriPrekazku) { Text("Zavrieť") }
+            },
+        )
     }
 }
 

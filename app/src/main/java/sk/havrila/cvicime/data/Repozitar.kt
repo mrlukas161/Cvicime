@@ -277,6 +277,104 @@ class Repozitar(context: Context) {
 
     fun zvierataTok() = denik.vsetkyZvierataTok()
 
+    // ---------------------------------------------------------------- denný záznam a miery
+
+    suspend fun prepniBielkoviny(): Boolean {
+        val den = dnes()
+        val z = denik.dennyZaznam(den) ?: sk.havrila.cvicime.data.denik.DennyZaznamEntity(epochDen = den)
+        val novy = z.copy(bielkovinySplnene = !z.bielkovinySplnene)
+        denik.ulozDennyZaznam(novy)
+        return novy.bielkovinySplnene
+    }
+
+    suspend fun bielkovinyDnes(): Boolean = denik.dennyZaznam(dnes())?.bielkovinySplnene == true
+
+    suspend fun zapisPrekazku(druh: String) {
+        denik.vlozPrekazku(sk.havrila.cvicime.data.denik.PrekazkaEntity(epochDen = dnes(), druh = druh))
+    }
+
+    /** Koľko dní uplynulo od posledného dokončeného tréningu; null = ešte žiadny nebol. */
+    suspend fun dniOdTreningu(): Long? {
+        val posledny = denik.poslednyTrening() ?: return null
+        return dnes() - posledny.epochDen
+    }
+
+    // ---------------------------------------------------------------- kotva pripomienky
+
+    /** Kotva sa ukladá do profilu (zdroj pravdy) aj do SharedPreferences (číta ich BootReceiver). */
+    suspend fun ulozKotvu(context: android.content.Context, text: String, minuty: Int) {
+        ulozProfil(profil().copy(kotvaText = text, kotvaMinuty = minuty))
+        context.getSharedPreferences("cvicime", android.content.Context.MODE_PRIVATE)
+            .edit().putInt("kotva_minuty", minuty).apply()
+        sk.havrila.cvicime.pripomienky.Pripomienky.naplanujDennu(context, minuty)
+    }
+
+    // ---------------------------------------------------------------- export
+
+    /**
+     * Záloha denníka ako čitateľný JSON. Katalóg sa nezálohuje - je v APK.
+     * Vracia obsah; zápis do súboru rieši UI cez MediaStore.
+     */
+    suspend fun exportujJson(): String {
+        val koren = org.json.JSONObject()
+        koren.put("appka", "Cvičíme")
+        koren.put("exportovane_epoch_den", dnes())
+        koren.put("profil", org.json.JSONObject().apply {
+            val p = profil()
+            put("vaha_kg", p.vahaKg); put("vyska_cm", p.vyskaCm); put("naradie", p.naradie)
+            put("bielkoviny_ciel_g", p.bielkovinyCielG); put("zaciatok_epoch_den", p.zaciatokEpochDen)
+        })
+        koren.put("ciele", org.json.JSONArray().apply {
+            denik.aktivneCiele().forEach { c ->
+                put(org.json.JSONObject().apply { put("druh", c.druh); put("kluc", c.kluc); put("nazov", c.nazov) })
+            }
+        })
+        koren.put("urovne", org.json.JSONArray().apply {
+            denik.urovne().forEach { u ->
+                put(org.json.JSONObject().apply { put("rebrik", u.rebrikId); put("uroven", u.uroven) })
+            }
+        })
+        koren.put("treningy", org.json.JSONArray().apply {
+            denik.posledneTreningy(10_000).forEach { t ->
+                put(org.json.JSONObject().apply {
+                    put("id", t.id); put("epoch_den", t.epochDen); put("minuty_dna", t.minutyDna)
+                    put("rodinny", t.rodinny)
+                    put("serie", org.json.JSONArray().apply {
+                        denik.serieTreningu(t.id).forEach { s ->
+                            put(org.json.JSONObject().apply {
+                                put("cvik", s.cvikId); put("blok", s.blok); put("plan", s.planHodnota)
+                                put("skutocne", s.skutocnaHodnota ?: org.json.JSONObject.NULL)
+                                put("rir", s.rir ?: org.json.JSONObject.NULL); put("preskocena", s.preskocena)
+                            })
+                        }
+                    })
+                })
+            }
+        })
+        koren.put("testy", org.json.JSONArray().apply {
+            denik.vsetkyTesty().forEach { t ->
+                put(org.json.JSONObject().apply {
+                    put("epoch_den", t.epochDen); put("minuty_dna", t.minutyDna)
+                    put("rebrik", t.rebrikId); put("uroven", t.uroven); put("hodnota", t.hodnota)
+                })
+            }
+        })
+        koren.put("miery", org.json.JSONArray().apply {
+            denik.vsetkyMiery().forEach { m ->
+                put(org.json.JSONObject().apply { put("epoch_den", m.epochDen); put("typ", m.typ); put("hodnota", m.hodnota) })
+            }
+        })
+        koren.put("deti", org.json.JSONArray().apply {
+            denik.deti().forEach { d ->
+                put(org.json.JSONObject().apply {
+                    put("meno", d.meno); put("vek", d.vek)
+                    put("zvierata", org.json.JSONArray(denik.zvierataDietata(d.id).map { it.zvieraKluc }))
+                })
+            }
+        })
+        return koren.toString(2)
+    }
+
     // ---------------------------------------------------------------- pomocné
 
     fun dnes(): Long = LocalDate.now().toEpochDay()

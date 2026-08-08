@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
@@ -46,14 +47,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import sk.havrila.cvicime.ui.obrazovky.ClanokObrazovka
 import sk.havrila.cvicime.ui.obrazovky.DomovObrazovka
 import sk.havrila.cvicime.ui.obrazovky.HistoriaObrazovka
 import sk.havrila.cvicime.ui.obrazovky.KniznicaObrazovka
 import sk.havrila.cvicime.ui.obrazovky.NastaveniaObrazovka
 import sk.havrila.cvicime.ui.obrazovky.OnboardingObrazovka
 import sk.havrila.cvicime.ui.obrazovky.PrehravacObrazovka
+import sk.havrila.cvicime.ui.obrazovky.ProgresObrazovka
 import sk.havrila.cvicime.ui.obrazovky.RebrikObrazovka
+import sk.havrila.cvicime.ui.obrazovky.TeoriaObrazovka
 import sk.havrila.cvicime.ui.obrazovky.TestObrazovka
+import sk.havrila.cvicime.ui.obrazovky.ZbierkaObrazovka
 import sk.havrila.cvicime.ui.theme.CvicimeTheme
 
 class MainActivity : ComponentActivity() {
@@ -147,6 +152,7 @@ private data class Zalozka(val cesta: String, val popis: String, val ikona: Imag
 
 private val zalozky = listOf(
     Zalozka(Cesty.DOMOV, "Dnes", Icons.Default.Today),
+    Zalozka(Cesty.PROGRES, "Pokrok", Icons.AutoMirrored.Filled.TrendingUp),
     Zalozka(Cesty.KNIZNICA, "Cviky", Icons.Default.FitnessCenter),
     Zalozka(Cesty.HISTORIA, "História", Icons.Default.History),
     Zalozka(Cesty.NASTAVENIA, "Nastavenia", Icons.Default.Settings),
@@ -156,14 +162,19 @@ object Cesty {
     const val ONBOARDING = "onboarding"
     const val TEST = "test"
     const val DOMOV = "domov"
-    const val PREHRAVAC = "prehravac/{minuty}"
+    const val PROGRES = "progres"
+    const val PREHRAVAC = "prehravac/{minuty}/{dieta}"
     const val KNIZNICA = "kniznica"
     const val REBRIK = "kniznica/{rebrikId}"
     const val HISTORIA = "historia"
     const val NASTAVENIA = "nastavenia"
+    const val TEORIA = "teoria"
+    const val CLANOK = "teoria/{clanokId}"
+    const val ZBIERKA = "zbierka"
 
-    fun prehravac(minuty: Int) = "prehravac/$minuty"
+    fun prehravac(minuty: Int, dieta: Long) = "prehravac/$minuty/$dieta"
     fun rebrik(id: String) = "kniznica/$id"
+    fun clanok(id: String) = "teoria/$id"
 }
 
 @Composable
@@ -213,8 +224,11 @@ private fun Navigacia(navigacia: NavHostController) {
             DomovObrazovka(
                 naOnboarding = { navigacia.navigate(Cesty.ONBOARDING) },
                 naTest = { navigacia.navigate(Cesty.TEST) },
-                naPrehravac = { minuty -> navigacia.navigate(Cesty.prehravac(minuty)) },
+                naPrehravac = { minuty, dieta -> navigacia.navigate(Cesty.prehravac(minuty, dieta)) },
             )
+        }
+        composable(Cesty.PROGRES) {
+            ProgresObrazovka(naTest = { navigacia.navigate(Cesty.TEST) })
         }
         composable(Cesty.ONBOARDING) {
             OnboardingObrazovka(hotovo = { navigacia.popBackStack() })
@@ -224,7 +238,8 @@ private fun Navigacia(navigacia: NavHostController) {
         }
         composable(Cesty.PREHRAVAC) { zaznam ->
             val minuty = zaznam.arguments?.getString("minuty")?.toIntOrNull() ?: 30
-            PrehravacObrazovka(minuty = minuty, hotovo = { navigacia.popBackStack() })
+            val dieta = zaznam.arguments?.getString("dieta")?.toLongOrNull() ?: -1L
+            PrehravacObrazovka(minuty = minuty, dietaId = dieta, hotovo = { navigacia.popBackStack() })
         }
         composable(Cesty.KNIZNICA) {
             KniznicaObrazovka(naRebrik = { id -> navigacia.navigate(Cesty.rebrik(id)) })
@@ -235,7 +250,19 @@ private fun Navigacia(navigacia: NavHostController) {
         }
         composable(Cesty.HISTORIA) { HistoriaObrazovka() }
         composable(Cesty.NASTAVENIA) {
-            NastaveniaObrazovka(naOnboarding = { navigacia.navigate(Cesty.ONBOARDING) })
+            NastaveniaObrazovka(
+                naOnboarding = { navigacia.navigate(Cesty.ONBOARDING) },
+                naTeoria = { navigacia.navigate(Cesty.TEORIA) },
+                naZbierka = { navigacia.navigate(Cesty.ZBIERKA) },
+            )
         }
+        composable(Cesty.TEORIA) {
+            TeoriaObrazovka(naClanok = { id -> navigacia.navigate(Cesty.clanok(id)) })
+        }
+        composable(Cesty.CLANOK) { zaznam ->
+            val id = zaznam.arguments?.getString("clanokId").orEmpty()
+            ClanokObrazovka(clanokId = id, spat = { navigacia.popBackStack() })
+        }
+        composable(Cesty.ZBIERKA) { ZbierkaObrazovka() }
     }
 }

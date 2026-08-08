@@ -7,6 +7,8 @@ import androidx.room.Query
 import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
+data class MaxUroven(val rebrikId: String, val maxUroven: Int)
+
 @Dao
 interface KatalogDao {
 
@@ -59,6 +61,9 @@ interface KatalogDao {
 
     @Query("SELECT MAX(uroven) FROM cvik WHERE rebrik_id = :rebrikId")
     suspend fun maxUroven(rebrikId: String): Int?
+
+    @Query("SELECT rebrik_id AS rebrikId, MAX(uroven) AS maxUroven FROM cvik WHERE je_detsky = 0 GROUP BY rebrik_id")
+    suspend fun maxUrovne(): List<MaxUroven>
 
     @Query("SELECT * FROM cvik WHERE je_detsky = 1 ORDER BY rebrik_id, uroven")
     suspend fun detskeCviky(): List<CvikEntity>
