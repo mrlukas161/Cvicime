@@ -1,26 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Ikona notifikacie: ta ista stojka ako ikona appky, jednofarebna biela (system ju farbi sam).
+    Medzery okolo hlavy su vacsie nez v ikone appky, aby boli citatelne v 24 dp.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24"
     android:tint="#FFFFFFFF">
+    <!-- lava noha -->
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M4,5 h16 v2 h-16 z" />
+        android:pathData="M11.97,10.6 L8.14,1.98 A1.65,1.65 0 0 0 5.13,3.32 L8.96,11.94 A1.65,1.65 0 0 0 11.97,10.6 Z" />
+    <!-- prava noha -->
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M8,7 h1.6 v3.4 h-1.6 z" />
+        android:pathData="M15.04,11.94 L18.87,3.32 A1.65,1.65 0 0 0 15.86,1.98 L12.03,10.6 A1.65,1.65 0 0 0 15.04,11.94 Z" />
+    <!-- trup a ramena -->
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M14.4,7 h1.6 v3.4 h-1.6 z" />
+        android:pathData="M8.36,9.36 L15.64,9.36 L17.6,15.1 L17.6,21.62 A1.38,1.38 0 0 1 14.84,21.62 L14.84,18.32 A2.84,2.84 0 0 0 9.16,18.32 L9.16,21.62 A1.38,1.38 0 0 1 6.4,21.62 L6.4,15.1 Z" />
+    <!-- hlava -->
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M12,10.4 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 z" />
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M10.5,12.8 h3 v4.6 h-3 z" />
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M13,15 h6 v2.2 h-6 z" />
+        android:pathData="M10.35,18.32 A1.65,1.65 0 1 0 13.65,18.32 A1.65,1.65 0 1 0 10.35,18.32 Z" />
 </vector>
