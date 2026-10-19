@@ -414,13 +414,16 @@ class PrehravacModel(app: Application) : AndroidViewModel(app) {
             cakajuceZapisy.joinAll()
             // Len čítanie: stupne PRED vyhodnotením, aby súhrn vedel povedať smer (vyššie / nižšie).
             val urovnePred = repo.denik.urovne().associate { it.rebrikId to it.uroven }
-            repo.ukonciTrening(id, pocitPo = null)
+            // Postupy sa vyhodnotia JEDINÝ raz, v ukonciTrening (druhé volanie posúvalo o ďalší stupeň).
+            val vsetkyPostupy = repo.ukonciTrening(id, pocitPo = null)
             if (d != null) {
                 repo.denik.ulozUcast(
                     UcastEntity(treningId = id, dietaId = d.dietaId, splneneKroky = d.labky)
                 )
             }
-            val postupy = repo.vyhodnotPostupy(id).mapNotNull { (rebrikId, uroven) ->
+            val postupy = vsetkyPostupy.filter { it.ucastnikId == 0L }.mapNotNull { p ->
+                val rebrikId = p.rebrikId
+                val uroven = p.uroven
                 val r = repo.katalog.rebrik(rebrikId) ?: return@mapNotNull null
                 val cvik = repo.katalog.cvik(rebrikId, uroven)
                 val vyssie = uroven > (urovnePred[rebrikId] ?: 1)
