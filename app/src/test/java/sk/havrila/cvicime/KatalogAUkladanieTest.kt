@@ -301,4 +301,29 @@ class KatalogAUkladanieTest {
         val vysledok = KatalogLoader.nacitajAkTreba(app)
         assertFalse("loader nemá hádzať výnimku", vysledok == Int.MIN_VALUE)
     }
+
+    // ---------------------------------------------------------------- ďalší cvičiaci (0.7)
+
+    /**
+     * Režim "šetriť panvové dno": v pláne nesmie byť nič so značkou skok/tlak_brucho
+     * a musí v ňom byť nácvik panvového dna (cieľ sa pridá automaticky s obmedzením).
+     */
+    @Test
+    fun `cvicaci so setrenim panvoveho dna dostane bezpecny plan s panvovym dnom`() = runTest {
+        val id = repo.ulozUcastnika(
+            sk.havrila.cvicime.data.denik.UcastnikEntity(
+                meno = "Test", farba = 0, obmedzenia = "panvove_dno,rameno",
+            )
+        )
+        assertTrue(repo.denik.aktivneCiele(id).any { it.kluc == "panvove-dno" })
+        for (minuty in listOf(15, 30, 45)) {
+            val cviky = repo.zostavPlan(minuty, ucastnikId = id).bloky.flatMap { it.polozky }.map { it.cvik }
+            val zakazane = setOf("skok", "tlak_brucho", "vis", "nad_hlavu", "rameno_zataz")
+            val zle = cviky.filter { c -> c.znacky.split(",").any { it.trim() in zakazane } }
+            assertTrue("pri $minuty min prešli zakázané cviky: ${zle.map { it.id }}", zle.isEmpty())
+            assertTrue("pri $minuty min chýba panvové dno", cviky.any { it.rebrikId == "panvove-dno" })
+        }
+        // Hlavný používateľ ostáva bez obmedzení a bez panvového dna v cieľoch.
+        assertFalse(repo.denik.aktivneCiele().any { it.kluc == "panvove-dno" })
+    }
 }

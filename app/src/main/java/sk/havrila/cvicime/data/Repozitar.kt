@@ -97,8 +97,27 @@ class Repozitar(context: Context) {
 
     suspend fun ucastnik(id: Long) = denik.ucastnik(id)
 
-    suspend fun ulozUcastnika(ucastnik: UcastnikEntity): Long =
-        denik.ulozUcastnika(if (ucastnik.zaciatokEpochDen == 0L) ucastnik.copy(zaciatokEpochDen = dnes()) else ucastnik)
+    /**
+     * Uloží cvičiaceho. Pri obmedzení "šetriť panvové dno" mu zároveň zapne cieľ
+     * rebríka Panvové dno - bez neho by režim len zakazoval a nič nepridával.
+     */
+    suspend fun ulozUcastnika(ucastnik: UcastnikEntity): Long {
+        val id = denik.ulozUcastnika(
+            if (ucastnik.zaciatokEpochDen == 0L) ucastnik.copy(zaciatokEpochDen = dnes()) else ucastnik
+        )
+        val ulozenyId = if (ucastnik.id != 0L) ucastnik.id else id
+        if (Obmedzenie.PANVOVE_DNO in Obmedzenie.zCsv(ucastnik.obmedzenia) &&
+            denik.aktivneCiele(ulozenyId).none { it.kluc == REBRIK_PANVOVE_DNO }
+        ) {
+            denik.ulozCiel(
+                CielEntity(
+                    ucastnikId = ulozenyId, druh = DruhCiela.ZRUCNOST.kluc,
+                    kluc = REBRIK_PANVOVE_DNO, nazov = "Panvové dno", priorita = 1,
+                )
+            )
+        }
+        return ulozenyId
+    }
 
     fun cieleTok(ucastnikId: Long) = denik.aktivneCieleTok(ucastnikId)
 
@@ -518,6 +537,9 @@ data class Rekord(
 )
 
 private val BLOKY_S_REKORDOM = setOf("sila", "skill", "kondicia")
+
+/** Rebrík nácviku panvového dna (katalóg v3, obsah z rešerše 19.10.2026). */
+const val REBRIK_PANVOVE_DNO = "panvove-dno"
 
 /** Zmena stupňa v rebríku po tréningu. */
 data class Postup(val ucastnikId: Long, val rebrikId: String, val uroven: Int)

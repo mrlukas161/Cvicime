@@ -146,7 +146,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "skok"
+     ]
     }
    ]
   },
@@ -238,7 +240,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "tlak_brucho"
+     ]
     },
     {
      "id": "lsit-4",
@@ -266,7 +270,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "tlak_brucho"
+     ]
     },
     {
      "id": "lsit-5",
@@ -293,7 +299,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "tlak_brucho"
+     ]
     },
     {
      "id": "lsit-6",
@@ -321,7 +329,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "tlak_brucho"
+     ]
     },
     {
      "id": "lsit-7",
@@ -349,7 +359,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "tlak_brucho"
+     ]
     },
     {
      "id": "lsit-8",
@@ -376,7 +388,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "tlak_brucho"
+     ]
     },
     {
      "id": "lsit-9",
@@ -403,7 +417,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "tlak_brucho"
+     ]
     }
    ]
   },
@@ -803,6 +819,8 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "rameno_zataz",
+      "tlak_brucho",
       "vis"
      ]
     },
@@ -834,6 +852,8 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "rameno_zataz",
+      "tlak_brucho",
       "vis"
      ]
     },
@@ -864,6 +884,8 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "rameno_zataz",
+      "tlak_brucho",
       "vis"
      ]
     },
@@ -894,6 +916,8 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "rameno_zataz",
+      "tlak_brucho",
       "vis"
      ]
     },
@@ -924,6 +948,8 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "rameno_zataz",
+      "tlak_brucho",
       "vis"
      ]
     },
@@ -954,6 +980,8 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "rameno_zataz",
+      "tlak_brucho",
       "vis"
      ]
     },
@@ -984,6 +1012,8 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "rameno_zataz",
+      "tlak_brucho",
       "vis"
      ]
     },
@@ -1013,6 +1043,8 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "rameno_zataz",
+      "tlak_brucho",
       "vis"
      ]
     },
@@ -1043,6 +1075,8 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "rameno_zataz",
+      "tlak_brucho",
       "vis"
      ]
     },
@@ -1073,6 +1107,8 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "rameno_zataz",
+      "tlak_brucho",
       "vis"
      ]
     },
@@ -1103,6 +1139,8 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "rameno_zataz",
+      "tlak_brucho",
       "vis"
      ]
     },
@@ -1133,8 +1171,266 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "rameno_zataz",
+      "tlak_brucho",
       "vis"
      ]
+    }
+   ]
+  },
+  {
+   "id": "panvove-dno",
+   "nazov": "Panvové dno",
+   "popis": "Cielené sťahovanie svalov dna panvy. Stupne 1–5 cvič denne 3× (nielen v tréningový deň), vyššie stupne prenášaj do pohybu. Ďalej postupuj, len keď necítiš tlak, ťah ani únik.",
+   "skupina": "zrucnost",
+   "jeZrucnost": true,
+   "poradie": 45,
+   "cviky": [
+    {
+     "id": "panvove-dno-1",
+     "uroven": 1,
+     "nazov": "Nájdi panvové dno v ľahu",
+     "meranie": "opakovania",
+     "cielMin": 5,
+     "cielMax": 10,
+     "naradie": [
+      "podlozka"
+     ],
+     "partie": {},
+     "cue": [
+      "Ľahni si s pokrčenými kolenami. Ako keby si zadržiavala vetry aj moč: stiahni a vytiahni dovnútra a nahor.",
+      "Dýchaj ďalej, zadok, stehná a brucho nechaj voľné.",
+      "Po každom stiahnutí úplne povoľ."
+     ],
+     "chyby": [
+      "Tlačenie nadol ako na stolici.",
+      "Zadržaný dych."
+     ],
+     "jeDetsky": false,
+     "zviera": null,
+     "znacky": []
+    },
+    {
+     "id": "panvove-dno-2",
+     "uroven": 2,
+     "nazov": "Pomalé stiahnutia v ľahu",
+     "meranie": "opakovania",
+     "cielMin": 8,
+     "cielMax": 10,
+     "naradie": [
+      "podlozka"
+     ],
+     "partie": {},
+     "cue": [
+      "Stiahni čo najsilnejšie a drž až 10 sekúnd, potom 4–5 sekúnd oddychuj.",
+      "Počítaj nahlas, aby si dýchala.",
+      "Výdrž predlžuj postupne od 3 sekúnd."
+     ],
+     "chyby": [
+      "Povolenie počas výdrže.",
+      "Zatínanie zadku."
+     ],
+     "jeDetsky": false,
+     "zviera": null,
+     "znacky": []
+    },
+    {
+     "id": "panvove-dno-3",
+     "uroven": 3,
+     "nazov": "Rýchle stiahnutia",
+     "meranie": "opakovania",
+     "cielMin": 10,
+     "cielMax": 20,
+     "naradie": [
+      "podlozka"
+     ],
+     "partie": {},
+     "cue": [
+      "Rýchlo stiahni a hneď pusti.",
+      "Medzi stiahnutiami úplne povoľ.",
+      "Rytmus asi jedno stiahnutie za sekundu, dýchaj voľne."
+     ],
+     "chyby": [
+      "Neúplné povolenie.",
+      "Brucho sa zapája do pohybu."
+     ],
+     "jeDetsky": false,
+     "zviera": null,
+     "znacky": []
+    },
+    {
+     "id": "panvove-dno-4",
+     "uroven": 4,
+     "nazov": "Pomalé stiahnutia v sede",
+     "meranie": "opakovania",
+     "cielMin": 8,
+     "cielMax": 12,
+     "naradie": [
+      "stolicka"
+     ],
+     "partie": {},
+     "cue": [
+      "Seď vzpriamene, kolená mierne od seba.",
+      "Cíť, ako sa hrádza dvíha od stoličky. Každé stiahnutie drž 10 sekúnd.",
+      "Na záver pridaj 10 rýchlych stiahnutí."
+     ],
+     "chyby": [
+      "Zhrbenie.",
+      "Zadržaný dych."
+     ],
+     "jeDetsky": false,
+     "zviera": null,
+     "znacky": []
+    },
+    {
+     "id": "panvove-dno-5",
+     "uroven": 5,
+     "nazov": "Pomalé stiahnutia v stoji",
+     "meranie": "opakovania",
+     "cielMin": 8,
+     "cielMax": 12,
+     "naradie": [
+      "ziadne"
+     ],
+     "partie": {},
+     "cue": [
+      "Stoj na šírku bokov, váha rovnomerne na chodidlách.",
+      "Vytiahni nahor, drž 10 sekúnd a dýchaj.",
+      "Na záver pridaj 10 rýchlych stiahnutí."
+     ],
+     "chyby": [
+      "Prehnutý driek.",
+      "Výdrž sa nenápadne skracuje."
+     ],
+     "jeDetsky": false,
+     "zviera": null,
+     "znacky": []
+    },
+    {
+     "id": "panvove-dno-6",
+     "uroven": 6,
+     "nazov": "Stiahnutie pred kašľom (Knack)",
+     "meranie": "opakovania",
+     "cielMin": 5,
+     "cielMax": 10,
+     "naradie": [
+      "ziadne"
+     ],
+     "partie": {},
+     "cue": [
+      "Stiahni asi sekundu pred zakašľaním a drž počas kašľa.",
+      "Potom povoľ.",
+      "Rovnako to rob pri kýchnutí a pred zdvihnutím niečoho."
+     ],
+     "chyby": [
+      "Stiahnutie až po kašli."
+     ],
+     "jeDetsky": false,
+     "zviera": null,
+     "znacky": []
+    },
+    {
+     "id": "panvove-dno-7",
+     "uroven": 7,
+     "nazov": "Sed – stoj so stiahnutím a výdychom",
+     "meranie": "opakovania",
+     "cielMin": 8,
+     "cielMax": 12,
+     "naradie": [
+      "stolicka"
+     ],
+     "partie": {
+      "stehna": 0.5,
+      "zadok": 0.5
+     },
+     "cue": [
+      "Stiahni, potom vstávaj s výdychom, akoby si fúkala do sviečky.",
+      "Nohy na šírku bokov, ruky prekrížené na hrudi.",
+      "Sadaj kontrolovane."
+     ],
+     "chyby": [
+      "Zadržanie dychu pri vstávaní."
+     ],
+     "jeDetsky": false,
+     "zviera": null,
+     "znacky": []
+    },
+    {
+     "id": "panvove-dno-8",
+     "uroven": 8,
+     "nazov": "Drep k stoličke so stiahnutím",
+     "meranie": "opakovania",
+     "cielMin": 8,
+     "cielMax": 12,
+     "naradie": [
+      "stolicka"
+     ],
+     "partie": {
+      "stehna": 0.5,
+      "zadok": 0.5
+     },
+     "cue": [
+      "Dole s nádychom a povoleným dnom, hore stiahni a vydýchni.",
+      "Zadok smeruje k stoličke, chrbát drž rovný.",
+      "Choď len tak hlboko, kým necítiš tlak."
+     ],
+     "chyby": [
+      "Hĺbka za cenu pocitu tlaku."
+     ],
+     "jeDetsky": false,
+     "zviera": null,
+     "znacky": []
+    },
+    {
+     "id": "panvove-dno-9",
+     "uroven": 9,
+     "nazov": "Dvíhanie z podlahy (taška, potom dieťa)",
+     "meranie": "opakovania",
+     "cielMin": 5,
+     "cielMax": 8,
+     "naradie": [
+      "ziadne"
+     ],
+     "partie": {
+      "stehna": 0.5,
+      "zadok": 0.5
+     },
+     "cue": [
+      "Podíď blízko a dvíhaj z drepu alebo výpadu.",
+      "Najprv stiahni, potom dvíhaj s výdychom.",
+      "Ťažké bremeno rozdeľ alebo noste vo dvojici."
+     ],
+     "chyby": [
+      "Dvíhanie v predklone so zadržaným dychom.",
+      "Príliš ťažké bremeno."
+     ],
+     "jeDetsky": false,
+     "zviera": null,
+     "znacky": []
+    },
+    {
+     "id": "panvove-dno-10",
+     "uroven": 10,
+     "nazov": "Chôdza s jemným stiahnutím",
+     "meranie": "vydrz",
+     "cielMin": 20,
+     "cielMax": 60,
+     "naradie": [
+      "ziadne"
+     ],
+     "partie": {},
+     "cue": [
+      "Počas chôdze drž jemné stiahnutie, asi tretinu až polovicu sily.",
+      "Dýchaj normálne.",
+      "Pri únave povoľ a zopakuj."
+     ],
+     "chyby": [
+      "Plná sila počas celej chôdze.",
+      "Zadržaný dych."
+     ],
+     "jeDetsky": false,
+     "zviera": null,
+     "znacky": []
     }
    ]
   },
@@ -1391,7 +1687,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "tlak_brucho"
+     ]
     },
     {
      "id": "kliky-10",
@@ -1419,7 +1717,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "tlak_brucho"
+     ]
     },
     {
      "id": "kliky-11",
@@ -1446,7 +1746,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "tlak_brucho"
+     ]
     },
     {
      "id": "kliky-12",
@@ -1474,7 +1776,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "tlak_brucho"
+     ]
     }
    ]
   },
@@ -1702,7 +2006,8 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
-      "nad_hlavu"
+      "nad_hlavu",
+      "tlak_brucho"
      ]
     },
     {
@@ -1731,7 +2036,8 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
-      "nad_hlavu"
+      "nad_hlavu",
+      "tlak_brucho"
      ]
     },
     {
@@ -1760,7 +2066,8 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
-      "nad_hlavu"
+      "nad_hlavu",
+      "tlak_brucho"
      ]
     },
     {
@@ -1790,7 +2097,8 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
-      "nad_hlavu"
+      "nad_hlavu",
+      "tlak_brucho"
      ]
     },
     {
@@ -1820,7 +2128,8 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
-      "nad_hlavu"
+      "nad_hlavu",
+      "tlak_brucho"
      ]
     },
     {
@@ -1849,7 +2158,8 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
-      "nad_hlavu"
+      "nad_hlavu",
+      "tlak_brucho"
      ]
     },
     {
@@ -1879,7 +2189,8 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
-      "nad_hlavu"
+      "nad_hlavu",
+      "tlak_brucho"
      ]
     }
    ]
@@ -2312,6 +2623,7 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "tlak_brucho",
       "vis"
      ]
     },
@@ -2342,6 +2654,7 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "tlak_brucho",
       "vis"
      ]
     },
@@ -2372,6 +2685,7 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "tlak_brucho",
       "vis"
      ]
     },
@@ -2401,6 +2715,7 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "tlak_brucho",
       "vis"
      ]
     },
@@ -2430,6 +2745,7 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "tlak_brucho",
       "vis"
      ]
     },
@@ -2461,6 +2777,7 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "tlak_brucho",
       "vis"
      ]
     },
@@ -2490,6 +2807,7 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "tlak_brucho",
       "vis"
      ]
     }
@@ -3431,7 +3749,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "tlak_brucho"
+     ]
     },
     {
      "id": "drep-10",
@@ -3457,7 +3777,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "tlak_brucho"
+     ]
     },
     {
      "id": "drep-11",
@@ -3484,7 +3806,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "tlak_brucho"
+     ]
     }
    ]
   },
@@ -4582,7 +4906,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "nad_hlavu"
+     ]
     },
     {
      "id": "hollow-6",
@@ -4607,7 +4933,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "tlak_brucho"
+     ]
     }
    ]
   },
@@ -4644,6 +4972,7 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "tlak_brucho",
       "vis"
      ]
     },
@@ -4672,6 +5001,7 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "tlak_brucho",
       "vis"
      ]
     },
@@ -4700,6 +5030,7 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "tlak_brucho",
       "vis"
      ]
     },
@@ -4728,6 +5059,7 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "tlak_brucho",
       "vis"
      ]
     },
@@ -4756,6 +5088,7 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "tlak_brucho",
       "vis"
      ]
     },
@@ -4784,6 +5117,7 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
+      "tlak_brucho",
       "vis"
      ]
     }
@@ -4911,7 +5245,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "vis"
+     ]
     }
    ]
   },
