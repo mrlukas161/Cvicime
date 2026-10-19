@@ -43,6 +43,11 @@ enum class Naradie(val kluc: String, val nazov: String) {
      * a prechodové drilly áno - takto sa dá cieľ trénovať doma a vrchné stupne na ihrisku.
      */
     PEVNA_HRAZDA("pevna_hrazda", "Pevná hrazda (vonku)"),
+    /** Bradlá samostatné alebo ako súčasť veže (hrazda + bradlá). Odomkne dipy a podpory. */
+    BRADLA("bradla", "Bradlá / veža"),
+    /** Nízke paralety - L-sit, kliky do stojky s väčším rozsahom, podpory. */
+    PARALETY("paralety", "Paralety"),
+    KRUHY("kruhy", "Gymnastické kruhy"),
     JEDNORUCKY("jednorucky", "Jednoručky"),
     PODLOZKA("podlozka", "Podložka"),
     STOLICKA("stolicka", "Stolička"),
@@ -123,7 +128,7 @@ enum class Obmedzenie(val kluc: String, val nazov: String, val popis: String, va
         setOf("skok", "tlak_brucho"),
     ),
     BEZ_SKOKOV("bez_skokov", "Bez skokov", "Žiadne doskoky ani poskoky.", setOf("skok")),
-    RAMENO("rameno", "Šetriť rameno", "Bez visov a záťaže nad hlavou.", setOf("vis", "nad_hlavu"));
+    RAMENO("rameno", "Šetriť rameno", "Bez visov, záťaže nad hlavou a hlbokých vzporov.", setOf("vis", "nad_hlavu", "rameno_zataz"));
 
     companion object {
         fun z(kluc: String): Obmedzenie? = entries.firstOrNull { it.kluc == kluc }
