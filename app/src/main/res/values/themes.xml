@@ -1,8 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <style name="Theme.Cvicime" parent="android:Theme.Material.NoActionBar">
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!--
+        Zakladna tema okna. Svetly rezim; tmavy variant (iny parent, farba okna, svetle ikony listy)
+        je vo values-night. Farby obsahu riesi Compose (ui/theme/Theme.kt) - tu ide len o okno
+        pred prvym snimkom a o systemove prvky (plavajuci panel pri oznaceni textu).
+    -->
+    <style name="Base.Theme.Cvicime" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowBackground">@color/pozadie</item>
+        <item name="android:windowBackground">@color/pozadie_okna</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">true</item>
     </style>
+
+    <!-- Android 12+ ma vlastny variant s nastavenim splash obrazovky (values-v31). -->
+    <style name="Theme.Cvicime" parent="Base.Theme.Cvicime" />
 </resources>

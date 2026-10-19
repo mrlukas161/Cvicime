@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Splash obrazovka Androidu 12+ (systemove API, bez kniznice core-splashscreen):
+        uhlove pozadie a stojka z popredia ikony. Popredie ma figuru v bezpecnej zone,
+        takze ju kruhovy vyrez splash obrazovky neoreze.
+        Svetly/tmavy variant okna sa dedi z Base.Theme.Cvicime (values / values-night).
+        Ikony stavovej listy su pocas splashu svetle (pozadie je vzdy tmave); po starte ich
+        nastavi enableEdgeToEdge() podla rezimu.
+    -->
+    <style name="Theme.Cvicime" parent="Base.Theme.Cvicime">
+        <item name="android:windowSplashScreenBackground">@color/pozadie</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+</resources>

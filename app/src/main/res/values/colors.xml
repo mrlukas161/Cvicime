@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Uhlie: znacka appky - pozadie ikony aj splash obrazovky (v oboch rezimoch rovnake). -->
     <color name="pozadie">#FF12100E</color>
-    <color name="ikona_pozadie">#FF1B4D45</color>
+    <color name="ikona_pozadie">#FF12100E</color>
+    <!--
+        Pozadie okna pri starte = pozadie Compose temy, aby medzi startom a prvym snimkom
+        nebol zablesk inej farby. Svetly rezim Papier, tmavy rezim uhlie (values-night).
+    -->
+    <color name="pozadie_okna">#FFFAF7F2</color>
 </resources>

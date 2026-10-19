@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tmavy rezim: pozadie okna = background tmavej Compose temy (Uhol). -->
+    <color name="pozadie_okna">#FF12100E</color>
+</resources>
