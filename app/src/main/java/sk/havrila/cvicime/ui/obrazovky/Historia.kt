@@ -81,19 +81,26 @@ data class RiadokSerie(
     val skutocna: Int?,
     val rir: Int?,
     val preskocena: Boolean,
-    /** séria je osobný rekord (najlepšia séria dňa nad doterajším maximom cviku) */
+    /** séria je osobný rekord svojho cvičiaceho (najlepšia séria dňa nad doterajším maximom cviku) */
     val rekord: Boolean,
+    /** kto sériu odcvičil: 0 = hlavný používateľ, inak id ďalšieho dospelého */
+    val ucastnikId: Long = 0,
 )
+
+/** Cvičiaci, ktorý má v tréningu série - pre hlavičky v detaile. */
+data class HistoriaCviciaci(val id: Long, val meno: String, val farba: Int?)
 
 /** Tréning v Histórii so súhrnom a detailom sérií. */
 data class HistoriaTrening(
     val trening: TreningEntity,
-    /** odcvičené (nepreskočené) série */
+    /** odcvičené (nepreskočené) série všetkých cvičiacich */
     val pocetSerii: Int,
     /** odcvičené série podľa blokov v poradí blokov - farebný pásik pomeru */
     val serieBlokov: List<Pair<Blok, Int>>,
     val serie: List<RiadokSerie>,
     val pocetRekordov: Int,
+    /** cvičiaci so sériami v tomto tréningu (hlavný používateľ prvý) */
+    val cviciaci: List<HistoriaCviciaci> = emptyList(),
 ) {
     val trvanieMs: Long get() = trening.koniec?.let { (it - trening.zaciatok).coerceAtLeast(0L) } ?: 0L
 }
@@ -118,14 +125,25 @@ class HistoriaModel(app: Application) : AndroidViewModel(app) {
 
     private suspend fun zostavTyzdne(treningy: List<TreningEntity>): List<HistoriaTyzden> {
         if (treningy.isEmpty()) return emptyList()
-        // Rekordy rovnakým výpočtom ako na Pokroku: najlepšia séria dňa nad doterajším maximom cviku.
-        val rekordyPodlaDna = repo.posledneRekordy(Int.MAX_VALUE).groupBy { it.epochDen }
+        val serieTreningov = treningy.associate { it.id to repo.denik.serieTreningu(it.id) }
+        // Ďalší dospelí (0.7): mená a farby pre hlavičky v detaile; neaktívny ostane bez mena.
+        val ucastnici = repo.ucastnici().associateBy { it.id }
+        val ktoCvicil = serieTreningov.values.flatten().map { it.ucastnikId }.toSet() + 0L
+        // Rekordy rovnakým výpočtom ako na Pokroku (najlepšia séria dňa nad doterajším maximom cviku),
+        // každý cvičiaci voči vlastnej histórii.
+        val rekordyPodlaDna = ktoCvicil.associateWith { id ->
+            repo.posledneRekordy(Int.MAX_VALUE, id).groupBy { it.epochDen }
+        }
         val karty = treningy.map { t ->
-            val serie = repo.denik.serieTreningu(t.id)
+            val serie = serieTreningov[t.id].orEmpty()
             val rekordneSerie = mutableSetOf<Long>()
-            rekordyPodlaDna[t.epochDen].orEmpty().forEach { r ->
-                serie.firstOrNull { !it.preskocena && it.cvikId == r.cvikId && it.skutocnaHodnota == r.hodnota }
-                    ?.let { rekordneSerie += it.id }
+            for ((ucastnikId, podlaDna) in rekordyPodlaDna) {
+                podlaDna[t.epochDen].orEmpty().forEach { r ->
+                    serie.firstOrNull {
+                        !it.preskocena && it.ucastnikId == ucastnikId && it.cvikId == r.cvikId &&
+                            it.skutocnaHodnota == r.hodnota
+                    }?.let { rekordneSerie += it.id }
+                }
             }
             val riadky = serie.map { s ->
                 RiadokSerie(
@@ -138,6 +156,7 @@ class HistoriaModel(app: Application) : AndroidViewModel(app) {
                     rir = s.rir,
                     preskocena = s.preskocena,
                     rekord = s.id in rekordneSerie,
+                    ucastnikId = s.ucastnikId,
                 )
             }
             val odcvicene = riadky.filter { !it.preskocena && it.skutocna != null }
@@ -147,6 +166,18 @@ class HistoriaModel(app: Application) : AndroidViewModel(app) {
                 serieBlokov = odcvicene.groupingBy { it.blok }.eachCount().toList().sortedBy { it.first.poradie },
                 serie = riadky,
                 pocetRekordov = rekordneSerie.size,
+                cviciaci = riadky.map { it.ucastnikId }.distinct().sorted().map { id ->
+                    val u = ucastnici[id]
+                    HistoriaCviciaci(
+                        id = id,
+                        meno = when {
+                            id == 0L -> "Ty"
+                            u != null -> u.meno
+                            else -> "Ďalší cvičiaci"
+                        },
+                        farba = u?.farba,
+                    )
+                },
             )
         }
         return karty
@@ -282,6 +313,8 @@ private fun KartaTreningu(
                             if (k.trvanieMs >= 60_000L) append(" · ${formatujTrvanie(k.trvanieMs)}")
                             append(" · ${k.pocetSerii} ${sklonuj(k.pocetSerii, "séria", "série", "sérií")}")
                             if (t.rodinny) append(" · s deťmi")
+                            val dalsi = k.cviciaci.filter { it.id != 0L }
+                            if (dalsi.isNotEmpty()) append(" · aj ${dalsi.joinToString(", ") { it.meno }}")
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -305,7 +338,20 @@ private fun KartaTreningu(
             }
             if (rozbaleny) {
                 Spacer(Modifier.height(16.dp))
-                DetailTreningu(k.serie)
+                if (k.cviciaci.size > 1) {
+                    // Viac dospelých na jednom tréningu: každý má vlastný blok sérií.
+                    Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                        k.cviciaci.forEach { c ->
+                            Column {
+                                HlavickaCviciaceho(c)
+                                Spacer(Modifier.height(10.dp))
+                                DetailTreningu(k.serie.filter { it.ucastnikId == c.id })
+                            }
+                        }
+                    }
+                } else {
+                    DetailTreningu(k.serie)
+                }
             }
         }
     }
@@ -331,6 +377,25 @@ private fun PasBlokov(podiely: List<Pair<Blok, Int>>) {
 }
 
 // ------------------------------------------------------------------ detail
+
+@Composable
+private fun HlavickaCviciaceho(c: HistoriaCviciaci) {
+    val farba = c.farba?.let { Color(it) } ?: MaterialTheme.colorScheme.primary
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            Modifier.size(26.dp).clip(CircleShape).background(farba.copy(alpha = 0.2f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                c.meno.take(1).uppercase(),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+        Spacer(Modifier.width(10.dp))
+        Text(c.meno, style = MaterialTheme.typography.titleMedium.copy(fontFamily = Grotesk))
+    }
+}
 
 @Composable
 private fun DetailTreningu(serie: List<RiadokSerie>) {
