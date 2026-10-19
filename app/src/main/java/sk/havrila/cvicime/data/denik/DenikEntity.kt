@@ -93,6 +93,11 @@ data class SeriaEntity(
     val preskocena: Boolean = false,
     /** kto sériu odcvičil: 0 = hlavný používateľ, inak [UcastnikEntity.id] */
     @ColumnInfo(name = "ucastnik_id", defaultValue = "0") val ucastnikId: Long = 0,
+    /**
+     * Varovný príznak tela počas série (režim Panvové dno: tlak, ťah alebo únik).
+     * Séria s príznakom zablokuje postup v rebríku - viď [sk.havrila.cvicime.domain.Pravidla.maPostupitVyssie].
+     */
+    @ColumnInfo(defaultValue = "0") val priznak: Boolean = false,
 )
 
 /**

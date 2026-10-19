@@ -85,13 +85,15 @@ class Repozitar(context: Context) {
         }
     }
 
-    private suspend fun urovne(ucastnikId: Long): Map<String, Int> =
+    suspend fun urovne(ucastnikId: Long): Map<String, Int> =
         if (ucastnikId == 0L) denik.urovne().associate { it.rebrikId to it.uroven }
         else denik.urovneUcastnika(ucastnikId).associate { it.rebrikId to it.uroven }
 
     // ---------------------------------------------------------------- ďalší dospelí cvičiaci (0.7)
 
     fun ucastniciTok() = denik.ucastniciTok()
+
+    fun vsetciUcastniciTok() = denik.vsetciUcastniciTok()
 
     suspend fun ucastnici() = denik.ucastnici()
 
@@ -223,7 +225,8 @@ class Repozitar(context: Context) {
         rir: Int?,
         preskocena: Boolean = false,
         ucastnikId: Long = 0,
-    ) {
+        priznak: Boolean = false,
+    ): Long {
         val den = dnes()
         val seriaId = denik.vlozSeriu(
             SeriaEntity(
@@ -241,13 +244,18 @@ class Repozitar(context: Context) {
                 rir = rir,
                 preskocena = preskocena,
                 ucastnikId = ucastnikId,
+                priznak = priznak,
             )
         )
         val rozpad = rozparsujPartie(cvik.partie).map { (kluc, vaha) ->
             SeriaPartiaEntity(seriaId = seriaId, partia = kluc, vaha = vaha)
         }
         if (rozpad.isNotEmpty()) denik.vlozSeriaPartie(rozpad)
+        return seriaId
     }
+
+    /** Dodatočne označí už zapísanú sériu príznakom tela (otázka prišla až po zápise). */
+    suspend fun nastavPriznak(seriaId: Long, priznak: Boolean) = denik.nastavPriznak(seriaId, priznak)
 
     /**
      * Uzavrie tréning a JEDINÝ raz vyhodnotí postupy všetkých dospelých, ktorí cvičili.
@@ -421,6 +429,7 @@ class Repozitar(context: Context) {
                                 put("cvik", s.cvikId); put("blok", s.blok); put("plan", s.planHodnota)
                                 put("skutocne", s.skutocnaHodnota ?: org.json.JSONObject.NULL)
                                 put("rir", s.rir ?: org.json.JSONObject.NULL); put("preskocena", s.preskocena)
+                                put("ucastnik", s.ucastnikId); put("priznak", s.priznak)
                             })
                         }
                     })

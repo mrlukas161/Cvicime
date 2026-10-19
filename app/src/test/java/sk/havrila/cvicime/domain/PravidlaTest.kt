@@ -23,7 +23,7 @@ class PravidlaTest {
         chyby = "",
     )
 
-    private fun seria(hodnota: Int?, rir: Int?, blok: String = "sila") = SeriaEntity(
+    private fun seria(hodnota: Int?, rir: Int?, blok: String = "sila", priznak: Boolean = false) = SeriaEntity(
         treningId = 1,
         epochDen = 20000,
         blok = blok,
@@ -36,7 +36,15 @@ class PravidlaTest {
         planHodnota = 10,
         skutocnaHodnota = hodnota,
         rir = rir,
+        priznak = priznak,
     )
+
+    /** Režim Panvové dno: tlak, ťah alebo únik v jedinej sérii = v tomto rebríku sa nepostupuje. */
+    @Test
+    fun `ziadny postup ked seria mala priznak tela`() {
+        val serie = listOf(seria(12, 1), seria(12, 2, priznak = true), seria(13, 1))
+        assertFalse(Pravidla.maPostupitVyssie(serie, cvik))
+    }
 
     @Test
     fun `postup vyssie ked vsetky serie splnili horny ciel a nieco ostalo v zalohe`() {

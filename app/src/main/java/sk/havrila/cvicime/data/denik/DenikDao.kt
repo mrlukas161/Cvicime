@@ -98,6 +98,9 @@ interface DenikDao {
     @Update
     suspend fun aktualizujSeriu(seria: SeriaEntity)
 
+    @Query("UPDATE seria SET priznak = :priznak WHERE id = :id")
+    suspend fun nastavPriznak(id: Long, priznak: Boolean)
+
     @Insert
     suspend fun vlozSeriaPartie(polozky: List<SeriaPartiaEntity>)
 
@@ -290,6 +293,10 @@ interface DenikDao {
 
     @Query("SELECT * FROM ucastnik WHERE aktivny = 1 ORDER BY id")
     fun ucastniciTok(): Flow<List<UcastnikEntity>>
+
+    /** Aj neaktívni - Nastavenia ich musia vedieť znova zapnúť. */
+    @Query("SELECT * FROM ucastnik ORDER BY id")
+    fun vsetciUcastniciTok(): Flow<List<UcastnikEntity>>
 
     @Query("SELECT * FROM ucastnik WHERE id = :id")
     suspend fun ucastnik(id: Long): UcastnikEntity?

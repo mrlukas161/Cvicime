@@ -88,10 +88,12 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import kotlinx.coroutines.launch
 import sk.havrila.cvicime.aktualizacia.AppUpdater
 import sk.havrila.cvicime.ui.komponenty.PasPlnenia
@@ -265,7 +267,8 @@ object Cesty {
     const val TEST = "test"
     const val DOMOV = "domov"
     const val PROGRES = "progres"
-    const val PREHRAVAC = "prehravac/{minuty}/{dieta}"
+    /** dospely = druhý dospelý popri hlavnom (-1 = nikto), hlavny = čí plán vedie (0 = tvoj). */
+    const val PREHRAVAC = "prehravac/{minuty}/{dieta}?dospely={dospely}&hlavny={hlavny}"
     const val KNIZNICA = "kniznica"
     const val REBRIK = "kniznica/{rebrikId}"
     const val HISTORIA = "historia"
@@ -275,6 +278,8 @@ object Cesty {
     const val ZBIERKA = "zbierka"
 
     fun prehravac(minuty: Int, dieta: Long) = "prehravac/$minuty/$dieta"
+    fun prehravac(minuty: Int, dieta: Long, dospely: Long, hlavny: Long) =
+        "prehravac/$minuty/$dieta?dospely=$dospely&hlavny=$hlavny"
     fun rebrik(id: String) = "kniznica/$id"
     fun clanok(id: String) = "teoria/$id"
 }
@@ -472,7 +477,9 @@ private fun Navigacia(navigacia: NavHostController, vypln: PaddingValues) {
                 DomovObrazovka(
                     naOnboarding = { navigacia.navigate(Cesty.ONBOARDING) },
                     naTest = { navigacia.navigate(Cesty.TEST) },
-                    naPrehravac = { minuty, dieta -> navigacia.navigate(Cesty.prehravac(minuty, dieta)) },
+                    naPrehravac = { minuty, dieta, dospely, hlavny ->
+                        navigacia.navigate(Cesty.prehravac(minuty, dieta, dospely, hlavny))
+                    },
                 )
             }
         }
@@ -491,11 +498,26 @@ private fun Navigacia(navigacia: NavHostController, vypln: PaddingValues) {
                 TestObrazovka(hotovo = { navigacia.popBackStack() })
             }
         }
-        composable(Cesty.PREHRAVAC) { zaznam ->
+        composable(
+            Cesty.PREHRAVAC,
+            // Nepovinné - staré cesty bez nich („prehravac/30/-1") vedú ako doteraz: ty sám alebo s dieťaťom.
+            arguments = listOf(
+                navArgument("dospely") { type = NavType.StringType; defaultValue = "-1" },
+                navArgument("hlavny") { type = NavType.StringType; defaultValue = "0" },
+            ),
+        ) { zaznam ->
             val minuty = zaznam.arguments?.getString("minuty")?.toIntOrNull() ?: 30
             val dieta = zaznam.arguments?.getString("dieta")?.toLongOrNull() ?: -1L
+            val dospely = zaznam.arguments?.getString("dospely")?.toLongOrNull() ?: -1L
+            val hlavny = zaznam.arguments?.getString("hlavny")?.toLongOrNull() ?: 0L
             Plocha(vyplnStav, sListou = false) {
-                PrehravacObrazovka(minuty = minuty, dietaId = dieta, hotovo = { navigacia.popBackStack() })
+                PrehravacObrazovka(
+                    minuty = minuty,
+                    dietaId = dieta,
+                    hotovo = { navigacia.popBackStack() },
+                    dospelyId = dospely,
+                    hlavnyId = hlavny,
+                )
             }
         }
         composable(Cesty.KNIZNICA) {

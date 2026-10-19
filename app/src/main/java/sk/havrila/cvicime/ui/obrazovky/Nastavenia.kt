@@ -24,6 +24,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.border
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -52,6 +54,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -74,6 +77,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
@@ -93,8 +97,11 @@ import sk.havrila.cvicime.data.Repozitar
 import sk.havrila.cvicime.data.denik.CielEntity
 import sk.havrila.cvicime.data.denik.DietaEntity
 import sk.havrila.cvicime.data.denik.ProfilEntity
+import sk.havrila.cvicime.data.denik.UcastnikEntity
 import sk.havrila.cvicime.data.model.Blok
 import sk.havrila.cvicime.data.model.Naradie
+import sk.havrila.cvicime.data.model.Obmedzenie
+import sk.havrila.cvicime.ui.komponenty.Inicialka
 import sk.havrila.cvicime.ui.komponenty.NadpisSekcie
 import sk.havrila.cvicime.ui.komponenty.TonovanaKarta
 import sk.havrila.cvicime.ui.komponenty.rememberHaptika
@@ -142,6 +149,20 @@ class NastaveniaModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             repo.detiTok().collectLatest { _deti.value = it }
         }
+    }
+
+    private val _dospeli = MutableStateFlow<List<UcastnikEntity>>(emptyList())
+    val dospeli = _dospeli.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            repo.vsetciUcastniciTok().collectLatest { _dospeli.value = it }
+        }
+    }
+
+    /** Nový aj upravený dospelý; pri panvovom dne repozitár sám pridá cieľ rebríka Panvové dno. */
+    fun ulozDospeleho(ucastnik: UcastnikEntity) {
+        viewModelScope.launch { repo.ulozUcastnika(ucastnik) }
     }
 
     fun pridajDieta(meno: String, vek: Int) {
@@ -200,6 +221,7 @@ fun NastaveniaObrazovka(
     val ciele by model.ciele.collectAsStateWithLifecycle()
     val pocetCvikov by model.pocetCvikov.collectAsStateWithLifecycle()
     val deti by model.deti.collectAsStateWithLifecycle()
+    val dospeli by model.dospeli.collectAsStateWithLifecycle()
     val kontext = LocalContext.current
     val rozsah = rememberCoroutineScope()
     val haptika = rememberHaptika()
@@ -210,6 +232,8 @@ fun NastaveniaObrazovka(
     var hladam by remember { mutableStateOf(false) }
     var stavAktualizacie by remember { mutableStateOf<String?>(null) }
     var dialogDieta by remember { mutableStateOf(false) }
+    // null = dialóg zavretý; NOVY_DOSPELY = pridanie, inak úprava existujúceho
+    var dialogDospely by remember { mutableStateOf<UcastnikEntity?>(null) }
     var exportujem by remember { mutableStateOf(false) }
     var stavExportu by remember { mutableStateOf<String?>(null) }
     var stavTestu by remember { mutableStateOf<String?>(null) }
@@ -327,9 +351,22 @@ fun NastaveniaObrazovka(
         // ------------------------------------------------------------ rodina
         SekciaNastaveni(
             "Rodina",
-            pata = "Pridané deti sa dajú vybrať pri tréningu — cvičia svoje zvieracie cviky " +
-                "v tvojich pauzách a zbierajú zvieratá.",
+            pata = "Dospelý cvičí popri tebe vlastný plán so svojimi stupňami — začína na prvom " +
+                "a ďalej ho posúva appka podľa jeho sérií. Deti cvičia svoje zvieracie cviky " +
+                "v tvojich pauzách a zbierajú zvieratá. Kto dnes cvičí, vyberieš na obrazovke Dnes.",
         ) {
+            dospeli.forEach { u ->
+                RiadokDospeleho(u) { dialogDospely = u }
+                Oddelovac()
+            }
+            RiadokNastavenia(
+                ikona = Icons.Outlined.PersonAdd,
+                farba = farbaRodina,
+                titul = "Pridať dospelého",
+                popis = if (dospeli.isEmpty()) "Partner či partnerka — každý so svojím plánom" else null,
+                onClick = { dialogDospely = NOVY_DOSPELY },
+            )
+            Oddelovac()
             val poradieFarieb = deti.sortedBy { it.id }.mapIndexed { i, d -> d.id to i }.toMap()
             deti.forEach { d ->
                 RiadokDietata(d, farbaDietataNastavenia(d, poradieFarieb[d.id] ?: 0))
@@ -525,6 +562,14 @@ fun NastaveniaObrazovka(
         Spacer(Modifier.height(32.dp))
     }
 
+    dialogDospely?.let { u ->
+        DialogDospeleho(
+            povodny = u.takeIf { it.id != 0L },
+            pocetDospelych = dospeli.size,
+            zavri = { dialogDospely = null },
+            uloz = { model.ulozDospeleho(it) },
+        )
+    }
     if (dialogDieta) {
         DialogDieta(
             zavri = { dialogDieta = false },
@@ -676,6 +721,181 @@ private fun RiadokDietata(dieta: DietaEntity, farba: Color) {
             )
         }
     }
+}
+
+/** Dospelý v Rodine: inicialka v jeho farbe, obmedzenia, stav. Ťuk = úprava. */
+@Composable
+private fun RiadokDospeleho(u: UcastnikEntity, naUpravu: () -> Unit) {
+    val haptika = rememberHaptika()
+    val obmedzenia = Obmedzenie.zCsv(u.obmedzenia)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable { haptika.klik(); naUpravu() }
+            .heightIn(min = 64.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Inicialka(u.meno, if (u.aktivny) Color(u.farba) else MaterialTheme.colorScheme.outlineVariant, 40.dp)
+        Spacer(Modifier.width(16.dp))
+        Column(Modifier.weight(1f)) {
+            Text(u.meno, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+            Text(
+                buildList {
+                    if (!u.aktivny) add("Neaktívny")
+                    obmedzenia.forEach { add(it.nazov) }
+                    if (isEmpty()) add("Bez obmedzení")
+                }.joinToString(" · "),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Sipka()
+    }
+}
+
+/** Značka pre „nový dospelý" v stave dialógu (id 0 = ešte neuložený). */
+private val NOVY_DOSPELY = UcastnikEntity(meno = "", farba = 0)
+
+/** Farby dospelých - odlišné od detskej palety, aby sa na čipoch nemýlili. */
+private val PALETA_DOSPELYCH = listOf(
+    Color(0xFFD0643B), // tehlová
+    Color(0xFF2F8F83), // morská
+    Color(0xFF7C6BC4), // fialková
+    Color(0xFFC2477A), // malinová
+    Color(0xFF5B7FBF), // oceľová modrá
+    Color(0xFF8A9A3B), // olivová
+)
+
+/**
+ * Pridanie či úprava dospelého: meno, farba, obmedzenia, aktívny. Pri obmedzení s dlhším
+ * vysvetlením (Panvové dno) sa text režimu ukáže priamo pod prepínačom.
+ */
+@Composable
+private fun DialogDospeleho(
+    povodny: UcastnikEntity?,
+    pocetDospelych: Int,
+    zavri: () -> Unit,
+    uloz: (UcastnikEntity) -> Unit,
+) {
+    var meno by remember { mutableStateOf(povodny?.meno.orEmpty()) }
+    var farba by remember {
+        mutableStateOf(povodny?.farba ?: PALETA_DOSPELYCH[pocetDospelych % PALETA_DOSPELYCH.size].toArgb())
+    }
+    var obmedzenia by remember { mutableStateOf(Obmedzenie.zCsv(povodny?.obmedzenia.orEmpty())) }
+    var aktivny by remember { mutableStateOf(povodny?.aktivny ?: true) }
+    var info by remember { mutableStateOf<Obmedzenie?>(null) }
+    val haptika = rememberHaptika()
+
+    AlertDialog(
+        onDismissRequest = zavri,
+        title = { Text(if (povodny == null) "Nový dospelý" else "Upraviť: ${povodny.meno}") },
+        text = {
+            Column(
+                Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                OutlinedTextField(
+                    value = meno,
+                    onValueChange = { meno = it.take(24) },
+                    label = { Text("Meno") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Text("Farba", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    PALETA_DOSPELYCH.forEach { f ->
+                        val vybrana = f.toArgb() == farba
+                        Box(
+                            Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(f)
+                                .border(3.dp, if (vybrana) MaterialTheme.colorScheme.onSurface else Color.Transparent, CircleShape)
+                                .selectable(selected = vybrana, role = Role.RadioButton) {
+                                    haptika.klik()
+                                    farba = f.toArgb()
+                                },
+                        )
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+                Text("Obmedzenia", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Obmedzenie.entries.forEach { o ->
+                    val zapnute = o in obmedzenia
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .toggleable(value = zapnute, role = Role.Switch) {
+                                haptika.klik()
+                                obmedzenia = if (it) obmedzenia + o else obmedzenia - o
+                                if (it && o.vysvetlenie != null) info = o
+                            }
+                            .padding(vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(o.nazov, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                            Text(o.popis, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        if (o.vysvetlenie != null) {
+                            IconButton(onClick = { info = if (info == o) null else o }) {
+                                Icon(Icons.Outlined.Info, contentDescription = "Čo robí režim ${o.nazov}")
+                            }
+                        }
+                        Switch(checked = zapnute, onCheckedChange = null)
+                    }
+                    val text = o.vysvetlenie
+                    AnimatedVisibility(
+                        visible = info == o && text != null,
+                        enter = expandVertically() + fadeIn(),
+                        exit = shrinkVertically() + fadeOut(),
+                    ) {
+                        TonovanaKarta(farba = Color(farba), vnutorneOdsadenie = 12.dp) {
+                            Text(text.orEmpty(), style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .toggleable(value = aktivny, role = Role.Switch) { haptika.klik(); aktivny = it }
+                        .padding(vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Aktívny", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                        Text(
+                            "Neaktívny sa na obrazovke Dnes neponúka, jeho história ostáva.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Switch(checked = aktivny, onCheckedChange = null)
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = meno.isNotBlank(),
+                onClick = {
+                    val csv = obmedzenia.joinToString(",") { it.kluc }
+                    uloz(
+                        (povodny ?: UcastnikEntity(meno = "", farba = farba)).copy(
+                            meno = meno.trim(),
+                            farba = farba,
+                            obmedzenia = csv,
+                            aktivny = aktivny,
+                        )
+                    )
+                    zavri()
+                },
+            ) { Text(if (povodny == null) "Pridať" else "Uložiť") }
+        },
+        dismissButton = {
+            TextButton(onClick = zavri) { Text("Zrušiť") }
+        },
+    )
 }
 
 @Composable

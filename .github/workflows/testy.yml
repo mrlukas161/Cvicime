@@ -57,3 +57,12 @@ jobs:
                   print(f"::error::{tc.get('classname')}.{tc.get('name')}: {sprava}")
           PY
           done
+
+      # Room exportuje schému novej verzie denníka pri builde - treba ju zakomitovať.
+      - name: Exportované schémy
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: schemy
+          path: app/schemas
+          if-no-files-found: ignore

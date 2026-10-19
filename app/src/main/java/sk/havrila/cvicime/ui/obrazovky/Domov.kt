@@ -38,6 +38,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -102,6 +103,7 @@ import kotlinx.coroutines.launch
 import sk.havrila.cvicime.data.Repozitar
 import sk.havrila.cvicime.data.denik.CielEntity
 import sk.havrila.cvicime.data.denik.DietaEntity
+import sk.havrila.cvicime.data.denik.UcastnikEntity
 import sk.havrila.cvicime.data.denik.ProfilEntity
 import sk.havrila.cvicime.data.denik.SuhrnTreningov
 import sk.havrila.cvicime.data.model.Blok
@@ -171,6 +173,13 @@ class DomovModel(app: Application) : AndroidViewModel(app) {
     private val _deti = MutableStateFlow<List<DietaEntity>>(emptyList())
     val deti = _deti.asStateFlow()
 
+    /** Ďalší dospelí, ktorí sú aktívni - ponúknu sa v „Kto dnes cvičí". */
+    private val _dospeli = MutableStateFlow<List<UcastnikEntity>>(emptyList())
+    val dospeli = _dospeli.asStateFlow()
+
+    /** Čí plán sa ukazuje a spustí: 0 = tvoj, inak dospelého (keď ty dnes necvičíš). */
+    private val _hlavny = MutableStateFlow(0L)
+
     private val _bielkoviny = MutableStateFlow(false)
     val bielkoviny = _bielkoviny.asStateFlow()
 
@@ -218,6 +227,9 @@ class DomovModel(app: Application) : AndroidViewModel(app) {
             repo.detiTok().collectLatest { _deti.value = it }
         }
         viewModelScope.launch {
+            repo.ucastniciTok().collectLatest { _dospeli.value = it }
+        }
+        viewModelScope.launch {
             _bielkoviny.value = repo.bielkovinyDnes()
             // Otázka na prekážku: po 4+ dňoch pauzy, najviac raz denne.
             val dni = repo.dniOdTreningu()
@@ -240,20 +252,24 @@ class DomovModel(app: Application) : AndroidViewModel(app) {
             }
         }
         viewModelScope.launch {
-            combine(repo.profilTok(), repo.cieleTok(), _minuty) { p, c, m -> Triple(p, c, m) }
-                .collectLatest { (p, c, m) ->
+            combine(repo.profilTok(), repo.cieleTok(), _minuty, _hlavny) { p, c, m, h -> Styri(p, c, m, h) }
+                .collectLatest { (p, c, m, h) ->
                     val profil = p ?: repo.profil()
                     _profil.value = profil
                     _ciele.value = c
                     _pocetCvikov.value = repo.katalog.pocetCvikov()
                     _prvyMesiac.value =
                         profil.zaciatokEpochDen == 0L || (repo.dnes() - profil.zaciatokEpochDen) < 28
-                    _plan.value = runCatching { repo.zostavPlan(m) }
+                    _plan.value = runCatching { repo.zostavPlan(m, h) }
                         .onFailure { _chyba.value = it.message ?: it.javaClass.simpleName }
                         .getOrNull()
                     if (_plan.value != null) _chyba.value = null
                 }
         }
+    }
+
+    fun nastavHlavneho(ucastnikId: Long) {
+        _hlavny.value = ucastnikId
     }
 
     fun nastavCas(m: Int) {
@@ -281,6 +297,8 @@ class DomovModel(app: Application) : AndroidViewModel(app) {
     }
 }
 
+private data class Styri<A, B, C, D>(val a: A, val b: B, val c: C, val d: D)
+
 /** Ponúkané dĺžky tréningu v minútach. */
 private val DLZKY = listOf(15, 30, 45, 60)
 
@@ -288,7 +306,8 @@ private val DLZKY = listOf(15, 30, 45, 60)
 fun DomovObrazovka(
     naOnboarding: () -> Unit,
     naTest: () -> Unit,
-    naPrehravac: (Int, Long) -> Unit,
+    /** minúty, dieťa (-1 = žiadne), druhý dospelý (-1 = nikto), hlavný cvičiaci (0 = ty) */
+    naPrehravac: (Int, Long, Long, Long) -> Unit,
     model: DomovModel = viewModel(),
 ) {
     val profil by model.profil.collectAsStateWithLifecycle()
@@ -305,10 +324,23 @@ fun DomovObrazovka(
     val suhrnTyzdna by model.suhrnTyzdna.collectAsStateWithLifecycle()
     val zrucnosti by model.zrucnosti.collectAsStateWithLifecycle()
 
-    // Rodinný režim: max jedno aktívne dieťa na tréning (deti sa nestriedajú o displej).
+    val dospeli by model.dospeli.collectAsStateWithLifecycle()
+
+    // Kto dnes cvičí: ty (vypnuteľný), najviac jeden ďalší dospelý a najviac jedno dieťa
+    // (deti sa nestriedajú o displej, prehrávač vedie dve dospelé stopy).
+    var jaCvicim by rememberSaveable { mutableStateOf(true) }
+    var sDospelym by rememberSaveable { mutableStateOf<Long?>(null) }
     var sDietatom by rememberSaveable { mutableStateOf<Long?>(null) }
-    // Dieťa medzičasom odstránené v Nastaveniach sa nesmie poslať do prehrávača.
+    // Dieťa či dospelý medzičasom odstránený v Nastaveniach sa nesmie poslať do prehrávača.
     val vybraneDieta = sDietatom?.takeIf { id -> deti.any { it.id == id } }
+    val vybranyDospely = sDospelym?.takeIf { id -> dospeli.any { it.id == id } }
+    // Bez ďalších dospelých sa „Ja" vypnúť nedá (čip vtedy ani nie je vidno).
+    val ja = jaCvicim || dospeli.isEmpty()
+    // Keď ty necvičíš, vedie tréning vybraný dospelý - jeho plán je hlavný.
+    val hlavny = if (ja) 0L else vybranyDospely ?: 0L
+    val dospelyPopri = if (ja) vybranyDospely ?: -1L else -1L
+    val niktoDospely = !ja && vybranyDospely == null
+    LaunchedEffect(hlavny) { model.nastavHlavneho(hlavny) }
 
     Column(
         modifier = Modifier
@@ -376,10 +408,18 @@ fun DomovObrazovka(
                     chyba = chyba,
                     minuty = minuty,
                     naMinuty = model::nastavCas,
-                    deti = deti,
-                    sDietatom = vybraneDieta,
-                    naDieta = { sDietatom = it },
-                    naStart = { naPrehravac(minuty, vybraneDieta ?: -1L) },
+                    kto = KtoCvici(
+                        ja = ja,
+                        dospeli = dospeli,
+                        dospely = vybranyDospely,
+                        deti = deti,
+                        dieta = vybraneDieta,
+                    ),
+                    naJa = { jaCvicim = !ja },
+                    naDospeleho = { id -> sDospelym = if (vybranyDospely == id) null else id },
+                    naDieta = { id -> sDietatom = if (vybraneDieta == id) null else id },
+                    mozeZacat = !niktoDospely,
+                    naStart = { naPrehravac(minuty, vybraneDieta ?: -1L, dospelyPopri, hlavny) },
                     naOnboarding = naOnboarding,
                 )
 
@@ -456,9 +496,11 @@ private fun DnesnyTrening(
     chyba: String?,
     minuty: Int,
     naMinuty: (Int) -> Unit,
-    deti: List<DietaEntity>,
-    sDietatom: Long?,
-    naDieta: (Long?) -> Unit,
+    kto: KtoCvici,
+    naJa: () -> Unit,
+    naDospeleho: (Long) -> Unit,
+    naDieta: (Long) -> Unit,
+    mozeZacat: Boolean,
     naStart: () -> Unit,
     naOnboarding: () -> Unit,
 ) {
@@ -512,39 +554,64 @@ private fun DnesnyTrening(
         Spacer(Modifier.height(20.dp))
         PrepinacDlzky(moznosti = DLZKY, vybrana = minuty, naVyber = naMinuty)
 
-        // Rodinný režim - deti cvičia v tvojich pauzách, ten istý tréning.
-        if (deti.isNotEmpty()) {
+        // Kto dnes cvičí - každý čip sa zapína a vypína. Deti cvičia v pauzách dospelých,
+        // druhý dospelý svoj vlastný plán popri tebe (rovnaký blok, iné cviky a stupne).
+        if (kto.deti.isNotEmpty() || kto.dospeli.isNotEmpty()) {
             Spacer(Modifier.height(12.dp))
-            NadpisSekcie("Poďme spolu")
+            NadpisSekcie("Kto dnes cvičí")
             Spacer(Modifier.height(8.dp))
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 AvatarCip(
-                    meno = "Sám",
+                    meno = "Ja",
                     farba = MaterialTheme.colorScheme.primary,
-                    vybrany = sDietatom == null,
+                    vybrany = kto.ja,
                     ikona = Icons.Filled.Person,
-                    onClick = { naDieta(null) },
+                    onClick = naJa,
                 )
-                deti.forEach { d ->
+                kto.dospeli.forEach { u ->
+                    AvatarCip(
+                        meno = u.meno,
+                        farba = Color(u.farba),
+                        vybrany = kto.dospely == u.id,
+                        onClick = { naDospeleho(u.id) },
+                    )
+                }
+                kto.deti.forEach { d ->
                     AvatarCip(
                         meno = d.meno,
                         farba = farbaDietata(d),
-                        vybrany = sDietatom == d.id,
+                        vybrany = kto.dieta == d.id,
                         onClick = { naDieta(d.id) },
                     )
                 }
             }
+            val menoHlavneho = kto.dospeli.firstOrNull { it.id == kto.dospely }?.meno
+            val poznamka = when {
+                !mozeZacat -> "Zapni seba alebo jedného dospelého — tréning vedie dospelý."
+                !kto.ja && menoHlavneho != null -> "Plán vyššie je plán pre: $menoHlavneho."
+                else -> null
+            }
+            if (poznamka != null) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    poznamka,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
 
         if (stav == StavPlanu.PLAN) {
+            val spolu = kto.dieta != null || (kto.ja && kto.dospely != null)
             Spacer(Modifier.height(20.dp))
             VelkeTlacidlo(
-                text = if (sDietatom != null) "Začať spolu" else "Začať tréning",
+                text = if (spolu) "Začať spolu" else "Začať tréning",
                 onClick = naStart,
                 ikona = Icons.Filled.PlayArrow,
+                enabled = mozeZacat,
             )
         }
     }
@@ -689,6 +756,15 @@ private fun PrepinacDlzky(moznosti: List<Int>, vybrana: Int, naVyber: (Int) -> U
 
 // ------------------------------------------------------------------ rodinný režim
 
+/** Výber „Kto dnes cvičí" - [dospely] a [dieta] sú id vybraných (null = nikto). */
+private data class KtoCvici(
+    val ja: Boolean,
+    val dospeli: List<UcastnikEntity>,
+    val dospely: Long?,
+    val deti: List<DietaEntity>,
+    val dieta: Long?,
+)
+
 /** Farby avatarov detí. DietaEntity.farba zatiaľ ostáva 0 - vtedy sa farba odvodí od id. */
 private val FARBY_DETI = listOf(
     Color(0xFFF2B138), // slnečná žltá - detský akcent appky
@@ -725,7 +801,7 @@ private fun AvatarCip(
             .clip(CircleShape)
             .background(pozadie)
             .border(2.dp, okraj, CircleShape)
-            .selectable(selected = vybrany, role = Role.RadioButton, onClick = { haptika.klik(); onClick() })
+            .toggleable(value = vybrany, role = Role.Checkbox, onValueChange = { haptika.klik(); onClick() })
             .padding(start = 6.dp, end = 16.dp, top = 6.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

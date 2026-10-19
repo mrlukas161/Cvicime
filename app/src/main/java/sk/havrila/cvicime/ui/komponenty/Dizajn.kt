@@ -60,6 +60,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -335,6 +336,24 @@ fun StatDlazdica(
             Text(hodnota, style = MaterialTheme.typography.headlineMedium, color = farba, maxLines = 1)
             Text(popis, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
         }
+    }
+}
+
+/** Kruh s prvým písmenom mena vo farbe cvičiaceho - dospelí aj deti. */
+@Composable
+fun Inicialka(meno: String, farba: Color, velkost: Dp) {
+    Box(
+        Modifier
+            .size(velkost)
+            .clip(CircleShape)
+            .background(farba),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            meno.trim().take(1).uppercase(),
+            style = MaterialTheme.typography.titleMedium.copy(fontFamily = Grotesk, fontWeight = FontWeight.Bold),
+            color = if (farba.luminance() > 0.18f) Color(0xFF1C1917) else Color.White,
+        )
     }
 }
 

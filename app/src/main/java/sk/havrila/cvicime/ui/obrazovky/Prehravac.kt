@@ -105,7 +105,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -126,6 +128,7 @@ import sk.havrila.cvicime.trening.TreningService
 import sk.havrila.cvicime.ui.komponenty.AnimovaneCislo
 import sk.havrila.cvicime.ui.komponenty.Kapsula
 import sk.havrila.cvicime.ui.komponenty.Konfety
+import sk.havrila.cvicime.ui.komponenty.Inicialka
 import sk.havrila.cvicime.ui.komponenty.KruhPostupu
 import sk.havrila.cvicime.ui.komponenty.NadpisSekcie
 import sk.havrila.cvicime.ui.komponenty.Postavicka
@@ -150,9 +153,55 @@ data class KrokTreningu(
     val polozka: PlanPolozka,
     val cisloSerie: Int,
     val zoSerii: Int,
+    /** čo v tej istej chvíli cvičí druhý dospelý (null = v tomto kroku nič) */
+    val partner: PartnerKrok? = null,
 )
 
-enum class StavPrehravaca { NACITAVA, CVICENIE, OTAZKA, PAUZA, HOTOVO, PRAZDNY }
+/** Séria druhého dospelého - z jeho vlastného plánu, spárovaná s krokom hlavného cvičiaceho. */
+data class PartnerKrok(
+    val polozka: PlanPolozka,
+    val cisloSerie: Int,
+    val zoSerii: Int,
+)
+
+/** Druhý dospelý v tréningu. [otazka] = otázka po sérii z jeho obmedzení (napr. panvové dno). */
+data class PartnerStopa(
+    val ucastnikId: Long,
+    val meno: String,
+    val farba: Int,
+    val otazka: String?,
+)
+
+/**
+ * Zápis série druhého dospelého. Kým nezačne ďalšia séria, dá sa upraviť (hodnota, rezerva,
+ * príznak) - do denníka ide až potom. Predvolene plán: kto nič nemení, nič nemusí ťukať.
+ */
+data class PartnerZapis(
+    val krok: PartnerKrok,
+    val blok: Blok,
+    val hodnota: Int,
+    val rir: Rir?,
+    val priznak: Boolean = false,
+)
+
+/** Otázka na príznak tela po sérii hlavného cvičiaceho (séria je už zapísaná, príznak sa dopíše). */
+data class OtazkaPriznaku(
+    val nazovCviku: String,
+    val otazka: String,
+    val priznak: Boolean = false,
+)
+
+/**
+ * DOPLNENIE = posledná séria je odcvičená, ale ešte treba dopísať druhého dospelého
+ * alebo odpovedať na otázku príznaku - až potom súhrn.
+ */
+enum class StavPrehravaca { NACITAVA, CVICENIE, OTAZKA, PAUZA, DOPLNENIE, HOTOVO, PRAZDNY }
+
+/** Bloky, v ktorých sa zapisuje skutočný výkon (inde sa plán zapíše ako skutočnosť). */
+private val BLOKY_S_VYKONOM = setOf(Blok.SKILL, Blok.SILA, Blok.KONDICIA)
+
+/** Bloky, v ktorých sa po sérii pýta na rezervu (RIR). */
+private val BLOKY_S_REZERVOU = setOf(Blok.SILA, Blok.KONDICIA)
 
 /** Detská vrstva rodinného režimu. */
 enum class DetskyKrok { VYBER, CVICI, ODHALENIE, HOTOVO }
@@ -180,6 +229,16 @@ data class PrehravacSuhrn(
     val serie: Int,
     val opakovania: Int,
     val sekundyVydrzi: Int,
+    val rekordy: List<Rekord>,
+    val postupy: List<PrehravacPostup>,
+    val partner: SuhrnPartnera? = null,
+)
+
+/** Súhrn druhého dospelého - jeho série, rekordy a posuny v rebríkoch. */
+data class SuhrnPartnera(
+    val meno: String,
+    val farba: Int,
+    val serie: Int,
     val rekordy: List<Rekord>,
     val postupy: List<PrehravacPostup>,
 )
@@ -222,6 +281,17 @@ class PrehravacModel(app: Application) : AndroidViewModel(app) {
     private val _suhrn = MutableStateFlow<PrehravacSuhrn?>(null)
     val suhrn = _suhrn.asStateFlow()
 
+    private val _partner = MutableStateFlow<PartnerStopa?>(null)
+    val partner = _partner.asStateFlow()
+
+    /** Rozpracovaný zápis druhého dospelého po sérii (null = nič nečaká). */
+    private val _partnerZapis = MutableStateFlow<PartnerZapis?>(null)
+    val partnerZapis = _partnerZapis.asStateFlow()
+
+    /** Otázka na príznak po sérii hlavného cvičiaceho (len pri obmedzení, ktoré sa pýta). */
+    private val _otazkaPriznaku = MutableStateFlow<OtazkaPriznaku?>(null)
+    val otazkaPriznaku = _otazkaPriznaku.asStateFlow()
+
     val hlasZapnuty get() = repo.prefs.hlasZapnuty
     val vibracieZapnute get() = repo.prefs.vibracieZapnute
     val obrazovkaStaleZapnuta get() = repo.prefs.obrazovkaStaleZapnuta
@@ -231,19 +301,57 @@ class PrehravacModel(app: Application) : AndroidViewModel(app) {
     private var poradieSerie = 0
     private var detskeCviky: List<CvikEntity> = emptyList()
 
+    /** Kto je hlavný cvičiaci tréningu: 0 = ty, inak id dospelého (keď ty dnes necvičíš). */
+    private var hlavnyId: Long = 0
+    private var otazkaHlavneho: String? = null
+
+    /** Zápis poslednej série hlavného cvičiaceho - id série pre dodatočný príznak. */
+    private var poslednyZapisHlavneho: Deferred<Long>? = null
+
     /** Rozbehnuté zápisy sérií - pred ukončením sa na ne počká, aby vyhodnotenie videlo každú sériu. */
     private val zapisy = mutableListOf<Job>()
 
-    fun spusti(minuty: Int, dietaId: Long) {
+    /**
+     * [dospelyId] = druhý dospelý, ktorý cvičí popri hlavnom (-1 = nikto).
+     * [hlavny] = čí plán vedie tréning: 0 = tvoj, inak dospelého (keď ty dnes necvičíš).
+     */
+    fun spusti(minuty: Int, dietaId: Long, dospelyId: Long = -1, hlavny: Long = 0) {
         // Poistka: po otočení obrazovky sa LaunchedEffect spustí znova. Tréning sa nesmie založiť
         // druhýkrát - ani počas načítania, ani na súhrne (vtedy je treningId už -1).
         if (spusteny || treningId > 0) return
         spusteny = true
         viewModelScope.launch {
-            val plan = repo.zostavPlan(minuty)
+            // Neexistujúci (medzičasom zmazaný) dospelý nesmie viesť tréning - vtedy vedieš ty.
+            hlavnyId = if (hlavny > 0 && repo.ucastnik(hlavny) != null) hlavny else 0L
+            otazkaHlavneho = repo.obmedzenia(hlavnyId).firstNotNullOfOrNull { it.otazkaPoSerii }
+            val plan = repo.zostavPlan(minuty, hlavnyId)
+
+            // Druhý dospelý: vlastný plán (úrovne, ciele, obmedzenia), kroky spárované po blokoch -
+            // k-ta séria bloku u hlavného ↔ k-ta séria toho istého bloku u neho. Chýbajúca = v tom kroku nič.
+            val druhy = repo.ucastnik(dospelyId)?.takeIf { dospelyId > 0 && dospelyId != hlavnyId }
+            val partnerovePodlaBloku: Map<Blok, List<PartnerKrok>> = if (druhy != null) {
+                _partner.value = PartnerStopa(
+                    ucastnikId = druhy.id,
+                    meno = druhy.meno,
+                    farba = druhy.farba,
+                    otazka = repo.obmedzenia(druhy.id).firstNotNullOfOrNull { it.otazkaPoSerii },
+                )
+                repo.zostavPlan(minuty, druhy.id).bloky.associate { blok ->
+                    blok.blok to blok.polozky.flatMap { polozka ->
+                        (1..polozka.serie).map { i -> PartnerKrok(polozka, i, polozka.serie) }
+                    }
+                }
+            } else {
+                emptyMap()
+            }
+
             val zoznam = plan.bloky.flatMap { blok ->
+                val partnerove = partnerovePodlaBloku[blok.blok].orEmpty()
+                var poradieVBloku = 0
                 blok.polozky.flatMap { polozka ->
-                    (1..polozka.serie).map { i -> KrokTreningu(blok.blok, polozka, i, polozka.serie) }
+                    (1..polozka.serie).map { i ->
+                        KrokTreningu(blok.blok, polozka, i, polozka.serie, partner = partnerove.getOrNull(poradieVBloku++))
+                    }
                 }
             }
             _kroky.value = zoznam
@@ -273,6 +381,10 @@ class PrehravacModel(app: Application) : AndroidViewModel(app) {
     // ------------------------------------------------------------ dospelá vetva
 
     private fun pripravKrok(i: Int) {
+        // Nová séria začína - čo druhý dospelý zapísal k predošlej, je už definitívne.
+        potvrdZapisPartnera()
+        _otazkaPriznaku.value = null
+        poslednyZapisHlavneho = null
         _index.value = i
         val krok = _kroky.value.getOrNull(i) ?: run {
             _stav.value = StavPrehravaca.HOTOVO
@@ -291,6 +403,7 @@ class PrehravacModel(app: Application) : AndroidViewModel(app) {
     fun hotovoCvicenie() {
         val krok = _kroky.value.getOrNull(_index.value) ?: return
         _koniecOdpoctu.value = 0L
+        zacniZapisPartnera(krok)
         if (krok.blok == Blok.SILA || krok.blok == Blok.KONDICIA) {
             _stav.value = StavPrehravaca.OTAZKA
         } else {
@@ -308,6 +421,8 @@ class PrehravacModel(app: Application) : AndroidViewModel(app) {
     fun preskoc() {
         val krok = _kroky.value.getOrNull(_index.value) ?: return
         zapis(krok, null, null, preskocena = true)
+        // Vynechaná séria sa vynechá obom - druhý dospelý v nej tiež nič nezapisuje.
+        krok.partner?.let { p -> zapisPartnera(PartnerZapis(p, krok.blok, p.polozka.ciel, null), preskocena = true) }
         dalej()
     }
 
@@ -316,7 +431,8 @@ class PrehravacModel(app: Application) : AndroidViewModel(app) {
         if (id <= 0) return
         poradieSerie += 1
         val poradie = poradieSerie
-        zapisy += viewModelScope.launch {
+        val ucastnik = hlavnyId
+        val zapis = viewModelScope.async {
             repo.zapisSeriu(
                 treningId = id,
                 blok = krok.blok.kluc,
@@ -326,8 +442,78 @@ class PrehravacModel(app: Application) : AndroidViewModel(app) {
                 skutocnaHodnota = hodnota,
                 rir = rir,
                 preskocena = preskocena,
+                ucastnikId = ucastnik,
             )
         }
+        zapisy += zapis
+        val otazka = otazkaHlavneho
+        if (!preskocena && otazka != null && krok.blok in BLOKY_S_VYKONOM) {
+            poslednyZapisHlavneho = zapis
+            _otazkaPriznaku.value = OtazkaPriznaku(nazovCviku = krok.polozka.cvik.nazov, otazka = otazka)
+        }
+    }
+
+    /** Odpoveď hlavného cvičiaceho na otázku príznaku - dopíše sa k už zapísanej sérii. */
+    fun odpovedPriznak(priznak: Boolean) {
+        val o = _otazkaPriznaku.value ?: return
+        if (o.priznak == priznak) return
+        _otazkaPriznaku.value = o.copy(priznak = priznak)
+        val zapis = poslednyZapisHlavneho ?: return
+        zapisy += viewModelScope.launch { repo.nastavPriznak(zapis.await(), priznak) }
+    }
+
+    // ------------------------------------------------------------ druhý dospelý
+
+    /** Po sérii hlavného: rozpracuje zápis druhého dospelého. Rozohriatie a mobilita sa zapíšu hneď podľa plánu. */
+    private fun zacniZapisPartnera(krok: KrokTreningu) {
+        val p = krok.partner ?: return
+        if (_partner.value == null) return
+        potvrdZapisPartnera()
+        val zapis = PartnerZapis(
+            krok = p,
+            blok = krok.blok,
+            hodnota = p.polozka.ciel,
+            rir = if (krok.blok in BLOKY_S_REZERVOU) Rir.JEDNO_DVE else null,
+        )
+        if (krok.blok in BLOKY_S_VYKONOM) _partnerZapis.value = zapis else zapisPartnera(zapis)
+    }
+
+    fun upravPartnera(zmena: (PartnerZapis) -> PartnerZapis) {
+        val z = _partnerZapis.value ?: return
+        _partnerZapis.value = zmena(z)
+    }
+
+    private fun potvrdZapisPartnera() {
+        val z = _partnerZapis.value ?: return
+        _partnerZapis.value = null
+        zapisPartnera(z)
+    }
+
+    private fun zapisPartnera(z: PartnerZapis, preskocena: Boolean = false) {
+        val p = _partner.value ?: return
+        val id = treningId
+        if (id <= 0) return
+        poradieSerie += 1
+        val poradie = poradieSerie
+        zapisy += viewModelScope.launch {
+            repo.zapisSeriu(
+                treningId = id,
+                blok = z.blok.kluc,
+                poradie = poradie,
+                cvik = z.krok.polozka.cvik,
+                planHodnota = z.krok.polozka.ciel,
+                skutocnaHodnota = if (preskocena) null else z.hodnota,
+                rir = z.rir?.hodnota,
+                preskocena = preskocena,
+                ucastnikId = p.ucastnikId,
+                priznak = z.priznak,
+            )
+        }
+    }
+
+    /** Doplnenie po poslednej sérii je hotové - až teraz súhrn. */
+    fun doplnenieHotove() {
+        if (_stav.value == StavPrehravaca.DOPLNENIE) ukonci()
     }
 
     private fun dalej() {
@@ -335,7 +521,13 @@ class PrehravacModel(app: Application) : AndroidViewModel(app) {
         val krok = _kroky.value.getOrNull(_index.value)
         val dalsi = _kroky.value.getOrNull(dalsiIndex)
         if (dalsi == null) {
-            ukonci()
+            // Posledná séria: ak ešte niečo čaká na doplnenie, súhrn počká.
+            if (_partnerZapis.value != null || _otazkaPriznaku.value != null) {
+                _koniecOdpoctu.value = 0L
+                _stav.value = StavPrehravaca.DOPLNENIE
+            } else {
+                ukonci()
+            }
             return
         }
         val pauza = krok?.polozka?.pauzaS ?: 0
@@ -374,7 +566,9 @@ class PrehravacModel(app: Application) : AndroidViewModel(app) {
     fun pozastav() {
         if (_pozastavene.value) return
         val s = _stav.value
-        if (s != StavPrehravaca.CVICENIE && s != StavPrehravaca.OTAZKA && s != StavPrehravaca.PAUZA) return
+        if (s != StavPrehravaca.CVICENIE && s != StavPrehravaca.OTAZKA && s != StavPrehravaca.PAUZA &&
+            s != StavPrehravaca.DOPLNENIE
+        ) return
         val koniec = _koniecOdpoctu.value
         _zostatokPozastaveny.value = if (koniec > 0L) {
             (koniec - SystemClock.elapsedRealtime()).coerceAtLeast(0L)
@@ -403,17 +597,23 @@ class PrehravacModel(app: Application) : AndroidViewModel(app) {
 
     fun ukonci() {
         val id = treningId
+        // Rozpracovaný zápis druhého dospelého sa pri ukončení neztratí.
+        potvrdZapisPartnera()
+        _otazkaPriznaku.value = null
         _pozastavene.value = false
         _zostatokPozastaveny.value = 0L
         _stav.value = StavPrehravaca.HOTOVO
         if (id <= 0) return
         val d = _detsky.value
+        val druhy = _partner.value
+        val hlavny = hlavnyId
         val cakajuceZapisy = zapisy.toList()
         viewModelScope.launch {
             // Posledná séria sa mohla ešte zapisovať - vyhodnotenie postupov ju musí vidieť.
             cakajuceZapisy.joinAll()
             // Len čítanie: stupne PRED vyhodnotením, aby súhrn vedel povedať smer (vyššie / nižšie).
-            val urovnePred = repo.denik.urovne().associate { it.rebrikId to it.uroven }
+            val urovnePred = repo.urovne(hlavny)
+            val urovnePredPartnera = druhy?.let { repo.urovne(it.ucastnikId) }.orEmpty()
             // Postupy sa vyhodnotia JEDINÝ raz, v ukonciTrening (druhé volanie posúvalo o ďalší stupeň).
             val vsetkyPostupy = repo.ukonciTrening(id, pocitPo = null, zachovajPrazdny = d != null && d.labky > 0)
             if (d != null) {
@@ -421,26 +621,43 @@ class PrehravacModel(app: Application) : AndroidViewModel(app) {
                     UcastEntity(treningId = id, dietaId = d.dietaId, splneneKroky = d.labky)
                 )
             }
-            val postupy = vsetkyPostupy.filter { it.ucastnikId == 0L }.mapNotNull { p ->
-                val rebrikId = p.rebrikId
-                val uroven = p.uroven
-                val r = repo.katalog.rebrik(rebrikId) ?: return@mapNotNull null
-                val cvik = repo.katalog.cvik(rebrikId, uroven)
-                val vyssie = uroven > (urovnePred[rebrikId] ?: 1)
-                val veta = if (vyssie) "postupuješ na stupeň $uroven" else "vraciaš sa na stupeň $uroven"
-                PrehravacPostup(
-                    text = "${r.nazov}: $veta" + (cvik?.let { " — ${it.nazov}" } ?: ""),
-                    vyssie = vyssie,
-                )
-            }
+            suspend fun popisPostupov(ucastnikId: Long, pred: Map<String, Int>, tykanie: Boolean) =
+                vsetkyPostupy.filter { it.ucastnikId == ucastnikId }.mapNotNull { p ->
+                    val rebrikId = p.rebrikId
+                    val uroven = p.uroven
+                    val r = repo.katalog.rebrik(rebrikId) ?: return@mapNotNull null
+                    val cvik = repo.katalog.cvik(rebrikId, uroven)
+                    val vyssie = uroven > (pred[rebrikId] ?: 1)
+                    val veta = when {
+                        tykanie && vyssie -> "postupuješ na stupeň $uroven"
+                        tykanie -> "vraciaš sa na stupeň $uroven"
+                        vyssie -> "postup na stupeň $uroven"
+                        else -> "návrat na stupeň $uroven"
+                    }
+                    PrehravacPostup(
+                        text = "${r.nazov}: $veta" + (cvik?.let { " — ${it.nazov}" } ?: ""),
+                        vyssie = vyssie,
+                    )
+                }
+            val postupy = popisPostupov(hlavny, urovnePred, tykanie = true)
 
-            // Série hlavného cvičiaceho (ucastnikId 0) - rovnako ako postupy a rekordy.
-            val odcvicene = repo.denik.serieTreningu(id)
-                .filter { !it.preskocena && it.skutocnaHodnota != null && it.ucastnikId == 0L }
+            // Série hlavného cvičiaceho - rovnako ako postupy a rekordy.
+            val vsetkySerie = repo.denik.serieTreningu(id)
+            val odcvicene = vsetkySerie
+                .filter { !it.preskocena && it.skutocnaHodnota != null && it.ucastnikId == hlavny }
             val trening = repo.denik.trening(id)
             val trvanie = trening?.let { (it.koniec ?: System.currentTimeMillis()) - it.zaciatok } ?: 0L
             // Rekordy sú len ozdoba súhrnu - chyba pri ich výpočte nesmie zhodiť koniec tréningu.
-            val rekordy = runCatching { repo.rekordyTreningu(id) }.getOrDefault(emptyList())
+            val rekordy = runCatching { repo.rekordyTreningu(id, hlavny) }.getOrDefault(emptyList())
+            val suhrnPartnera = druhy?.let { p ->
+                SuhrnPartnera(
+                    meno = p.meno,
+                    farba = p.farba,
+                    serie = vsetkySerie.count { !it.preskocena && it.skutocnaHodnota != null && it.ucastnikId == p.ucastnikId },
+                    rekordy = runCatching { repo.rekordyTreningu(id, p.ucastnikId) }.getOrDefault(emptyList()),
+                    postupy = popisPostupov(p.ucastnikId, urovnePredPartnera, tykanie = false),
+                )
+            }
             _suhrn.value = PrehravacSuhrn(
                 trvanieMs = trvanie.coerceAtLeast(0L),
                 serie = odcvicene.size,
@@ -452,6 +669,7 @@ class PrehravacModel(app: Application) : AndroidViewModel(app) {
                     .sumOf { it.skutocnaHodnota ?: 0 },
                 rekordy = rekordy,
                 postupy = postupy,
+                partner = suhrnPartnera?.takeIf { it.serie > 0 || it.postupy.isNotEmpty() },
             )
         }
         treningId = -1
@@ -533,6 +751,9 @@ private data class PrehravacObraz(
     val zostatokPozastaveny: Long,
     val detsky: DetskyStav?,
     val suhrn: PrehravacSuhrn?,
+    val partner: PartnerStopa?,
+    val partnerZapis: PartnerZapis?,
+    val otazkaPriznaku: OtazkaPriznaku?,
 )
 
 private class PrehravacDrzak<T>(var hodnota: T)
@@ -552,6 +773,8 @@ fun PrehravacObrazovka(
     minuty: Int,
     dietaId: Long,
     hotovo: () -> Unit,
+    dospelyId: Long = -1,
+    hlavnyId: Long = 0,
     model: PrehravacModel = viewModel(),
 ) {
     val kontext = LocalContext.current
@@ -566,10 +789,13 @@ fun PrehravacObrazovka(
     val zaciatok by model.zaciatok.collectAsStateWithLifecycle()
     val detsky by model.detsky.collectAsStateWithLifecycle()
     val suhrn by model.suhrn.collectAsStateWithLifecycle()
+    val partner by model.partner.collectAsStateWithLifecycle()
+    val partnerZapis by model.partnerZapis.collectAsStateWithLifecycle()
+    val otazkaPriznaku by model.otazkaPriznaku.collectAsStateWithLifecycle()
 
     val hlas = remember { Hlas(kontext) }
 
-    LaunchedEffect(minuty, dietaId) { model.spusti(minuty, dietaId) }
+    LaunchedEffect(minuty, dietaId, dospelyId, hlavnyId) { model.spusti(minuty, dietaId, dospelyId, hlavnyId) }
 
     DisposableEffect(Unit) {
         TreningService.spusti(kontext, "Prebieha tréning")
@@ -583,7 +809,8 @@ fun PrehravacObrazovka(
 
     val krok = kroky.getOrNull(index)
     val vTreningu = kroky.isNotEmpty() &&
-        (stav == StavPrehravaca.CVICENIE || stav == StavPrehravaca.OTAZKA || stav == StavPrehravaca.PAUZA)
+        (stav == StavPrehravaca.CVICENIE || stav == StavPrehravaca.OTAZKA || stav == StavPrehravaca.PAUZA ||
+            stav == StavPrehravaca.DOPLNENIE)
 
     // Hlas pri zmene cviku - názov + dávka. Bez pozerania na displej.
     LaunchedEffect(stav, index) {
@@ -592,7 +819,11 @@ fun PrehravacObrazovka(
             StavPrehravaca.CVICENIE -> {
                 val naCas = Meranie.z(k.polozka.cvik.meranie) == Meranie.VYDRZ
                 val davka = if (naCas) "${k.polozka.ciel} sekúnd" else "${k.polozka.ciel} opakovaní"
-                hlas.povedz("${k.polozka.cvik.nazov}. $davka.", model.hlasZapnuty)
+                // Druhý dospelý počuje svoj cvik hneď za tvojím - ak má iný.
+                val druhy = model.partner.value?.let { p ->
+                    k.partner?.polozka?.cvik?.takeIf { it.id != k.polozka.cvik.id }?.let { " ${p.meno}: ${it.nazov}." }
+                }.orEmpty()
+                hlas.povedz("${k.polozka.cvik.nazov}. $davka.$druhy", model.hlasZapnuty)
             }
             StavPrehravaca.PAUZA -> {
                 val dalsi = kroky.getOrNull(index)
@@ -675,6 +906,9 @@ fun PrehravacObrazovka(
         zostatokPozastaveny = zostatokPozastaveny,
         detsky = detsky,
         suhrn = suhrn,
+        partner = partner,
+        partnerZapis = partnerZapis,
+        otazkaPriznaku = otazkaPriznaku,
     )
     val kluc = PrehravacKluc(stav, index, krok?.polozka?.cvik?.id, krok?.cisloSerie ?: 0)
 
@@ -742,6 +976,7 @@ fun PrehravacObrazovka(
                                 } else {
                                     CvicenieOpakovania(
                                         krok = kr,
+                                        partner = o.partner,
                                         naHotovo = {
                                             model.akAktualny(k) {
                                                 hlas.zavibruj(true)
@@ -767,6 +1002,12 @@ fun PrehravacObrazovka(
                             model = model,
                             naUpravu = { delta -> model.akAktualny(k) { model.upravPauzu(delta) } },
                             naPreskocenie = { model.akAktualny(k) { model.pauzaSkoncila() } },
+                        )
+
+                        StavPrehravaca.DOPLNENIE -> Doplnenie(
+                            o = o,
+                            model = model,
+                            naHotovo = { model.akAktualny(k) { model.doplnenieHotove() } },
                         )
 
                         StavPrehravaca.HOTOVO -> Zaver(o.detsky, o.suhrn, hotovo)
@@ -904,7 +1145,7 @@ private fun PruhTreningu(kroky: List<KrokTreningu>, index: Int, obraz: Prehravac
     )
     val postup = when {
         vydrz -> 1f - zostatok.toFloat() / obraz.celkom.toFloat()
-        obraz.stav == StavPrehravaca.OTAZKA -> 1f
+        obraz.stav == StavPrehravaca.OTAZKA || obraz.stav == StavPrehravaca.DOPLNENIE -> 1f
         else -> 0f
     }
     SegmentovyPruh(
@@ -1069,7 +1310,7 @@ private fun Pokyny(krok: KrokTreningu) {
 
 /** Opakovania: veľký cieľ v strede, pod ním jedna veľká akcia „Hotovo". */
 @Composable
-private fun CvicenieOpakovania(krok: KrokTreningu, naHotovo: () -> Unit) {
+private fun CvicenieOpakovania(krok: KrokTreningu, partner: PartnerStopa?, naHotovo: () -> Unit) {
     val farba = FarbyBlokov.pre(krok.blok)
     val ciel = krok.polozka.ciel
     Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -1094,6 +1335,7 @@ private fun CvicenieOpakovania(krok: KrokTreningu, naHotovo: () -> Unit) {
             )
             Spacer(Modifier.height(16.dp))
             Pokyny(krok)
+            KartaPartnera(krok, partner)
         }
         Spacer(Modifier.height(16.dp))
         VelkeTlacidlo(text = "Hotovo", onClick = naHotovo, ikona = Icons.Rounded.Check)
@@ -1126,6 +1368,7 @@ private fun CvicenieVydrz(krok: KrokTreningu, o: PrehravacObraz) {
             }
             Spacer(Modifier.height(18.dp))
             Pokyny(krok)
+            KartaPartnera(krok, o.partner)
         }
     }
 }
@@ -1290,10 +1533,16 @@ private fun Pauza(
     val celkom = o.celkom.coerceAtLeast(1L)
     val detsky = o.detsky
     val sDetmi = detsky != null && detsky.krok != DetskyKrok.HOTOVO
+    val sDoplnenim = o.partnerZapis != null || o.otazkaPriznaku != null
     val haptika = rememberHaptika()
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val kruh = minOf(maxWidth * 0.78f, maxHeight * (if (sDetmi) 0.34f else 0.48f)).coerceIn(196.dp, 300.dp)
+        val podiel = when {
+            sDetmi && sDoplnenim -> 0.26f
+            sDetmi || sDoplnenim -> 0.34f
+            else -> 0.48f
+        }
+        val kruh = minOf(maxWidth * 0.78f, maxHeight * podiel).coerceIn(168.dp, 300.dp)
         RolovatelnyStred(Modifier.fillMaxSize()) {
             // Kruh sa vyprázdňuje - oddych ubúda.
             KruhPostupu(
@@ -1340,9 +1589,11 @@ private fun Pauza(
                     contentPadding = PaddingValues(horizontal = 8.dp),
                 ) { Text("Preskočiť", style = MaterialTheme.typography.titleMedium, maxLines = 1) }
             }
+            // Kým oddychuješ, dopíše sa predošlá séria: príznak a zápis druhého dospelého.
+            DoplnenieSerie(o, model)
             if (dalsi != null) {
                 Spacer(Modifier.height(16.dp))
-                KartaDalej(dalsi)
+                KartaDalej(dalsi, o.partner)
             }
             // Detský pruh: deti cvičia v tvojich pauzách. Ty oddychuješ, oni sa hrajú.
             if (detsky != null && sDetmi) {
@@ -1355,7 +1606,7 @@ private fun Pauza(
 
 /** „Ďalej: cvik · plán" s malou postavičkou ďalšieho kroku. */
 @Composable
-private fun KartaDalej(krok: KrokTreningu) {
+private fun KartaDalej(krok: KrokTreningu, partner: PartnerStopa?) {
     val farba = FarbyBlokov.pre(krok.blok)
     TonovanaKarta(farba = farba, vnutorneOdsadenie = 16.dp) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1378,8 +1629,205 @@ private fun KartaDalej(krok: KrokTreningu) {
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                val p = krok.partner
+                if (partner != null && p != null) {
+                    Text(
+                        "${partner.meno}: ${p.polozka.cvik.nazov} · ${formatujHodnotu(p.polozka.ciel, p.polozka.cvik.meranie)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         }
+    }
+}
+
+// ---------------------------------------------------------------- druhý dospelý
+
+/** „<meno>: cvik · plán" - čo v tomto kroku cvičí druhý dospelý. */
+@Composable
+private fun KartaPartnera(krok: KrokTreningu, partner: PartnerStopa?) {
+    val p = krok.partner
+    if (partner == null || p == null) return
+    val farba = Color(partner.farba)
+    Spacer(Modifier.height(16.dp))
+    TonovanaKarta(farba = farba, vnutorneOdsadenie = 14.dp) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Inicialka(partner.meno, farba, 40.dp)
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    "${partner.meno}: ${p.polozka.cvik.nazov}",
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    "${formatujHodnotu(p.polozka.ciel, p.polozka.cvik.meranie)} · séria ${p.cisloSerie} / ${p.zoSerii}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+/** Dopísanie predošlej série: otázka príznaku pre teba a kompaktný zápis druhého dospelého. */
+@Composable
+private fun DoplnenieSerie(o: PrehravacObraz, model: PrehravacModel) {
+    val otazka = o.otazkaPriznaku
+    if (otazka != null) {
+        Spacer(Modifier.height(14.dp))
+        TonovanaKarta(farba = MaterialTheme.colorScheme.tertiary, vnutorneOdsadenie = 14.dp) {
+            Text(
+                otazka.nazovCviku,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            OtazkaTela(otazka.otazka, otazka.priznak, MaterialTheme.colorScheme.tertiary) { model.odpovedPriznak(it) }
+        }
+    }
+    val zapis = o.partnerZapis
+    val partner = o.partner
+    if (zapis != null && partner != null) {
+        Spacer(Modifier.height(14.dp))
+        ZapisPartnera(zapis, partner) { zmena -> model.upravPartnera(zmena) }
+    }
+}
+
+/** Kompaktný zápis série druhého dospelého: hodnota (predvolene plán) −/+, rezerva, príznak. */
+@Composable
+private fun ZapisPartnera(z: PartnerZapis, partner: PartnerStopa, uprav: ((PartnerZapis) -> PartnerZapis) -> Unit) {
+    val farba = Color(partner.farba)
+    val cvik = z.krok.polozka.cvik
+    val krokZmeny = if (Meranie.z(cvik.meranie) == Meranie.VYDRZ) 5 else 1
+    val haptika = rememberHaptika()
+    TonovanaKarta(farba = farba, vnutorneOdsadenie = 14.dp) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Inicialka(partner.meno, farba, 36.dp)
+            Spacer(Modifier.width(10.dp))
+            Column(Modifier.weight(1f)) {
+                Text(partner.meno, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(cvik.nazov, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            FilledTonalIconButton(
+                onClick = {
+                    haptika.tik()
+                    uprav { it.copy(hodnota = (it.hodnota - krokZmeny).coerceAtLeast(0)) }
+                },
+                modifier = Modifier.size(48.dp),
+            ) { Icon(Icons.Rounded.Remove, contentDescription = "Menej") }
+            Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                AnimovaneCislo(
+                    hodnota = z.hodnota,
+                    style = MaterialTheme.typography.headlineMedium.copy(fontFamily = Grotesk, fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    "plán ${formatujHodnotu(z.krok.polozka.ciel, cvik.meranie)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            FilledTonalIconButton(
+                onClick = {
+                    haptika.tik()
+                    uprav { it.copy(hodnota = it.hodnota + krokZmeny) }
+                },
+                modifier = Modifier.size(48.dp),
+            ) { Icon(Icons.Rounded.Add, contentDescription = "Viac") }
+        }
+        val rir = z.rir
+        if (rir != null) {
+            Spacer(Modifier.height(8.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf(Rir.NIC, Rir.JEDNO_DVE, Rir.TRI_A_VIAC).forEach { r ->
+                    MalaVolba(r.popis, vybrana = rir == r, farba = farba, modifier = Modifier.weight(1f)) {
+                        uprav { it.copy(rir = r) }
+                    }
+                }
+            }
+        }
+        val otazka = partner.otazka
+        if (otazka != null) {
+            OtazkaTela(otazka, z.priznak, farba) { ano -> uprav { it.copy(priznak = ano) } }
+        }
+    }
+}
+
+/**
+ * Otázka na príznak tela (napr. tlak, ťah, únik). „Áno" nie je zlyhanie - len zastaví postup
+ * v tomto rebríku, kým telo nie je pripravené.
+ */
+@Composable
+private fun OtazkaTela(otazka: String, priznak: Boolean, farba: Color, odpoved: (Boolean) -> Unit) {
+    Spacer(Modifier.height(8.dp))
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(otazka, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+        Spacer(Modifier.width(8.dp))
+        MalaVolba("Nie", vybrana = !priznak, farba = farba) { odpoved(false) }
+        Spacer(Modifier.width(6.dp))
+        MalaVolba("Áno", vybrana = priznak, farba = farba) { odpoved(true) }
+    }
+    AnimatedVisibility(visible = priznak, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
+        Text(
+            "Zapísané. V tomto rebríku sa zatiaľ nepostupuje — uber záťaž alebo sa vráť o stupeň nižšie.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 6.dp),
+        )
+    }
+}
+
+/** Malá voľba v kapsule (rezerva, áno/nie) - ťuk prepne, vybraná je plná. */
+@Composable
+private fun MalaVolba(text: String, vybrana: Boolean, farba: Color, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val haptika = rememberHaptika()
+    val pozadie by animateColorAsState(
+        if (vybrana) farba.copy(alpha = 0.32f).compositeOver(MaterialTheme.colorScheme.surfaceContainerHigh)
+        else MaterialTheme.colorScheme.surfaceContainerHigh,
+        label = "malaVolba",
+    )
+    Surface(
+        onClick = { haptika.klik(); onClick() },
+        modifier = modifier.heightIn(min = 44.dp),
+        shape = CircleShape,
+        color = pozadie,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        border = if (vybrana) BorderStroke(1.5.dp, farba) else null,
+    ) {
+        Box(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), contentAlignment = Alignment.Center) {
+            Text(text, style = MaterialTheme.typography.labelLarge, maxLines = 1, fontWeight = if (vybrana) FontWeight.SemiBold else FontWeight.Medium)
+        }
+    }
+}
+
+/** Po poslednej sérii: dopísať druhého dospelého (a príznak), až potom súhrn. */
+@Composable
+private fun Doplnenie(o: PrehravacObraz, model: PrehravacModel, naHotovo: () -> Unit) {
+    Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+        RolovatelnyStred(
+            Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        ) {
+            Text("Posledná séria", style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "Ešte ju zapíš, potom ukážem súhrn.",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+            DoplnenieSerie(o, model)
+        }
+        Spacer(Modifier.height(16.dp))
+        VelkeTlacidlo(text = "Dokončiť", onClick = naHotovo, ikona = Icons.Rounded.Check)
     }
 }
 
@@ -1820,7 +2268,26 @@ private fun SuhrnTreningu(s: PrehravacSuhrn) {
             NadpisSekcie("Rebríky")
             s.postupy.forEach { KartaPostupu(it) }
         }
+        s.partner?.let { SuhrnDruheho(it) }
     }
+}
+
+@Composable
+private fun SuhrnDruheho(p: SuhrnPartnera) {
+    val farba = Color(p.farba)
+    NadpisSekcie(p.meno)
+    TonovanaKarta(farba = farba, vnutorneOdsadenie = 16.dp) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Inicialka(p.meno, farba, 44.dp)
+            Spacer(Modifier.width(14.dp))
+            Text(
+                "${p.serie} ${sklonuj(p.serie, "séria", "série", "sérií")} zapísaných",
+                style = MaterialTheme.typography.titleMedium,
+            )
+        }
+    }
+    p.rekordy.forEach { KartaRekordu(it) }
+    p.postupy.forEach { KartaPostupu(it) }
 }
 
 /** Počítadlo, ktoré pri prvom zobrazení „nabehne" od nuly ku skutočnej hodnote. */

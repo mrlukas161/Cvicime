@@ -29,9 +29,11 @@ object Pravidla {
      * Posun o stupeň VYŠŠIE: vo všetkých sériách cviku dosiahnutý horný cieľ
      * a aspoň v jednej ostalo ešte niečo v zálohe (RIR >= 1).
      * Progresia pri vlastnej váhe je ťažšia variácia, nie donekonečna viac opakovaní.
+     * Séria s príznakom tela (tlak, ťah, únik) postup vždy zastaví - telo ešte nie je pripravené.
      */
     fun maPostupitVyssie(serie: List<SeriaEntity>, cvik: CvikEntity): Boolean {
         if (serie.isEmpty()) return false
+        if (serie.any { it.priznak }) return false
         val vsetkySplnene = serie.all { (it.skutocnaHodnota ?: 0) >= cvik.cielMax }
         val ostaloVZalohe = serie.any { (it.rir ?: 0) >= 1 }
         return vsetkySplnene && ostaloVZalohe

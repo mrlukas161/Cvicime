@@ -121,11 +121,30 @@ enum class Skupina(val kluc: String, val nazov: String) {
  * (pole `znacky` v katalógu). Engine potom ustúpi na nižší stupeň bez značky alebo rebrík vynechá -
  * rovnako ako pri chýbajúcom náradí.
  */
-enum class Obmedzenie(val kluc: String, val nazov: String, val popis: String, val vylucujeZnacky: Set<String>) {
+enum class Obmedzenie(
+    val kluc: String,
+    val nazov: String,
+    val popis: String,
+    val vylucujeZnacky: Set<String>,
+    /** dlhší text režimu pre info pri prepínači; null = stačí [popis] */
+    val vysvetlenie: String? = null,
+    /** otázka po sérii, ktorej „áno" zastaví postup v rebríku; null = režim sa nepýta */
+    val otazkaPoSerii: String? = null,
+) {
     PANVOVE_DNO(
         "panvove_dno", "Šetriť panvové dno",
         "Bez skokov a cvikov s veľkým tlakom do brucha. Pridá tréning panvového dna.",
         setOf("skok", "tlak_brucho"),
+        vysvetlenie = "Režim Panvové dno je pre ženy, ktoré po pôrodoch cítia tlak, ťah alebo pocit, " +
+            "že niečo tlačí dole, prípadne im pri pohybe unikne moč. Pohyb neruší, len vymení skoky, " +
+            "beh a cviky s veľkým tlakom do brucha za verzie, ktoré robíš popri ostatných v tom istom " +
+            "bloku. Pred každou námahou jemne stiahni panvové dno a počas záťaže vydýchni, dych " +
+            "nezadržiavaj. Riaď sa telom: keď cítiš tlak, ťah alebo únik, uber záťaž alebo sa vráť " +
+            "o stupeň nižšie – nie je to zlyhanie, ale informácia. Cviky panvového dna účinkujú, keď " +
+            "ich robíš pravidelne niekoľko mesiacov, najlepšie s fyzioterapeutom. Appka nenahrádza " +
+            "vyšetrenie: ak ťažkosti trvajú alebo cítiš či vidíš vydutie pri vchode do pošvy, choď " +
+            "ku gynekológovi.",
+        otazkaPoSerii = "Cítila si tlak, ťah alebo únik?",
     ),
     BEZ_SKOKOV("bez_skokov", "Bez skokov", "Žiadne doskoky ani poskoky.", setOf("skok")),
     RAMENO("rameno", "Šetriť rameno", "Bez visov, záťaže nad hlavou a hlbokých vzporov.", setOf("vis", "nad_hlavu", "rameno_zataz"));

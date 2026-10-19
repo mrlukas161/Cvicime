@@ -32,7 +32,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         UcastnikEntity::class,
         UrovenUcastnikaEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class DenikDatabase : RoomDatabase() {
@@ -50,7 +50,7 @@ abstract class DenikDatabase : RoomDatabase() {
                     "denik.db",
                 )
                     // Zámerne BEZ fallbackToDestructiveMigration - viď komentár vyššie.
-                    .addMigrations(MIGRACIA_1_2)
+                    .addMigrations(MIGRACIA_1_2, MIGRACIA_2_3)
                     .build()
                     .also { instancia = it }
             }
@@ -79,5 +79,15 @@ val MIGRACIA_1_2 = object : Migration(1, 2) {
         db.execSQL("ALTER TABLE `ciel` ADD COLUMN `ucastnik_id` INTEGER NOT NULL DEFAULT 0")
         db.execSQL("DROP INDEX IF EXISTS `index_ciel_kluc`")
         db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_ciel_ucastnik_id_kluc` ON `ciel` (`ucastnik_id`, `kluc`)")
+    }
+}
+
+/**
+ * 2 → 3: príznak série (režim Panvové dno). Existujúce série dostanú priznak = 0 -
+ * nič sa nemaže ani neprepisuje, postupy v histórii ostávajú platné.
+ */
+val MIGRACIA_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `seria` ADD COLUMN `priznak` INTEGER NOT NULL DEFAULT 0")
     }
 }

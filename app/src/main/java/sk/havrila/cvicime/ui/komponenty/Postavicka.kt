@@ -37,7 +37,7 @@ data class Poza(
     val rukaZ: Offset,
 )
 
-data class PozyCviku(val a: Poza, val b: Poza, val hrazda: Boolean = false)
+data class PozyCviku(val a: Poza, val b: Poza, val hrazda: Boolean = false, val bradla: Boolean = false)
 
 private fun o(x: Float, y: Float) = Offset(x, y)
 
@@ -387,6 +387,43 @@ object Pozy {
             ),
         ))
         put("mobilita-clenky", PozyCviku(drep, drep.copy(bok = o(0.40f, 0.66f))))
+        put("dipy", PozyCviku(
+            // vzpor na bradlách, nohy pokrčené vzad
+            Poza(
+                hlava = o(0.50f, 0.12f), krk = o(0.50f, 0.22f), bok = o(0.50f, 0.48f),
+                kolenoP = o(0.53f, 0.66f), chodidloP = o(0.45f, 0.80f),
+                kolenoZ = o(0.47f, 0.66f), chodidloZ = o(0.40f, 0.80f),
+                laketP = o(0.61f, 0.36f), rukaP = o(0.64f, 0.50f),
+                laketZ = o(0.39f, 0.36f), rukaZ = o(0.36f, 0.50f),
+            ),
+            // dole: lakte ohnuté, ruky ostávajú na bradlách
+            Poza(
+                hlava = o(0.50f, 0.24f), krk = o(0.50f, 0.34f), bok = o(0.50f, 0.60f),
+                kolenoP = o(0.53f, 0.78f), chodidloP = o(0.45f, 0.92f),
+                kolenoZ = o(0.47f, 0.78f), chodidloZ = o(0.40f, 0.92f),
+                laketP = o(0.68f, 0.38f), rukaP = o(0.64f, 0.50f),
+                laketZ = o(0.32f, 0.38f), rukaZ = o(0.36f, 0.50f),
+            ),
+            bradla = true,
+        ))
+        put("panvove-dno", PozyCviku(
+            // ľah na chrbte, kolená pokrčené, chodidlá na zemi
+            Poza(
+                hlava = o(0.14f, 0.72f), krk = o(0.22f, 0.72f), bok = o(0.48f, 0.74f),
+                kolenoP = o(0.62f, 0.56f), chodidloP = o(0.70f, 0.76f),
+                kolenoZ = o(0.58f, 0.58f), chodidloZ = o(0.66f, 0.78f),
+                laketP = o(0.32f, 0.76f), rukaP = o(0.40f, 0.78f),
+                laketZ = o(0.28f, 0.77f), rukaZ = o(0.36f, 0.79f),
+            ),
+            // jemné stiahnutie: panva sa len nakloní, žiadny most - pohyb je vnútri
+            Poza(
+                hlava = o(0.14f, 0.72f), krk = o(0.22f, 0.72f), bok = o(0.48f, 0.71f),
+                kolenoP = o(0.62f, 0.55f), chodidloP = o(0.70f, 0.76f),
+                kolenoZ = o(0.58f, 0.57f), chodidloZ = o(0.66f, 0.78f),
+                laketP = o(0.32f, 0.76f), rukaP = o(0.40f, 0.78f),
+                laketZ = o(0.28f, 0.77f), rukaZ = o(0.36f, 0.79f),
+            ),
+        ))
         put("mobilita-zapastia", PozyCviku(
             // kľak, dlane na zemi
             Poza(
@@ -443,6 +480,11 @@ fun Postavicka(
 
         if (pozy.hrazda) {
             drawLine(farbaAkcent, Offset(w * 0.18f, h * 0.10f), Offset(w * 0.82f, h * 0.10f), hrubka * 0.8f, StrokeCap.Round)
+        }
+        if (pozy.bradla) {
+            // dve žrde bradiel z boku pod dlaňami
+            drawLine(farbaAkcent, Offset(w * 0.20f, h * 0.52f), Offset(w * 0.40f, h * 0.52f), hrubka * 0.8f, StrokeCap.Round)
+            drawLine(farbaAkcent, Offset(w * 0.60f, h * 0.52f), Offset(w * 0.80f, h * 0.52f), hrubka * 0.8f, StrokeCap.Round)
         }
 
         // trup
