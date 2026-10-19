@@ -12,6 +12,8 @@ on:
 jobs:
   testy:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -58,11 +60,25 @@ jobs:
           PY
           done
 
-      # Room exportuje schému novej verzie denníka pri builde - treba ju zakomitovať.
-      - name: Exportované schémy
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: schemy
-          path: app/schemas
-          if-no-files-found: ignore
+      - name: Počet testov
+        if: success()
+        run: |
+          python3 - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          spolu = sum(int(ET.parse(f).getroot().get('tests', 0)) for f in glob.glob('app/build/test-results/testDebugUnitTest/*.xml'))
+          print(f"::notice::Prešlo {spolu} unit testov")
+          PY
+
+      # Room exportuje schému novej verzie denníka pri builde. Mimo main ju workflow
+      # zakomituje späť do vetvy, aby sa nezabudla (main sa takto nikdy nemení).
+      - name: Nová schéma denníka
+        if: success() && github.ref != 'refs/heads/main'
+        run: |
+          if [ -n "$(git status --porcelain app/schemas)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add app/schemas
+            git commit -m "Room: exportovana schema dennika"
+            git push
+            echo "::notice::Zakomitovaná nová schéma: $(git show --name-only --format= HEAD | tr '\n' ' ')"
+          fi
