@@ -1,0 +1,59 @@
+name: Testy
+
+# Len unit testy - nič nepodpisuje a nič nevydáva. Beží na každej vetve, aby sa zmena dala
+# overiť ešte pred zlúčením do main (tam po nej beží Build APK).
+on:
+  workflow_dispatch:
+  push:
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+
+jobs:
+  testy:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      # Bez akcie tretej strany: priamo oficiálne cmdline-tools a presne tie balíky, ktoré build chce.
+      - name: Android SDK
+        run: |
+          SDK="$RUNNER_TEMP/android-sdk"
+          mkdir -p "$SDK/cmdline-tools"
+          curl -sSfL -o "$RUNNER_TEMP/ct.zip" https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip
+          unzip -q "$RUNNER_TEMP/ct.zip" -d "$SDK/cmdline-tools"
+          mv "$SDK/cmdline-tools/cmdline-tools" "$SDK/cmdline-tools/latest"
+          yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$SDK" --licenses > /dev/null
+          "$SDK/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$SDK" "platforms;android-37.0" "build-tools;36.0.0" > /dev/null
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+          echo "sdk.dir=$SDK" > local.properties
+
+      - name: Unit testy
+        run: |
+          chmod +x ./gradlew
+          set -o pipefail
+          ./gradlew testDebugUnitTest --console=plain 2>&1 | tee "$RUNNER_TEMP/build.log"
+
+      # Chyby kompilácie a padnuté testy ako anotácie - sú vidno priamo v prehľade behu.
+      - name: Anotácie chýb
+        if: failure()
+        run: |
+          grep -E '^e: ' "$RUNNER_TEMP/build.log" | head -40 | while IFS= read -r r; do echo "::error::$r"; done || true
+          grep -E 'FAILED$|What went wrong' -A3 "$RUNNER_TEMP/build.log" | head -40 | while IFS= read -r r; do echo "::error::$r"; done || true
+          for f in app/build/test-results/testDebugUnitTest/*.xml; do
+            [ -f "$f" ] || continue
+            python3 - "$f" <<'PY' || true
+          import sys, xml.etree.ElementTree as ET
+          for tc in ET.parse(sys.argv[1]).getroot().iter('testcase'):
+              for z in list(tc.findall('failure')) + list(tc.findall('error')):
+                  sprava = (z.get('message') or z.text or '').replace('\n', ' ')[:400]
+                  print(f"::error::{tc.get('classname')}.{tc.get('name')}: {sprava}")
+          PY
+          done
