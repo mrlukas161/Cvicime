@@ -415,7 +415,7 @@ class PrehravacModel(app: Application) : AndroidViewModel(app) {
             // Len čítanie: stupne PRED vyhodnotením, aby súhrn vedel povedať smer (vyššie / nižšie).
             val urovnePred = repo.denik.urovne().associate { it.rebrikId to it.uroven }
             // Postupy sa vyhodnotia JEDINÝ raz, v ukonciTrening (druhé volanie posúvalo o ďalší stupeň).
-            val vsetkyPostupy = repo.ukonciTrening(id, pocitPo = null)
+            val vsetkyPostupy = repo.ukonciTrening(id, pocitPo = null, zachovajPrazdny = d != null && d.labky > 0)
             if (d != null) {
                 repo.denik.ulozUcast(
                     UcastEntity(treningId = id, dietaId = d.dietaId, splneneKroky = d.labky)
@@ -1642,7 +1642,7 @@ private fun PozastaveneVrstva(
     naUkoncenie: () -> Unit,
 ) {
     // Surface pohltí dotyky - pod vrstvou sa nič nedá omylom stlačiť.
-    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background.copy(alpha = 0.97f)) {
+    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(
             Modifier
                 .fillMaxSize()
@@ -1720,17 +1720,19 @@ private fun Zaver(detsky: DetskyStav?, suhrn: PrehravacSuhrn?, hotovo: () -> Uni
                 Spacer(Modifier.height(16.dp))
                 ZnakHotovo()
                 Spacer(Modifier.height(16.dp))
-                Text("Hotovo.", style = MaterialTheme.typography.headlineLarge)
+                val prazdny = suhrn != null && suhrn.serie == 0
+                Text(if (prazdny) "Ukončené." else "Hotovo.", style = MaterialTheme.typography.headlineLarge)
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    "Zapísané. To je celé, čo dnes bolo treba.",
+                    if (prazdny) "Nezapísala sa ani jedna séria, takže sa tento tréning do histórie neráta."
+                    else "Zapísané. To je celé, čo dnes bolo treba.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
                 Spacer(Modifier.height(24.dp))
                 AnimatedVisibility(
-                    visible = suhrn != null,
+                    visible = suhrn != null && !prazdny,
                     enter = fadeIn(tween(300)) + expandVertically(tween(300)),
                 ) {
                     if (suhrn != null) SuhrnTreningu(suhrn)

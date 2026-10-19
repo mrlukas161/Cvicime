@@ -70,6 +70,23 @@ interface DenikDao {
     @Query("SELECT * FROM trening WHERE dokonceny = 0 ORDER BY zaciatok DESC LIMIT 1")
     suspend fun nedokoncenyTrening(): TreningEntity?
 
+    /** Zmaže tréning aj s jeho sériami a ich rozpadom na partie (len prázdny, neodcvičený tréning). */
+    @androidx.room.Transaction
+    suspend fun zmazTrening(id: Long) {
+        zmazPartieTreningu(id)
+        zmazSerieTreningu(id)
+        zmazTreningRiadok(id)
+    }
+
+    @Query("DELETE FROM seria_partia WHERE seria_id IN (SELECT id FROM seria WHERE trening_id = :id)")
+    suspend fun zmazPartieTreningu(id: Long)
+
+    @Query("DELETE FROM seria WHERE trening_id = :id")
+    suspend fun zmazSerieTreningu(id: Long)
+
+    @Query("DELETE FROM trening WHERE id = :id")
+    suspend fun zmazTreningRiadok(id: Long)
+
     @Query("SELECT COUNT(*) FROM trening WHERE dokonceny = 1 AND epoch_den >= :od")
     suspend fun pocetTreningovOd(od: Long): Int
 

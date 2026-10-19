@@ -326,4 +326,12 @@ class KatalogAUkladanieTest {
         // Hlavný používateľ ostáva bez obmedzení a bez panvového dna v cieľoch.
         assertFalse(repo.denik.aktivneCiele().any { it.kluc == "panvove-dno" })
     }
+
+    /** Tréning ukončený pred prvou sériou sa nesmie zarátať do histórie ani štatistík. */
+    @Test
+    fun `prazdny ukonceny trening sa zahodi`() = runTest {
+        val id = repo.zacniTrening(planovaneMinuty = 30, rodinny = false)
+        assertTrue(repo.ukonciTrening(id, pocitPo = null).isEmpty())
+        assertTrue("prázdny tréning ostal v denníku", repo.denik.trening(id) == null)
+    }
 }

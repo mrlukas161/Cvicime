@@ -254,9 +254,16 @@ class Repozitar(context: Context) {
      * Volajúci si výsledok berie odtiaľto - druhé volanie vyhodnotPostupy by posunulo
      * stupeň ešte raz (chyba z 0.4.0, opravená v 0.7: po tréningu skok o 2 stupne).
      */
-    suspend fun ukonciTrening(treningId: Long, pocitPo: Int?): List<Postup> {
+    suspend fun ukonciTrening(treningId: Long, pocitPo: Int?, zachovajPrazdny: Boolean = false): List<Postup> {
         val t = denik.trening(treningId) ?: return emptyList()
         if (t.dokonceny) return emptyList() // druhé uzavretie (napr. po otočení obrazovky) nič neposúva
+        // Tréning ukončený skôr, než sa odcvičila prvá séria, nemá v histórii ani štatistikách čo robiť.
+        val serie = denik.serieTreningu(treningId)
+        if (!zachovajPrazdny && serie.none { !it.preskocena && it.skutocnaHodnota != null }) {
+            denik.zmazTrening(treningId)
+            prefs.beziaciTreningId = -1
+            return emptyList()
+        }
         denik.aktualizujTrening(
             t.copy(koniec = System.currentTimeMillis(), pocitPo = pocitPo, dokonceny = true)
         )

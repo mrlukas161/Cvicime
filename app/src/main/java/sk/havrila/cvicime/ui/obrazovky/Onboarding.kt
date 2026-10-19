@@ -51,6 +51,9 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Height
 import androidx.compose.material.icons.filled.MonitorWeight
 import androidx.compose.material.icons.filled.Park
+import androidx.compose.material.icons.filled.DragHandle
+import androidx.compose.material.icons.filled.HorizontalRule
+import androidx.compose.material.icons.filled.TripOrigin
 import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.SportsGymnastics
 import androidx.compose.material.icons.filled.Stairs
@@ -792,6 +795,9 @@ private fun RiadokZhrnutia(popis: String, hodnota: String, naUpravu: () -> Unit)
 private fun ikonaNaradia(n: Naradie): ImageVector = when (n) {
     Naradie.HRAZDA -> Icons.Filled.SportsGymnastics
     Naradie.PEVNA_HRAZDA -> Icons.Filled.Park
+    Naradie.BRADLA -> Icons.Filled.DragHandle
+    Naradie.PARALETY -> Icons.Filled.HorizontalRule
+    Naradie.KRUHY -> Icons.Filled.TripOrigin
     Naradie.JEDNORUCKY -> Icons.Filled.FitnessCenter
     Naradie.PODLOZKA -> Icons.Filled.SelfImprovement
     Naradie.STOLICKA -> Icons.Filled.Chair
