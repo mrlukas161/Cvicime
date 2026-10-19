@@ -271,4 +271,38 @@ class GeneratorTest {
             )
         }
     }
+
+    /**
+     * Obmedzenie (napr. šetrenie panvového dna) musí cvik so zakázanou značkou spoľahlivo vylúčiť,
+     * ale rebrík kvôli tomu nezahodiť - engine ustúpi na stupeň bez značky, ako pri chýbajúcom náradí.
+     */
+    @Test
+    fun `obmedzenie vylúči cviky so zakazanou znackou a ustupi na povoleny stupen`() {
+        val sZnackami = cviky + mapOf(
+            "drep" to listOf(
+                cvik("drep", 1, "stehna:1.0,zadok:0.5"),
+                cvik("drep", 2, "stehna:1.0,zadok:0.5").copy(znacky = "skok"),
+            ),
+            "plank" to listOf(cvik("plank", 1, "stred:1.0", meranie = "vydrz").copy(znacky = "tlak_brucho")),
+        )
+        val v = vstup(minuty = 45).copy(
+            cvikyPodlaRebrika = sZnackami,
+            urovne = mapOf("drep" to 2),
+            vylucitZnacky = setOf("skok", "tlak_brucho"),
+        )
+        val vsetky = Generator.zostav(v).bloky.flatMap { it.polozky }.map { it.cvik }
+        assertTrue("prešiel cvik so zakázanou značkou", vsetky.none { it.znacky.isNotBlank() })
+        assertTrue("drep mal ustúpiť na stupeň 1", vsetky.any { it.id == "drep-1" })
+        assertFalse(vsetky.any { it.rebrikId == "plank" })
+    }
+
+    @Test
+    fun `bez obmedzeni sa znacky ignoruju`() {
+        val sZnackami = cviky + mapOf(
+            "drep" to listOf(cvik("drep", 1, "stehna:1.0,zadok:0.5").copy(znacky = "skok")),
+        )
+        val vsetky = Generator.zostav(vstup(minuty = 45).copy(cvikyPodlaRebrika = sZnackami))
+            .bloky.flatMap { it.polozky }.map { it.cvik.id }
+        assertTrue(vsetky.contains("drep-1"))
+    }
 }

@@ -27,6 +27,8 @@ data class VstupGeneratora(
     val deload: Boolean,
     val rebriky: List<RebrikEntity>,
     val cvikyPodlaRebrika: Map<String, List<CvikEntity>>,
+    /** značky cvikov, ktoré cvičiaci robiť nesmie (z jeho obmedzení) - viď Obmedzenie */
+    val vylucitZnacky: Set<String> = emptySet(),
 )
 
 data class PlanPolozka(
@@ -322,7 +324,7 @@ object Generator {
             .filter { Skupina.z(it.skupina) == skupina }
             .flatMap { rebrik ->
                 (v.cvikyPodlaRebrika[rebrik.id] ?: emptyList())
-                    .filter { !it.jeDetsky && maNaradie(v.naradie, it) }
+                    .filter { !it.jeDetsky && jePovoleny(v, it) }
                     .map { rebrik to it }
             }
 
@@ -338,7 +340,7 @@ object Generator {
      */
     private fun aktualnyCvik(v: VstupGeneratora, rebrik: RebrikEntity): CvikEntity? {
         val cviky = v.cvikyPodlaRebrika[rebrik.id]?.filter { !it.jeDetsky } ?: return null
-        val dostupne = cviky.filter { maNaradie(v.naradie, it) }
+        val dostupne = cviky.filter { jePovoleny(v, it) }
         if (dostupne.isEmpty()) return null
         val uroven = v.urovne[rebrik.id] ?: 1
         dostupne.firstOrNull { it.uroven == uroven }?.let { return it }
@@ -371,6 +373,13 @@ object Generator {
             }
         }
         return chyba
+    }
+
+    /** Cvik sa dá zaradiť: je naň náradie a nemá značku, ktorú cvičiaci robiť nesmie. */
+    private fun jePovoleny(v: VstupGeneratora, cvik: CvikEntity): Boolean {
+        if (!maNaradie(v.naradie, cvik)) return false
+        if (v.vylucitZnacky.isEmpty() || cvik.znacky.isBlank()) return true
+        return cvik.znacky.split(",").none { it.trim() in v.vylucitZnacky }
     }
 
     private fun maNaradie(dostupne: Set<Naradie>, cvik: CvikEntity): Boolean {

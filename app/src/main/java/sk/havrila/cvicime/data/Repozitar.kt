@@ -9,7 +9,9 @@ import sk.havrila.cvicime.data.denik.SeriaEntity
 import sk.havrila.cvicime.data.denik.SeriaPartiaEntity
 import sk.havrila.cvicime.data.denik.TestEntity
 import sk.havrila.cvicime.data.denik.TreningEntity
+import sk.havrila.cvicime.data.denik.UcastnikEntity
 import sk.havrila.cvicime.data.denik.UrovenRebrikaEntity
+import sk.havrila.cvicime.data.denik.UrovenUcastnikaEntity
 import sk.havrila.cvicime.data.denik.ZvieraEntity
 import sk.havrila.cvicime.data.katalog.CvikEntity
 import sk.havrila.cvicime.data.katalog.KatalogDatabase
@@ -17,6 +19,7 @@ import sk.havrila.cvicime.data.katalog.RebrikEntity
 import sk.havrila.cvicime.data.katalog.rozparsujPartie
 import sk.havrila.cvicime.data.model.DruhCiela
 import sk.havrila.cvicime.data.model.Naradie
+import sk.havrila.cvicime.data.model.Obmedzenie
 import sk.havrila.cvicime.data.model.Partia
 import sk.havrila.cvicime.domain.Generator
 import sk.havrila.cvicime.domain.PlanTreningu
@@ -67,26 +70,56 @@ class Repozitar(context: Context) {
 
     suspend fun cvik(id: String) = katalog.cvik(id)
 
-    suspend fun urovenVRebriku(rebrikId: String): Int = denik.uroven(rebrikId)?.uroven ?: 1
+    /** Úroveň v rebríku. [ucastnikId] 0 = hlavný používateľ (tabuľka uroven_rebrika), inak ďalší dospelý. */
+    suspend fun urovenVRebriku(rebrikId: String, ucastnikId: Long = 0): Int =
+        if (ucastnikId == 0L) denik.uroven(rebrikId)?.uroven ?: 1
+        else denik.urovneUcastnika(ucastnikId).firstOrNull { it.rebrikId == rebrikId }?.uroven ?: 1
 
-    suspend fun nastavUroven(rebrikId: String, uroven: Int) {
-        denik.ulozUroven(
-            UrovenRebrikaEntity(
-                rebrikId = rebrikId,
-                uroven = uroven,
-                zmeneneEpochDen = dnes(),
+    suspend fun nastavUroven(rebrikId: String, uroven: Int, ucastnikId: Long = 0) {
+        if (ucastnikId == 0L) {
+            denik.ulozUroven(UrovenRebrikaEntity(rebrikId = rebrikId, uroven = uroven, zmeneneEpochDen = dnes()))
+        } else {
+            denik.ulozUrovenUcastnika(
+                UrovenUcastnikaEntity(ucastnikId = ucastnikId, rebrikId = rebrikId, uroven = uroven, zmeneneEpochDen = dnes())
             )
-        )
+        }
     }
+
+    private suspend fun urovne(ucastnikId: Long): Map<String, Int> =
+        if (ucastnikId == 0L) denik.urovne().associate { it.rebrikId to it.uroven }
+        else denik.urovneUcastnika(ucastnikId).associate { it.rebrikId to it.uroven }
+
+    // ---------------------------------------------------------------- ďalší dospelí cvičiaci (0.7)
+
+    fun ucastniciTok() = denik.ucastniciTok()
+
+    suspend fun ucastnici() = denik.ucastnici()
+
+    suspend fun ucastnik(id: Long) = denik.ucastnik(id)
+
+    suspend fun ulozUcastnika(ucastnik: UcastnikEntity): Long =
+        denik.ulozUcastnika(if (ucastnik.zaciatokEpochDen == 0L) ucastnik.copy(zaciatokEpochDen = dnes()) else ucastnik)
+
+    fun cieleTok(ucastnikId: Long) = denik.aktivneCieleTok(ucastnikId)
+
+    suspend fun obmedzenia(ucastnikId: Long): Set<Obmedzenie> =
+        if (ucastnikId == 0L) emptySet() else Obmedzenie.zCsv(denik.ucastnik(ucastnikId)?.obmedzenia.orEmpty())
 
     // ---------------------------------------------------------------- generovanie tréningu
 
-    suspend fun zostavPlan(dostupneMinuty: Int): PlanTreningu {
+    /**
+     * Plán na dnes pre daného cvičiaceho. Náradie je spoločné pre domácnosť, všetko ostatné
+     * (úrovne, ciele, objem, deload, obmedzenia) je jeho vlastné.
+     */
+    suspend fun zostavPlan(dostupneMinuty: Int, ucastnikId: Long = 0): PlanTreningu {
         val profil = profil()
         val rebriky = katalog.rebriky()
         val cvikyPodlaRebrika = rebriky.associate { it.id to katalog.cvikyRebrika(it.id) }
-        val urovne = denik.urovne().associate { it.rebrikId to it.uroven }
-        val ciele = denik.aktivneCiele()
+        val urovne = urovne(ucastnikId)
+        val ciele = denik.aktivneCiele(ucastnikId)
+        val obmedzenia = obmedzenia(ucastnikId)
+        val zaciatok = if (ucastnikId == 0L) profil.zaciatokEpochDen
+        else denik.ucastnik(ucastnikId)?.zaciatokEpochDen ?: 0L
 
         val cieleZrucnosti = ciele.filter { DruhCiela.z(it.druh) == DruhCiela.ZRUCNOST }
             .sortedBy { it.priorita }
@@ -97,15 +130,15 @@ class Repozitar(context: Context) {
 
         val dnesDen = dnes()
         val zaciatokTyzdna = zaciatokTyzdna(dnesDen)
-        val objem = denik.objemPodlaPartii(zaciatokTyzdna, dnesDen)
+        val objem = denik.objemPodlaPartii(zaciatokTyzdna, dnesDen, ucastnikId)
             .mapNotNull { o -> Partia.z(o.partia)?.let { it to o.serie } }
             .toMap()
-        val poslednaZataz = denik.poslednaZatazPartii()
+        val poslednaZataz = denik.poslednaZatazPartii(ucastnikId)
             .mapNotNull { z -> Partia.z(z.partia)?.let { it to z.den } }
             .toMap()
 
-        val tyzdnov = if (profil.zaciatokEpochDen > 0) {
-            ((dnesDen - profil.zaciatokEpochDen) / 7).toInt().coerceAtLeast(0)
+        val tyzdnov = if (zaciatok > 0) {
+            ((dnesDen - zaciatok) / 7).toInt().coerceAtLeast(0)
         } else {
             0
         }
@@ -121,9 +154,10 @@ class Repozitar(context: Context) {
                 poslednaZataz = poslednaZataz,
                 dnesEpochDen = dnesDen,
                 tyzdnovOdZaciatku = tyzdnov,
-                deload = potrebujeDeload(),
+                deload = potrebujeDeload(ucastnikId),
                 rebriky = rebriky,
                 cvikyPodlaRebrika = cvikyPodlaRebrika,
+                vylucitZnacky = obmedzenia.flatMap { it.vylucujeZnacky }.toSet(),
             )
         )
     }
@@ -133,10 +167,13 @@ class Repozitar(context: Context) {
      * Preto je zámerne konzervatívny: musia byť DVA dokončené tréningy po sebe,
      * v ktorých väčšina silových sérií skončila na doraz.
      */
-    private suspend fun potrebujeDeload(): Boolean {
-        val posledne = denik.posledneTreningy(2)
-        if (posledne.size < 2) return false
-        val serie = posledne.map { denik.serieTreningu(it.id) }
+    private suspend fun potrebujeDeload(ucastnikId: Long = 0): Boolean {
+        // Posledné dva tréningy, na ktorých tento cvičiaci naozaj cvičil.
+        val serie = denik.posledneTreningy(20)
+            .map { t -> denik.serieTreningu(t.id).filter { it.ucastnikId == ucastnikId } }
+            .filter { it.isNotEmpty() }
+            .take(2)
+        if (serie.size < 2) return false
         return Pravidla.potrebujeDeload(serie)
     }
 
@@ -166,6 +203,7 @@ class Repozitar(context: Context) {
         skutocnaHodnota: Int?,
         rir: Int?,
         preskocena: Boolean = false,
+        ucastnikId: Long = 0,
     ) {
         val den = dnes()
         val seriaId = denik.vlozSeriu(
@@ -183,6 +221,7 @@ class Repozitar(context: Context) {
                 skutocnaHodnota = skutocnaHodnota,
                 rir = rir,
                 preskocena = preskocena,
+                ucastnikId = ucastnikId,
             )
         )
         val rozpad = rozparsujPartie(cvik.partie).map { (kluc, vaha) ->
@@ -204,21 +243,26 @@ class Repozitar(context: Context) {
      * Po tréningu prehodnotí, či sa v niektorom rebríku posunúť o stupeň.
      * Progresia pri vlastnej váhe je ťažšia variácia, nie viac opakovaní donekonečna.
      */
-    suspend fun vyhodnotPostupy(treningId: Long): List<Pair<String, Int>> {
-        val zmeny = mutableListOf<Pair<String, Int>>()
+    suspend fun vyhodnotPostupy(treningId: Long): List<Pair<String, Int>> =
+        vyhodnotPostupyVsetkych(treningId).filter { it.ucastnikId == 0L }.map { it.rebrikId to it.uroven }
+
+    /** Postupy všetkých dospelých, ktorí na tréningu cvičili - každý podľa vlastných sérií. */
+    suspend fun vyhodnotPostupyVsetkych(treningId: Long): List<Postup> {
+        val zmeny = mutableListOf<Postup>()
         val serie = denik.serieTreningu(treningId).filter { it.blok == "sila" || it.blok == "skill" }
-        for ((rebrikId, serieRebrika) in serie.groupBy { it.rebrikId }) {
+        for ((kluc, serieRebrika) in serie.groupBy { it.ucastnikId to it.rebrikId }) {
+            val (ucastnikId, rebrikId) = kluc
             val cvik = katalog.cvik(serieRebrika.first().cvikId) ?: continue
             val max = katalog.maxUroven(rebrikId) ?: continue
-            val aktualna = urovenVRebriku(rebrikId)
+            val aktualna = urovenVRebriku(rebrikId, ucastnikId)
             when {
                 Pravidla.maPostupitVyssie(serieRebrika, cvik) && aktualna < max -> {
-                    nastavUroven(rebrikId, aktualna + 1)
-                    zmeny += rebrikId to (aktualna + 1)
+                    nastavUroven(rebrikId, aktualna + 1, ucastnikId)
+                    zmeny += Postup(ucastnikId, rebrikId, aktualna + 1)
                 }
                 Pravidla.maKlesnutNizsie(serieRebrika, cvik) && aktualna > 1 -> {
-                    nastavUroven(rebrikId, aktualna - 1)
-                    zmeny += rebrikId to (aktualna - 1)
+                    nastavUroven(rebrikId, aktualna - 1, ucastnikId)
+                    zmeny += Postup(ucastnikId, rebrikId, aktualna - 1)
                 }
             }
         }
@@ -388,10 +432,10 @@ class Repozitar(context: Context) {
      * na TOM ISTOM cviku. Prvé vyskúšanie cviku rekord nie je (nebolo s čím porovnať).
      * Na jeden cvik sa vráti najviac jeden rekord (najlepšia séria tréningu).
      */
-    suspend fun rekordyTreningu(treningId: Long): List<Rekord> {
-        val predtym = denik.maximaCvikov(treningId).associate { it.cvikId to it.hodnota }
+    suspend fun rekordyTreningu(treningId: Long, ucastnikId: Long = 0): List<Rekord> {
+        val predtym = denik.maximaCvikov(treningId, ucastnikId).associate { it.cvikId to it.hodnota }
         return denik.serieTreningu(treningId)
-            .filter { !it.preskocena && it.skutocnaHodnota != null }
+            .filter { !it.preskocena && it.skutocnaHodnota != null && it.ucastnikId == ucastnikId }
             .groupBy { it.cvikId }
             .mapNotNull { (cvikId, serie) ->
                 val najlepsia = serie.maxBy { it.skutocnaHodnota!! }
@@ -410,11 +454,11 @@ class Repozitar(context: Context) {
     }
 
     /** Posledné osobné rekordy naprieč históriou (najnovšie prvé). */
-    suspend fun posledneRekordy(limit: Int = 8): List<Rekord> {
+    suspend fun posledneRekordy(limit: Int = 8, ucastnikId: Long = 0): List<Rekord> {
         val maxima = mutableMapOf<String, Int>()
         val rekordy = mutableListOf<Rekord>()
         // Za jeden deň sa na cvik ráta len najlepšia séria - inak by každá séria bola "rekord".
-        for ((_, dennySet) in denik.vsetkyOdcviceneSerie().groupBy { it.epochDen to it.cvikId }) {
+        for ((_, dennySet) in denik.vsetkyOdcviceneSerie(ucastnikId).groupBy { it.epochDen to it.cvikId }) {
             val najlepsia = dennySet.maxBy { it.skutocnaHodnota!! }
             val hodnota = najlepsia.skutocnaHodnota!!
             val stare = maxima[najlepsia.cvikId]
@@ -464,3 +508,6 @@ data class Rekord(
     val predtym: Int,
     val epochDen: Long,
 )
+
+/** Zmena stupňa v rebríku po tréningu. */
+data class Postup(val ucastnikId: Long, val rebrikId: String, val uroven: Int)

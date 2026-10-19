@@ -56,4 +56,9 @@ data class CvikEntity(
     @ColumnInfo(name = "je_detsky") val jeDetsky: Boolean = false,
     /** kľúč zvieratka, ktoré sa odomkne (len pri detských cvikoch) */
     @ColumnInfo(name = "zviera") val zviera: String? = null,
+    /**
+     * Značky záťaže oddelené čiarkou ("skok", "tlak_brucho", "vis", "nad_hlavu").
+     * Podľa nich engine vylučuje cviky pri obmedzeniach - viď [sk.havrila.cvicime.data.model.Obmedzenie].
+     */
+    @ColumnInfo(name = "znacky", defaultValue = "") val znacky: String = "",
 )
