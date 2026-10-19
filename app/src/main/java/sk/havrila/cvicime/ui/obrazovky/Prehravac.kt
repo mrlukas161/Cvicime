@@ -431,8 +431,9 @@ class PrehravacModel(app: Application) : AndroidViewModel(app) {
                 )
             }
 
+            // Série hlavného cvičiaceho (ucastnikId 0) - rovnako ako postupy a rekordy.
             val odcvicene = repo.denik.serieTreningu(id)
-                .filter { !it.preskocena && it.skutocnaHodnota != null }
+                .filter { !it.preskocena && it.skutocnaHodnota != null && it.ucastnikId == 0L }
             val trening = repo.denik.trening(id)
             val trvanie = trening?.let { (it.koniec ?: System.currentTimeMillis()) - it.zaciatok } ?: 0L
             // Rekordy sú len ozdoba súhrnu - chyba pri ich výpočte nesmie zhodiť koniec tréningu.
@@ -1207,7 +1208,11 @@ private fun TlacidloKroku(ikona: ImageVector, popis: String, farba: Color, naKro
     val opakovalo = remember { PrehravacDrzak(false) }
 
     LaunchedEffect(stlacene) {
-        if (!stlacene) return@LaunchedEffect
+        if (!stlacene) {
+            // Až po kliknutí (to príde skôr než prekreslenie) - aj pri zrušenom stlačení (posun prstom).
+            opakovalo.hodnota = false
+            return@LaunchedEffect
+        }
         opakovalo.hodnota = false
         delay(420)
         var pauza = 170L
