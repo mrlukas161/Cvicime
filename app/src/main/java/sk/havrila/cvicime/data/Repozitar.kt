@@ -230,13 +230,19 @@ class Repozitar(context: Context) {
         if (rozpad.isNotEmpty()) denik.vlozSeriaPartie(rozpad)
     }
 
-    suspend fun ukonciTrening(treningId: Long, pocitPo: Int?) {
-        val t = denik.trening(treningId) ?: return
+    /**
+     * Uzavrie tréning a JEDINÝ raz vyhodnotí postupy všetkých dospelých, ktorí cvičili.
+     * Volajúci si výsledok berie odtiaľto - druhé volanie vyhodnotPostupy by posunulo
+     * stupeň ešte raz (chyba z 0.4.0, opravená v 0.7: po tréningu skok o 2 stupne).
+     */
+    suspend fun ukonciTrening(treningId: Long, pocitPo: Int?): List<Postup> {
+        val t = denik.trening(treningId) ?: return emptyList()
+        if (t.dokonceny) return emptyList() // druhé uzavretie (napr. po otočení obrazovky) nič neposúva
         denik.aktualizujTrening(
             t.copy(koniec = System.currentTimeMillis(), pocitPo = pocitPo, dokonceny = true)
         )
         prefs.beziaciTreningId = -1
-        vyhodnotPostupy(treningId)
+        return vyhodnotPostupyVsetkych(treningId)
     }
 
     /**
@@ -436,6 +442,8 @@ class Repozitar(context: Context) {
         val predtym = denik.maximaCvikov(treningId, ucastnikId).associate { it.cvikId to it.hodnota }
         return denik.serieTreningu(treningId)
             .filter { !it.preskocena && it.skutocnaHodnota != null && it.ucastnikId == ucastnikId }
+            // Rozohriatie a mobilita zapisujú plán ako skutočnosť - "rekord" by tam bol len vyšší plán.
+            .filter { it.blok in BLOKY_S_REKORDOM }
             .groupBy { it.cvikId }
             .mapNotNull { (cvikId, serie) ->
                 val najlepsia = serie.maxBy { it.skutocnaHodnota!! }
@@ -458,7 +466,7 @@ class Repozitar(context: Context) {
         val maxima = mutableMapOf<String, Int>()
         val rekordy = mutableListOf<Rekord>()
         // Za jeden deň sa na cvik ráta len najlepšia séria - inak by každá séria bola "rekord".
-        for ((_, dennySet) in denik.vsetkyOdcviceneSerie(ucastnikId).groupBy { it.epochDen to it.cvikId }) {
+        for ((_, dennySet) in denik.vsetkyOdcviceneSerie(ucastnikId).filter { it.blok in BLOKY_S_REKORDOM }.groupBy { it.epochDen to it.cvikId }) {
             val najlepsia = dennySet.maxBy { it.skutocnaHodnota!! }
             val hodnota = najlepsia.skutocnaHodnota!!
             val stare = maxima[najlepsia.cvikId]
@@ -508,6 +516,8 @@ data class Rekord(
     val predtym: Int,
     val epochDen: Long,
 )
+
+private val BLOKY_S_REKORDOM = setOf("sila", "skill", "kondicia")
 
 /** Zmena stupňa v rebríku po tréningu. */
 data class Postup(val ucastnikId: Long, val rebrikId: String, val uroven: Int)
