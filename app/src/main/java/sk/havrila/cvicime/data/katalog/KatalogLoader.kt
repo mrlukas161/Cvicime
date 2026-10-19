@@ -91,6 +91,7 @@ object KatalogLoader {
                     chyby = c.optJSONArray("chyby").naZoznam(),
                     jeDetsky = c.optBoolean("jeDetsky", false),
                     zviera = c.optString("zviera").takeIf { it.isNotBlank() && it != "null" },
+                    znacky = c.optJSONArray("znacky").naCsv(),
                 )
             }
         }

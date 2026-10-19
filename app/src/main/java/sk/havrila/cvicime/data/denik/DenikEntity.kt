@@ -30,9 +30,11 @@ data class ProfilEntity(
     @ColumnInfo(name = "vstupny_test_hotovy") val vstupnyTestHotovy: Boolean = false,
 )
 
-@Entity(tableName = "ciel", indices = [Index(value = ["kluc"], unique = true)])
+@Entity(tableName = "ciel", indices = [Index(value = ["ucastnik_id", "kluc"], unique = true)])
 data class CielEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    /** 0 = hlavný používateľ, inak [UcastnikEntity.id] (od verzie 2 databázy) */
+    @ColumnInfo(name = "ucastnik_id", defaultValue = "0") val ucastnikId: Long = 0,
     /** viď [sk.havrila.cvicime.data.model.DruhCiela] */
     val druh: String,
     /**
@@ -89,6 +91,8 @@ data class SeriaEntity(
     val rir: Int? = null,
     @ColumnInfo(name = "zataz_kg") val zatazKg: Double? = null,
     val preskocena: Boolean = false,
+    /** kto sériu odcvičil: 0 = hlavný používateľ, inak [UcastnikEntity.id] */
+    @ColumnInfo(name = "ucastnik_id", defaultValue = "0") val ucastnikId: Long = 0,
 )
 
 /**
@@ -120,6 +124,7 @@ data class TestEntity(
     val hodnota: Int,
     /** true = prvý (vstupný) test, false = retest */
     @ColumnInfo(name = "je_vstupny") val jeVstupny: Boolean = false,
+    @ColumnInfo(name = "ucastnik_id", defaultValue = "0") val ucastnikId: Long = 0,
 )
 
 /** Aktuálna úroveň používateľa v každom rebríku. Mení ju engine pri splnení cieľa. */
@@ -185,4 +190,30 @@ data class PrekazkaEntity(
     @ColumnInfo(name = "epoch_den") val epochDen: Long,
     /** "cas", "bolest", "nechcelo_sa", "prec", "ine" */
     val druh: String,
+)
+
+/**
+ * Ďalší dospelý cvičiaci (napr. partnerka). Hlavný používateľ má id 0 a v tejto tabuľke NIE JE -
+ * jeho údaje (profil, uroven_rebrika) ostávajú tam, kde boli pred verziou 2.
+ * Deti sú zámerne inde ([DietaEntity]) - majú vlastnú pedagogiku, nie progresný engine.
+ */
+@Entity(tableName = "ucastnik")
+data class UcastnikEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val meno: String,
+    /** ARGB farba avatara */
+    val farba: Int,
+    /** kľúče obmedzení oddelené čiarkou - viď [sk.havrila.cvicime.data.model.Obmedzenie] */
+    val obmedzenia: String = "",
+    val aktivny: Boolean = true,
+    @ColumnInfo(name = "zaciatok_epoch_den") val zaciatokEpochDen: Long = 0,
+)
+
+/** Úroveň ďalšieho cvičiaceho v rebríku (obdoba [UrovenRebrikaEntity] pre hlavného používateľa). */
+@Entity(tableName = "uroven_ucastnika", primaryKeys = ["ucastnik_id", "rebrik_id"])
+data class UrovenUcastnikaEntity(
+    @ColumnInfo(name = "ucastnik_id") val ucastnikId: Long,
+    @ColumnInfo(name = "rebrik_id") val rebrikId: String,
+    val uroven: Int,
+    @ColumnInfo(name = "zmenene_epoch_den") val zmeneneEpochDen: Long,
 )

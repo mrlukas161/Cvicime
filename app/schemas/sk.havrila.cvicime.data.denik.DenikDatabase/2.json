@@ -1,0 +1,879 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "6882ef3454ef6031e4f78844957721d0",
+    "entities": [
+      {
+        "tableName": "profil",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `vaha_kg` REAL NOT NULL, `vyska_cm` INTEGER NOT NULL, `naradie` TEXT NOT NULL, `kotva_text` TEXT NOT NULL, `kotva_minuty` INTEGER NOT NULL, `bielkoviny_ciel_g` INTEGER NOT NULL, `zaciatok_epoch_den` INTEGER NOT NULL, `onboarding_hotovy` INTEGER NOT NULL, `vstupny_test_hotovy` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vahaKg",
+            "columnName": "vaha_kg",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vyskaCm",
+            "columnName": "vyska_cm",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "naradie",
+            "columnName": "naradie",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kotvaText",
+            "columnName": "kotva_text",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kotvaMinuty",
+            "columnName": "kotva_minuty",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "bielkovinyCielG",
+            "columnName": "bielkoviny_ciel_g",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "zaciatokEpochDen",
+            "columnName": "zaciatok_epoch_den",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "onboardingHotovy",
+            "columnName": "onboarding_hotovy",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vstupnyTestHotovy",
+            "columnName": "vstupny_test_hotovy",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "ciel",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `ucastnik_id` INTEGER NOT NULL DEFAULT 0, `druh` TEXT NOT NULL, `kluc` TEXT NOT NULL, `nazov` TEXT NOT NULL, `aktivny` INTEGER NOT NULL, `priorita` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ucastnikId",
+            "columnName": "ucastnik_id",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "druh",
+            "columnName": "druh",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kluc",
+            "columnName": "kluc",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nazov",
+            "columnName": "nazov",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "aktivny",
+            "columnName": "aktivny",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "priorita",
+            "columnName": "priorita",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_ciel_ucastnik_id_kluc",
+            "unique": true,
+            "columnNames": [
+              "ucastnik_id",
+              "kluc"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_ciel_ucastnik_id_kluc` ON `${TABLE_NAME}` (`ucastnik_id`, `kluc`)"
+          }
+        ]
+      },
+      {
+        "tableName": "trening",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `zaciatok` INTEGER NOT NULL, `koniec` INTEGER, `epoch_den` INTEGER NOT NULL, `minuty_dna` INTEGER NOT NULL, `pocit_pred` INTEGER, `pocit_po` INTEGER, `planovane_minuty` INTEGER NOT NULL, `rodinny` INTEGER NOT NULL, `dokonceny` INTEGER NOT NULL, `poznamka` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "zaciatok",
+            "columnName": "zaciatok",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "koniec",
+            "columnName": "koniec",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "epochDen",
+            "columnName": "epoch_den",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "minutyDna",
+            "columnName": "minuty_dna",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pocitPred",
+            "columnName": "pocit_pred",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "pocitPo",
+            "columnName": "pocit_po",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "planovaneMinuty",
+            "columnName": "planovane_minuty",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rodinny",
+            "columnName": "rodinny",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dokonceny",
+            "columnName": "dokonceny",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "poznamka",
+            "columnName": "poznamka",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "seria",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `trening_id` INTEGER NOT NULL, `epoch_den` INTEGER NOT NULL, `blok` TEXT NOT NULL, `poradie` INTEGER NOT NULL, `cvik_id` TEXT NOT NULL, `rebrik_id` TEXT NOT NULL, `uroven` INTEGER NOT NULL, `meranie` TEXT NOT NULL, `partie` TEXT NOT NULL, `plan_hodnota` INTEGER NOT NULL, `skutocna_hodnota` INTEGER, `rir` INTEGER, `zataz_kg` REAL, `preskocena` INTEGER NOT NULL, `ucastnik_id` INTEGER NOT NULL DEFAULT 0)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "treningId",
+            "columnName": "trening_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "epochDen",
+            "columnName": "epoch_den",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "blok",
+            "columnName": "blok",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "poradie",
+            "columnName": "poradie",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cvikId",
+            "columnName": "cvik_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rebrikId",
+            "columnName": "rebrik_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "uroven",
+            "columnName": "uroven",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "meranie",
+            "columnName": "meranie",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "partie",
+            "columnName": "partie",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "planHodnota",
+            "columnName": "plan_hodnota",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "skutocnaHodnota",
+            "columnName": "skutocna_hodnota",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "rir",
+            "columnName": "rir",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "zatazKg",
+            "columnName": "zataz_kg",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "preskocena",
+            "columnName": "preskocena",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ucastnikId",
+            "columnName": "ucastnik_id",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_seria_trening_id",
+            "unique": false,
+            "columnNames": [
+              "trening_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_seria_trening_id` ON `${TABLE_NAME}` (`trening_id`)"
+          },
+          {
+            "name": "index_seria_cvik_id",
+            "unique": false,
+            "columnNames": [
+              "cvik_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_seria_cvik_id` ON `${TABLE_NAME}` (`cvik_id`)"
+          },
+          {
+            "name": "index_seria_epoch_den",
+            "unique": false,
+            "columnNames": [
+              "epoch_den"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_seria_epoch_den` ON `${TABLE_NAME}` (`epoch_den`)"
+          }
+        ]
+      },
+      {
+        "tableName": "seria_partia",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `seria_id` INTEGER NOT NULL, `partia` TEXT NOT NULL, `vaha` REAL NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "seriaId",
+            "columnName": "seria_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "partia",
+            "columnName": "partia",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vaha",
+            "columnName": "vaha",
+            "affinity": "REAL",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_seria_partia_seria_id",
+            "unique": false,
+            "columnNames": [
+              "seria_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_seria_partia_seria_id` ON `${TABLE_NAME}` (`seria_id`)"
+          },
+          {
+            "name": "index_seria_partia_partia",
+            "unique": false,
+            "columnNames": [
+              "partia"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_seria_partia_partia` ON `${TABLE_NAME}` (`partia`)"
+          }
+        ]
+      },
+      {
+        "tableName": "test",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `epoch_den` INTEGER NOT NULL, `minuty_dna` INTEGER NOT NULL, `rebrik_id` TEXT NOT NULL, `cvik_id` TEXT NOT NULL, `uroven` INTEGER NOT NULL, `meranie` TEXT NOT NULL, `hodnota` INTEGER NOT NULL, `je_vstupny` INTEGER NOT NULL, `ucastnik_id` INTEGER NOT NULL DEFAULT 0)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "epochDen",
+            "columnName": "epoch_den",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "minutyDna",
+            "columnName": "minuty_dna",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rebrikId",
+            "columnName": "rebrik_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cvikId",
+            "columnName": "cvik_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "uroven",
+            "columnName": "uroven",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "meranie",
+            "columnName": "meranie",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hodnota",
+            "columnName": "hodnota",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "jeVstupny",
+            "columnName": "je_vstupny",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ucastnikId",
+            "columnName": "ucastnik_id",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_test_rebrik_id",
+            "unique": false,
+            "columnNames": [
+              "rebrik_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_test_rebrik_id` ON `${TABLE_NAME}` (`rebrik_id`)"
+          },
+          {
+            "name": "index_test_epoch_den",
+            "unique": false,
+            "columnNames": [
+              "epoch_den"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_test_epoch_den` ON `${TABLE_NAME}` (`epoch_den`)"
+          }
+        ]
+      },
+      {
+        "tableName": "uroven_rebrika",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`rebrik_id` TEXT NOT NULL, `uroven` INTEGER NOT NULL, `zmenene_epoch_den` INTEGER NOT NULL, PRIMARY KEY(`rebrik_id`))",
+        "fields": [
+          {
+            "fieldPath": "rebrikId",
+            "columnName": "rebrik_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "uroven",
+            "columnName": "uroven",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "zmeneneEpochDen",
+            "columnName": "zmenene_epoch_den",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "rebrik_id"
+          ]
+        }
+      },
+      {
+        "tableName": "dieta",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `meno` TEXT NOT NULL, `vek` INTEGER NOT NULL, `farba` INTEGER NOT NULL, `aktivne` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "meno",
+            "columnName": "meno",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vek",
+            "columnName": "vek",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "farba",
+            "columnName": "farba",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "aktivne",
+            "columnName": "aktivne",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "ucast",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `trening_id` INTEGER NOT NULL, `dieta_id` INTEGER NOT NULL, `splnene_kroky` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "treningId",
+            "columnName": "trening_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dietaId",
+            "columnName": "dieta_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "splneneKroky",
+            "columnName": "splnene_kroky",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_ucast_trening_id",
+            "unique": false,
+            "columnNames": [
+              "trening_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ucast_trening_id` ON `${TABLE_NAME}` (`trening_id`)"
+          },
+          {
+            "name": "index_ucast_dieta_id",
+            "unique": false,
+            "columnNames": [
+              "dieta_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ucast_dieta_id` ON `${TABLE_NAME}` (`dieta_id`)"
+          }
+        ]
+      },
+      {
+        "tableName": "zviera",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `dieta_id` INTEGER NOT NULL, `zviera_kluc` TEXT NOT NULL, `odomknute_epoch_den` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dietaId",
+            "columnName": "dieta_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "zvieraKluc",
+            "columnName": "zviera_kluc",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "odomknuteEpochDen",
+            "columnName": "odomknute_epoch_den",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_zviera_dieta_id_zviera_kluc",
+            "unique": true,
+            "columnNames": [
+              "dieta_id",
+              "zviera_kluc"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_zviera_dieta_id_zviera_kluc` ON `${TABLE_NAME}` (`dieta_id`, `zviera_kluc`)"
+          }
+        ]
+      },
+      {
+        "tableName": "denny_zaznam",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`epoch_den` INTEGER NOT NULL, `bielkoviny_splnene` INTEGER NOT NULL, `poznamka` TEXT NOT NULL, PRIMARY KEY(`epoch_den`))",
+        "fields": [
+          {
+            "fieldPath": "epochDen",
+            "columnName": "epoch_den",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "bielkovinySplnene",
+            "columnName": "bielkoviny_splnene",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "poznamka",
+            "columnName": "poznamka",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "epoch_den"
+          ]
+        }
+      },
+      {
+        "tableName": "miera",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `epoch_den` INTEGER NOT NULL, `typ` TEXT NOT NULL, `hodnota` REAL NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "epochDen",
+            "columnName": "epoch_den",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "typ",
+            "columnName": "typ",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hodnota",
+            "columnName": "hodnota",
+            "affinity": "REAL",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_miera_epoch_den",
+            "unique": false,
+            "columnNames": [
+              "epoch_den"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_miera_epoch_den` ON `${TABLE_NAME}` (`epoch_den`)"
+          }
+        ]
+      },
+      {
+        "tableName": "prekazka",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `epoch_den` INTEGER NOT NULL, `druh` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "epochDen",
+            "columnName": "epoch_den",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "druh",
+            "columnName": "druh",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "ucastnik",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `meno` TEXT NOT NULL, `farba` INTEGER NOT NULL, `obmedzenia` TEXT NOT NULL, `aktivny` INTEGER NOT NULL, `zaciatok_epoch_den` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "meno",
+            "columnName": "meno",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "farba",
+            "columnName": "farba",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "obmedzenia",
+            "columnName": "obmedzenia",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "aktivny",
+            "columnName": "aktivny",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "zaciatokEpochDen",
+            "columnName": "zaciatok_epoch_den",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "uroven_ucastnika",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`ucastnik_id` INTEGER NOT NULL, `rebrik_id` TEXT NOT NULL, `uroven` INTEGER NOT NULL, `zmenene_epoch_den` INTEGER NOT NULL, PRIMARY KEY(`ucastnik_id`, `rebrik_id`))",
+        "fields": [
+          {
+            "fieldPath": "ucastnikId",
+            "columnName": "ucastnik_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rebrikId",
+            "columnName": "rebrik_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "uroven",
+            "columnName": "uroven",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "zmeneneEpochDen",
+            "columnName": "zmenene_epoch_den",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "ucastnik_id",
+            "rebrik_id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6882ef3454ef6031e4f78844957721d0')"
+    ]
+  }
+}

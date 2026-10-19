@@ -12,7 +12,7 @@ import androidx.room.RoomDatabase
  */
 @Database(
     entities = [RebrikEntity::class, CvikEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class KatalogDatabase : RoomDatabase() {

@@ -32,17 +32,20 @@ interface DenikDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun ulozCiel(ciel: CielEntity): Long
 
-    @Query("DELETE FROM ciel WHERE kluc = :kluc")
-    suspend fun zmazCiel(kluc: String)
+    // Ciele, série, testy a úrovne majú od verzie 2 rozmer "kto" (ucastnik_id).
+    // Predvolená 0 = hlavný používateľ, takže staré volania sa správajú presne ako predtým.
 
-    @Query("SELECT * FROM ciel WHERE aktivny = 1 ORDER BY priorita, nazov")
-    suspend fun aktivneCiele(): List<CielEntity>
+    @Query("DELETE FROM ciel WHERE kluc = :kluc AND ucastnik_id = :ucastnikId")
+    suspend fun zmazCiel(kluc: String, ucastnikId: Long = 0)
 
-    @Query("SELECT * FROM ciel WHERE aktivny = 1 ORDER BY priorita, nazov")
-    fun aktivneCieleTok(): Flow<List<CielEntity>>
+    @Query("SELECT * FROM ciel WHERE aktivny = 1 AND ucastnik_id = :ucastnikId ORDER BY priorita, nazov")
+    suspend fun aktivneCiele(ucastnikId: Long = 0): List<CielEntity>
 
-    @Query("SELECT * FROM ciel WHERE druh = :druh AND aktivny = 1")
-    suspend fun cieleDruhu(druh: String): List<CielEntity>
+    @Query("SELECT * FROM ciel WHERE aktivny = 1 AND ucastnik_id = :ucastnikId ORDER BY priorita, nazov")
+    fun aktivneCieleTok(ucastnikId: Long = 0): Flow<List<CielEntity>>
+
+    @Query("SELECT * FROM ciel WHERE druh = :druh AND aktivny = 1 AND ucastnik_id = :ucastnikId")
+    suspend fun cieleDruhu(druh: String, ucastnikId: Long = 0): List<CielEntity>
 
     // ---------- tréning ----------
 
@@ -90,11 +93,11 @@ interface DenikDao {
     @Query(
         """
         SELECT * FROM seria
-        WHERE rebrik_id = :rebrikId AND skutocna_hodnota IS NOT NULL
+        WHERE rebrik_id = :rebrikId AND skutocna_hodnota IS NOT NULL AND ucastnik_id = :ucastnikId
         ORDER BY epoch_den DESC, id DESC LIMIT :limit
         """
     )
-    suspend fun poslednéSerieRebrika(rebrikId: String, limit: Int = 12): List<SeriaEntity>
+    suspend fun poslednéSerieRebrika(rebrikId: String, limit: Int = 12, ucastnikId: Long = 0): List<SeriaEntity>
 
     /**
      * Týždenný objem na svalovú partiu.
@@ -111,10 +114,11 @@ interface DenikDao {
           AND s.skutocna_hodnota IS NOT NULL
           AND s.preskocena = 0
           AND s.blok IN ('sila', 'kondicia')
+          AND s.ucastnik_id = :ucastnikId
         GROUP BY sp.partia
         """
     )
-    suspend fun objemPodlaPartii(odDna: Long, doDna: Long): List<ObjemPartie>
+    suspend fun objemPodlaPartii(odDna: Long, doDna: Long, ucastnikId: Long = 0): List<ObjemPartie>
 
     /** Kedy bola ktorá partia naposledy zaťažená - vstup pre výber cviku na dnes. */
     @Query(
@@ -122,25 +126,25 @@ interface DenikDao {
         SELECT sp.partia AS partia, MAX(s.epoch_den) AS den
         FROM seria_partia sp
         JOIN seria s ON s.id = sp.seria_id
-        WHERE s.skutocna_hodnota IS NOT NULL AND s.preskocena = 0
+        WHERE s.skutocna_hodnota IS NOT NULL AND s.preskocena = 0 AND s.ucastnik_id = :ucastnikId
         GROUP BY sp.partia
         """
     )
-    suspend fun poslednaZatazPartii(): List<PoslednaZataz>
+    suspend fun poslednaZatazPartii(ucastnikId: Long = 0): List<PoslednaZataz>
 
     // ---------- test ----------
 
     @Insert
     suspend fun vlozTest(test: TestEntity): Long
 
-    @Query("SELECT * FROM test WHERE rebrik_id = :rebrikId ORDER BY epoch_den")
-    suspend fun testyRebrika(rebrikId: String): List<TestEntity>
+    @Query("SELECT * FROM test WHERE rebrik_id = :rebrikId AND ucastnik_id = :ucastnikId ORDER BY epoch_den")
+    suspend fun testyRebrika(rebrikId: String, ucastnikId: Long = 0): List<TestEntity>
 
-    @Query("SELECT * FROM test ORDER BY epoch_den DESC")
-    fun vsetkyTestyTok(): Flow<List<TestEntity>>
+    @Query("SELECT * FROM test WHERE ucastnik_id = :ucastnikId ORDER BY epoch_den DESC")
+    fun vsetkyTestyTok(ucastnikId: Long = 0): Flow<List<TestEntity>>
 
-    @Query("SELECT * FROM test ORDER BY epoch_den")
-    suspend fun vsetkyTesty(): List<TestEntity>
+    @Query("SELECT * FROM test WHERE ucastnik_id = :ucastnikId ORDER BY epoch_den")
+    suspend fun vsetkyTesty(ucastnikId: Long = 0): List<TestEntity>
 
     @Query("SELECT * FROM miera ORDER BY epoch_den")
     suspend fun vsetkyMiery(): List<MieraEntity>
@@ -150,17 +154,17 @@ interface DenikDao {
         """
         SELECT epoch_den AS den, MAX(skutocna_hodnota) AS hodnota FROM seria
         WHERE rebrik_id = :rebrikId AND skutocna_hodnota IS NOT NULL AND preskocena = 0
-          AND blok IN ('sila', 'skill')
+          AND blok IN ('sila', 'skill') AND ucastnik_id = :ucastnikId
         GROUP BY epoch_den ORDER BY epoch_den
         """
     )
-    suspend fun grafRebrika(rebrikId: String): List<BodGrafu>
+    suspend fun grafRebrika(rebrikId: String, ucastnikId: Long = 0): List<BodGrafu>
 
-    @Query("SELECT * FROM test WHERE je_vstupny = 1 ORDER BY epoch_den LIMIT 1")
-    suspend fun prvyVstupnyTest(): TestEntity?
+    @Query("SELECT * FROM test WHERE je_vstupny = 1 AND ucastnik_id = :ucastnikId ORDER BY epoch_den LIMIT 1")
+    suspend fun prvyVstupnyTest(ucastnikId: Long = 0): TestEntity?
 
-    @Query("SELECT MAX(epoch_den) FROM test")
-    suspend fun poslednyTestDen(): Long?
+    @Query("SELECT MAX(epoch_den) FROM test WHERE ucastnik_id = :ucastnikId")
+    suspend fun poslednyTestDen(ucastnikId: Long = 0): Long?
 
     // ---------- úrovne v rebríkoch ----------
 
@@ -241,22 +245,46 @@ interface DenikDao {
     )
     fun suhrnTreningovTok(odDna: Long = 0): Flow<SuhrnTreningov>
 
-    @Query("SELECT COUNT(*) FROM seria WHERE skutocna_hodnota IS NOT NULL AND preskocena = 0")
-    fun pocetSeriiTok(): Flow<Int>
+    @Query("SELECT COUNT(*) FROM seria WHERE skutocna_hodnota IS NOT NULL AND preskocena = 0 AND ucastnik_id = :ucastnikId")
+    fun pocetSeriiTok(ucastnikId: Long = 0): Flow<Int>
 
     /** Najlepší výkon na každom cviku mimo daného tréningu - porovnanie pre osobný rekord. */
     @Query(
         """
         SELECT cvik_id AS cvikId, MAX(skutocna_hodnota) AS hodnota FROM seria
         WHERE skutocna_hodnota IS NOT NULL AND preskocena = 0 AND trening_id != :okremTreningu
+          AND ucastnik_id = :ucastnikId
         GROUP BY cvik_id
         """
     )
-    suspend fun maximaCvikov(okremTreningu: Long): List<MaxCviku>
+    suspend fun maximaCvikov(okremTreningu: Long, ucastnikId: Long = 0): List<MaxCviku>
 
     /** Všetky odcvičené série chronologicky - história osobných rekordov sa počíta v Kotline. */
-    @Query("SELECT * FROM seria WHERE skutocna_hodnota IS NOT NULL AND preskocena = 0 ORDER BY epoch_den, id")
-    suspend fun vsetkyOdcviceneSerie(): List<SeriaEntity>
+    @Query("SELECT * FROM seria WHERE skutocna_hodnota IS NOT NULL AND preskocena = 0 AND ucastnik_id = :ucastnikId ORDER BY epoch_den, id")
+    suspend fun vsetkyOdcviceneSerie(ucastnikId: Long = 0): List<SeriaEntity>
+
+    // ---------- ďalší dospelí cvičiaci (0.7) ----------
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun ulozUcastnika(ucastnik: UcastnikEntity): Long
+
+    @Query("SELECT * FROM ucastnik WHERE aktivny = 1 ORDER BY id")
+    suspend fun ucastnici(): List<UcastnikEntity>
+
+    @Query("SELECT * FROM ucastnik WHERE aktivny = 1 ORDER BY id")
+    fun ucastniciTok(): Flow<List<UcastnikEntity>>
+
+    @Query("SELECT * FROM ucastnik WHERE id = :id")
+    suspend fun ucastnik(id: Long): UcastnikEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun ulozUrovenUcastnika(uroven: UrovenUcastnikaEntity)
+
+    @Query("SELECT * FROM uroven_ucastnika WHERE ucastnik_id = :ucastnikId")
+    suspend fun urovneUcastnika(ucastnikId: Long): List<UrovenUcastnikaEntity>
+
+    @Query("SELECT * FROM uroven_ucastnika WHERE ucastnik_id = :ucastnikId")
+    fun urovneUcastnikaTok(ucastnikId: Long): Flow<List<UrovenUcastnikaEntity>>
 }
 
 /** Súhrn dokončených tréningov. */

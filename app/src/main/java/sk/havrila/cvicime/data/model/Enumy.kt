@@ -110,3 +110,26 @@ enum class Skupina(val kluc: String, val nazov: String) {
         fun z(kluc: String): Skupina = entries.firstOrNull { it.kluc == kluc } ?: TLAK
     }
 }
+
+/**
+ * Zdravotné/pohybové obmedzenie ďalšieho cvičiaceho. Každé vylúči cviky s danými značkami
+ * (pole `znacky` v katalógu). Engine potom ustúpi na nižší stupeň bez značky alebo rebrík vynechá -
+ * rovnako ako pri chýbajúcom náradí.
+ */
+enum class Obmedzenie(val kluc: String, val nazov: String, val popis: String, val vylucujeZnacky: Set<String>) {
+    PANVOVE_DNO(
+        "panvove_dno", "Šetriť panvové dno",
+        "Bez skokov a cvikov s veľkým tlakom do brucha. Pridá tréning panvového dna.",
+        setOf("skok", "tlak_brucho"),
+    ),
+    BEZ_SKOKOV("bez_skokov", "Bez skokov", "Žiadne doskoky ani poskoky.", setOf("skok")),
+    RAMENO("rameno", "Šetriť rameno", "Bez visov a záťaže nad hlavou.", setOf("vis", "nad_hlavu"));
+
+    companion object {
+        fun z(kluc: String): Obmedzenie? = entries.firstOrNull { it.kluc == kluc }
+
+        fun zCsv(csv: String): Set<Obmedzenie> =
+            csv.split(",").mapNotNull { z(it.trim()) }.toSet()
+    }
+}
+
