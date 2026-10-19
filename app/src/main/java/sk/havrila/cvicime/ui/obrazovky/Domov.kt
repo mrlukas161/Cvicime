@@ -560,9 +560,9 @@ private fun SuhrnPlanu(plan: PlanTreningu) {
         Row(verticalAlignment = Alignment.Bottom) {
             Text(
                 "≈",
-                style = MaterialTheme.typography.headlineLarge,
+                style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(end = 4.dp, bottom = 8.dp),
+                modifier = Modifier.padding(end = 4.dp, bottom = 14.dp),
             )
             AnimovaneCislo(
                 hodnota = plan.odhadMinut,
@@ -795,36 +795,37 @@ private fun ZrucnostiSekcia(zrucnosti: List<ZrucnostNaDomove>) {
 @Composable
 private fun ZrucnostDlazdica(z: ZrucnostNaDomove, modifier: Modifier = Modifier) {
     val farba = FarbyBlokov.pre(Blok.SKILL)
-    TonovanaKarta(modifier = modifier, vnutorneOdsadenie = 14.dp) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+    TonovanaKarta(modifier = modifier, vnutorneOdsadenie = 16.dp) {
+        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+            // Stupeň je hrdina: číslo v kruhu, pod ním maximum rebríka.
             KruhPostupu(
                 postup = z.uroven.toFloat() / z.max.coerceAtLeast(1),
-                modifier = Modifier.size(56.dp),
+                modifier = Modifier.size(88.dp),
                 farba = farba,
-                hrubka = 6.dp,
+                hrubka = 8.dp,
                 plynulo = false,
             ) {
-                Text(
-                    "${z.uroven}",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        "${z.uroven}",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        "z ${z.max}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(
-                    z.nazov,
-                    style = stylNadpisuKarty(),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    "stupeň ${z.uroven} z ${z.max}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                )
-            }
+            Spacer(Modifier.height(10.dp))
+            Text(
+                z.nazov,
+                style = stylNadpisuKarty(),
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }
@@ -1188,9 +1189,10 @@ private fun stylNadpisuKarty(): TextStyle =
     MaterialTheme.typography.titleMedium.copy(fontFamily = Grotesk, fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
 
 /**
- * Farby blokov sú stredne svetlé - na tmavom podklade čitateľné, na svetlom papieri
- * nie. Vo svetlom režime sa preto text vo farbe bloku stmaví.
+ * Farby blokov sú stredne svetlé - na svetlom papieri aj na uhlí majú text vo farbe bloku
+ * hraničný kontrast. Vo svetlom režime sa preto stmaví, v tmavom mierne zosvetlí.
  */
 @Composable
 private fun citatelna(farba: Color): Color =
-    if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) lerp(farba, Color.Black, 0.3f) else farba
+    if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) lerp(farba, Color.Black, 0.3f)
+    else lerp(farba, Color.White, 0.2f)

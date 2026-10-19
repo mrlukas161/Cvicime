@@ -179,8 +179,10 @@ fun TestObrazovka(hotovo: () -> Unit, model: TestModel = viewModel()) {
         Column(Modifier.padding(start = 20.dp, end = 8.dp, top = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.heightIn(min = 48.dp)) {
                 Text("Vstupný test", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
-                // Uložiť sa dá kedykoľvek - zvyšné rebríky ostanú, kde sú.
-                TextButton(onClick = uloz, enabled = !uklada) { Text("Uložiť") }
+                // Uložiť sa dá kedykoľvek - zvyšné rebríky ostanú, kde sú. V poslednom kroku je to akcia dole.
+                if (!posledny) {
+                    TextButton(onClick = uloz, enabled = !uklada) { Text("Uložiť") }
+                }
             }
             Text(
                 "Nastav najťažší stupeň, ktorý zvládneš aspoň trikrát s poriadnou technikou. " +
@@ -277,7 +279,8 @@ fun TestObrazovka(hotovo: () -> Unit, model: TestModel = viewModel()) {
                 }
             }
             VelkeTlacidlo(
-                text = if (posledny) "Hotovo, poďme cvičiť" else "Ďalej",
+                // Krátko - vedľa tlačidla Späť sa dlhší text zalomil do dvoch riadkov.
+                text = if (posledny) "Hotovo" else "Ďalej",
                 onClick = { if (posledny) uloz() else krok = aktualny + 1 },
                 modifier = Modifier.weight(1f),
                 ikona = if (posledny) Icons.Filled.Check else null,
@@ -512,7 +515,8 @@ private fun farbaRebrika(r: RebrikEntity): Color =
 
 private fun textNaFarbe(farba: Color): Color = if (farba.luminance() > 0.18f) Color(0xFF1C1917) else Color.White
 
-/** Vo svetlom režime sa text vo farbe bloku stmaví, aby bol čitateľný na papieri. */
+/** Text vo farbe bloku: vo svetlom režime stmavený, v tmavom mierne zosvetlený (kontrast). */
 @Composable
 private fun citatelnaVTeste(farba: Color): Color =
-    if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) lerp(farba, Color.Black, 0.3f) else farba
+    if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) lerp(farba, Color.Black, 0.3f)
+    else lerp(farba, Color.White, 0.2f)

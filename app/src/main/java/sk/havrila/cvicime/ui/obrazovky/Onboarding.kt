@@ -306,7 +306,8 @@ fun OnboardingObrazovka(hotovo: () -> Unit, model: OnboardingModel = viewModel()
                     modifier = Modifier.weight(1f),
                 )
                 // Pri úprave (nie pri prvom spustení) sa dá uložiť hneď - netreba prejsť všetky kroky.
-                if (!prveSpustenie && predvyplnene) {
+                // V poslednom kroku je uloženie hlavná akcia dole, tu by bolo navyše.
+                if (!prveSpustenie && predvyplnene && krok != kroky.lastIndex) {
                     TextButton(onClick = uloz, enabled = !uklada) { Text("Uložiť") }
                 }
             }
@@ -404,7 +405,8 @@ fun OnboardingObrazovka(hotovo: () -> Unit, model: OnboardingModel = viewModel()
                 }
             }
             VelkeTlacidlo(
-                text = if (posledny) "Uložiť a pokračovať" else "Ďalej",
+                // Krátko - vedľa tlačidla Späť sa dlhší text zalomil do dvoch riadkov.
+                text = if (posledny) "Uložiť" else "Ďalej",
                 onClick = { if (posledny) uloz() else krok++ },
                 modifier = Modifier.weight(1f),
                 ikona = if (posledny) Icons.Filled.Check else null,
