@@ -51,7 +51,24 @@ private val tmava = darkColorScheme(
     surfaceVariant = Color(0xFF2A2622),
     onSurfaceVariant = Color(0xFFBFB6AC),
     outline = Color(0xFF5C544C),
+    outlineVariant = Color(0xFF3D3731),
     error = Color(0xFFE5796B),
+    errorContainer = Color(0xFF8C1D18),
+    onErrorContainer = Color(0xFFFFDAD6),
+    tertiaryContainer = Color(0xFF5C4300),
+    onTertiaryContainer = Color(0xFFFFE6B0),
+    // Kontajnery M3 by inak prevzali fialkasté neutrály z predvolenej palety - presne to,
+    // čo robí appku "generovanou". Tu sú teplé, v tóne uhlia.
+    surfaceContainerLowest = Color(0xFF0D0B0A),
+    surfaceContainerLow = Color(0xFF191614),
+    surfaceContainer = Color(0xFF1E1B18),
+    surfaceContainerHigh = Color(0xFF282420),
+    surfaceContainerHighest = Color(0xFF332E29),
+    surfaceBright = Color(0xFF3A342F),
+    surfaceDim = Color(0xFF12100E),
+    inverseSurface = Color(0xFFEFE9E3),
+    inverseOnSurface = Color(0xFF2A2622),
+    inversePrimary = PlamenTmavy,
 )
 
 private val svetla = lightColorScheme(
@@ -72,7 +89,22 @@ private val svetla = lightColorScheme(
     surfaceVariant = Color(0xFFEDE6DD),
     onSurfaceVariant = Color(0xFF4E463E),
     outline = Color(0xFF80776E),
+    outlineVariant = Color(0xFFD5CCC2),
     error = Color(0xFFB3261E),
+    errorContainer = Color(0xFFFFDAD6),
+    onErrorContainer = Color(0xFF410002),
+    tertiaryContainer = Color(0xFFFFE6B0),
+    onTertiaryContainer = Color(0xFF2A1D00),
+    surfaceContainerLowest = Color.White,
+    surfaceContainerLow = Color(0xFFF6F1EA),
+    surfaceContainer = Color(0xFFF1EBE3),
+    surfaceContainerHigh = Color(0xFFEBE4DB),
+    surfaceContainerHighest = Color(0xFFE5DDD3),
+    surfaceBright = Color.White,
+    surfaceDim = Color(0xFFE2DAD0),
+    inverseSurface = Color(0xFF322D29),
+    inverseOnSurface = Color(0xFFF7EFE7),
+    inversePrimary = Plamen,
 )
 
 /**

@@ -225,7 +225,45 @@ interface DenikDao {
 
     @Query("SELECT druh, COUNT(*) AS pocet FROM prekazka WHERE epoch_den >= :od GROUP BY druh ORDER BY pocet DESC")
     suspend fun najcastejsiePrekazky(od: Long): List<PocetPrekazok>
+
+    // ---------- štatistiky (0.6) - len čítanie, schéma sa nemení ----------
+
+    /** Dni s dokončeným tréningom - týždenný pás na Domove, kalendár na Pokroku. */
+    @Query("SELECT DISTINCT epoch_den FROM trening WHERE dokonceny = 1 AND epoch_den >= :odDna ORDER BY epoch_den")
+    fun dniTreningovTok(odDna: Long): Flow<List<Long>>
+
+    /** Počet dokončených tréningov a ich celkový čas. */
+    @Query(
+        """
+        SELECT COUNT(*) AS pocet, COALESCE(SUM(koniec - zaciatok), 0) AS trvanieMs
+        FROM trening WHERE dokonceny = 1 AND koniec IS NOT NULL AND epoch_den >= :odDna
+        """
+    )
+    fun suhrnTreningovTok(odDna: Long = 0): Flow<SuhrnTreningov>
+
+    @Query("SELECT COUNT(*) FROM seria WHERE skutocna_hodnota IS NOT NULL AND preskocena = 0")
+    fun pocetSeriiTok(): Flow<Int>
+
+    /** Najlepší výkon na každom cviku mimo daného tréningu - porovnanie pre osobný rekord. */
+    @Query(
+        """
+        SELECT cvik_id AS cvikId, MAX(skutocna_hodnota) AS hodnota FROM seria
+        WHERE skutocna_hodnota IS NOT NULL AND preskocena = 0 AND trening_id != :okremTreningu
+        GROUP BY cvik_id
+        """
+    )
+    suspend fun maximaCvikov(okremTreningu: Long): List<MaxCviku>
+
+    /** Všetky odcvičené série chronologicky - história osobných rekordov sa počíta v Kotline. */
+    @Query("SELECT * FROM seria WHERE skutocna_hodnota IS NOT NULL AND preskocena = 0 ORDER BY epoch_den, id")
+    suspend fun vsetkyOdcviceneSerie(): List<SeriaEntity>
 }
+
+/** Súhrn dokončených tréningov. */
+data class SuhrnTreningov(val pocet: Int, val trvanieMs: Long)
+
+/** Najlepšia hodnota (opakovania alebo sekundy) dosiahnutá na cviku. */
+data class MaxCviku(val cvikId: String, val hodnota: Int)
 
 data class PocetPrekazok(val druh: String, val pocet: Int)
 

@@ -375,6 +375,65 @@ class Repozitar(context: Context) {
         return koren.toString(2)
     }
 
+    // ---------------------------------------------------------------- štatistiky a rekordy (0.6)
+
+    fun dniTreningovTok(odDna: Long) = denik.dniTreningovTok(odDna)
+
+    fun suhrnTreningovTok(odDna: Long = 0) = denik.suhrnTreningovTok(odDna)
+
+    fun pocetSeriiTok() = denik.pocetSeriiTok()
+
+    /**
+     * Osobné rekordy dosiahnuté v danom tréningu - séria, ktorá prekonala doterajšie maximum
+     * na TOM ISTOM cviku. Prvé vyskúšanie cviku rekord nie je (nebolo s čím porovnať).
+     * Na jeden cvik sa vráti najviac jeden rekord (najlepšia séria tréningu).
+     */
+    suspend fun rekordyTreningu(treningId: Long): List<Rekord> {
+        val predtym = denik.maximaCvikov(treningId).associate { it.cvikId to it.hodnota }
+        return denik.serieTreningu(treningId)
+            .filter { !it.preskocena && it.skutocnaHodnota != null }
+            .groupBy { it.cvikId }
+            .mapNotNull { (cvikId, serie) ->
+                val najlepsia = serie.maxBy { it.skutocnaHodnota!! }
+                val stare = predtym[cvikId] ?: return@mapNotNull null
+                if (najlepsia.skutocnaHodnota!! <= stare) return@mapNotNull null
+                Rekord(
+                    cvikId = cvikId,
+                    nazov = katalog.cvik(cvikId)?.nazov ?: cvikId,
+                    rebrikId = najlepsia.rebrikId,
+                    meranie = najlepsia.meranie,
+                    hodnota = najlepsia.skutocnaHodnota,
+                    predtym = stare,
+                    epochDen = najlepsia.epochDen,
+                )
+            }
+    }
+
+    /** Posledné osobné rekordy naprieč históriou (najnovšie prvé). */
+    suspend fun posledneRekordy(limit: Int = 8): List<Rekord> {
+        val maxima = mutableMapOf<String, Int>()
+        val rekordy = mutableListOf<Rekord>()
+        // Za jeden deň sa na cvik ráta len najlepšia séria - inak by každá séria bola "rekord".
+        for ((_, dennySet) in denik.vsetkyOdcviceneSerie().groupBy { it.epochDen to it.cvikId }) {
+            val najlepsia = dennySet.maxBy { it.skutocnaHodnota!! }
+            val hodnota = najlepsia.skutocnaHodnota!!
+            val stare = maxima[najlepsia.cvikId]
+            if (stare != null && hodnota > stare) {
+                rekordy += Rekord(
+                    cvikId = najlepsia.cvikId,
+                    nazov = katalog.cvik(najlepsia.cvikId)?.nazov ?: najlepsia.cvikId,
+                    rebrikId = najlepsia.rebrikId,
+                    meranie = najlepsia.meranie,
+                    hodnota = hodnota,
+                    predtym = stare,
+                    epochDen = najlepsia.epochDen,
+                )
+            }
+            if (stare == null || hodnota > stare) maxima[najlepsia.cvikId] = hodnota
+        }
+        return rekordy.sortedByDescending { it.epochDen }.take(limit)
+    }
+
     // ---------------------------------------------------------------- pomocné
 
     fun dnes(): Long = LocalDate.now().toEpochDay()
@@ -394,3 +453,14 @@ class Repozitar(context: Context) {
             }
     }
 }
+
+/** Osobný rekord - [hodnota] sú opakovania alebo sekundy podľa [meranie]. */
+data class Rekord(
+    val cvikId: String,
+    val nazov: String,
+    val rebrikId: String,
+    val meranie: String,
+    val hodnota: Int,
+    val predtym: Int,
+    val epochDen: Long,
+)
