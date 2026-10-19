@@ -1,22 +1,66 @@
 package sk.havrila.cvicime.ui.obrazovky
 
 import android.app.Application
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.outlined.AutoStories
+import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.FitnessCenter
+import androidx.compose.material.icons.outlined.Flag
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.LightMode
+import androidx.compose.material.icons.outlined.MonitorWeight
+import androidx.compose.material.icons.outlined.NotificationsActive
+import androidx.compose.material.icons.outlined.PersonAdd
+import androidx.compose.material.icons.outlined.Pets
+import androidx.compose.material.icons.outlined.RecordVoiceOver
+import androidx.compose.material.icons.outlined.Replay
+import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.SystemUpdate
+import androidx.compose.material.icons.outlined.Vibration
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerDialog
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,9 +69,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import sk.havrila.cvicime.aktualizacia.AppUpdater
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
@@ -37,9 +88,19 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import sk.havrila.cvicime.BuildConfig
+import sk.havrila.cvicime.aktualizacia.AppUpdater
 import sk.havrila.cvicime.data.Repozitar
 import sk.havrila.cvicime.data.denik.CielEntity
+import sk.havrila.cvicime.data.denik.DietaEntity
 import sk.havrila.cvicime.data.denik.ProfilEntity
+import sk.havrila.cvicime.data.model.Blok
+import sk.havrila.cvicime.data.model.Naradie
+import sk.havrila.cvicime.ui.komponenty.NadpisSekcie
+import sk.havrila.cvicime.ui.komponenty.TonovanaKarta
+import sk.havrila.cvicime.ui.komponenty.rememberHaptika
+import sk.havrila.cvicime.ui.komponenty.sklonuj
+import sk.havrila.cvicime.ui.theme.FarbyBlokov
+import sk.havrila.cvicime.ui.theme.Grotesk
 
 class NastaveniaModel(app: Application) : AndroidViewModel(app) {
 
@@ -74,7 +135,7 @@ class NastaveniaModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    private val _deti = MutableStateFlow<List<sk.havrila.cvicime.data.denik.DietaEntity>>(emptyList())
+    private val _deti = MutableStateFlow<List<DietaEntity>>(emptyList())
     val deti = _deti.asStateFlow()
 
     init {
@@ -85,9 +146,7 @@ class NastaveniaModel(app: Application) : AndroidViewModel(app) {
 
     fun pridajDieta(meno: String, vek: Int) {
         viewModelScope.launch {
-            repo.ulozDieta(
-                sk.havrila.cvicime.data.denik.DietaEntity(meno = meno, vek = vek, farba = 0)
-            )
+            repo.ulozDieta(DietaEntity(meno = meno, vek = vek, farba = 0))
         }
     }
 
@@ -125,6 +184,11 @@ class NastaveniaModel(app: Application) : AndroidViewModel(app) {
     val prefs get() = repo.prefs
 }
 
+/**
+ * Nastavenia ako skupiny riadkov (ikona + titul + popis + ovládač vpravo), nie dlhý formulár.
+ * Každá doterajšia funkcia ostáva: ciele, náradie, prepínače prehrávača, kotva pripomienky,
+ * deti a zbierka, teória, export, retest, aktualizácie, o appke.
+ */
 @Composable
 fun NastaveniaObrazovka(
     naOnboarding: () -> Unit,
@@ -138,6 +202,7 @@ fun NastaveniaObrazovka(
     val deti by model.deti.collectAsStateWithLifecycle()
     val kontext = LocalContext.current
     val rozsah = rememberCoroutineScope()
+    val haptika = rememberHaptika()
 
     var vibracie by remember { mutableStateOf(model.prefs.vibracieZapnute) }
     var obrazovka by remember { mutableStateOf(model.prefs.obrazovkaStaleZapnuta) }
@@ -145,235 +210,319 @@ fun NastaveniaObrazovka(
     var hladam by remember { mutableStateOf(false) }
     var stavAktualizacie by remember { mutableStateOf<String?>(null) }
     var dialogDieta by remember { mutableStateOf(false) }
+    var exportujem by remember { mutableStateOf(false) }
     var stavExportu by remember { mutableStateOf<String?>(null) }
+    var stavTestu by remember { mutableStateOf<String?>(null) }
+
+    var upravujemKotvu by remember { mutableStateOf(false) }
+    var dialogCas by remember { mutableStateOf(false) }
+    var stavKotvy by remember { mutableStateOf<String?>(null) }
     var kotvaText by remember(profil?.kotvaText) { mutableStateOf(profil?.kotvaText ?: "") }
-    var kotvaCas by remember(profil?.kotvaMinuty) {
-        mutableStateOf(
-            profil?.kotvaMinuty?.takeIf { it >= 0 }
-                ?.let { "%02d:%02d".format(it / 60, it % 60) } ?: ""
-        )
-    }
+    var kotvaMinuty by remember(profil?.kotvaMinuty) { mutableStateOf(profil?.kotvaMinuty ?: -1) }
+
+    // Farby skupín - rovnaký jazyk ako zvyšok appky (primary = tréning, tertiary = deti…).
+    val farbaTrening = MaterialTheme.colorScheme.primary
+    val farbaPrehravac = MaterialTheme.colorScheme.secondary
+    val farbaRodina = MaterialTheme.colorScheme.tertiary
+    val farbaPripomienky = citatelnaFarbaNastaveni(FarbyBlokov.pre(Blok.ROZOHRIATIE))
+    val farbaData = citatelnaFarbaNastaveni(FarbyBlokov.pre(Blok.MOBILITA))
+    val farbaOAppke = MaterialTheme.colorScheme.onSurfaceVariant
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(20.dp),
+            .padding(horizontal = 20.dp),
     ) {
+        Spacer(Modifier.height(20.dp))
         Text("Nastavenia", style = MaterialTheme.typography.headlineLarge)
 
-        Spacer(Modifier.height(20.dp))
-        Text("Ciele", style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.height(6.dp))
-        if (ciele.isEmpty()) {
-            Text(
-                "Zatiaľ žiadne. Bez cieľov appka skladá len všeobecný tréning.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+        // ------------------------------------------------------------ tréning a ciele
+        SekciaNastaveni("Tréning a ciele") {
+            RiadokNastavenia(
+                ikona = Icons.Outlined.Flag,
+                farba = farbaTrening,
+                titul = "Ciele",
+                popis = if (ciele.isEmpty()) {
+                    "Zatiaľ žiadne. Bez cieľov appka skladá len všeobecný tréning."
+                } else {
+                    ciele.joinToString(" · ") { it.nazov }
+                },
+                onClick = naOnboarding,
+                vpravo = { Sipka() },
             )
-        } else {
-            ciele.forEach { Text("• ${it.nazov}", style = MaterialTheme.typography.bodyLarge) }
+            Oddelovac()
+            val naradie = profil?.naradie.orEmpty().split(",")
+                .mapNotNull { Naradie.z(it.trim()) }
+                .filter { it != Naradie.ZIADNE }
+            RiadokNastavenia(
+                ikona = Icons.Outlined.FitnessCenter,
+                farba = farbaTrening,
+                titul = "Náradie",
+                popis = if (naradie.isEmpty()) "Len vlastná váha" else naradie.joinToString(" · ") { it.nazov },
+                onClick = naOnboarding,
+                vpravo = { Sipka() },
+            )
+            Oddelovac()
+            RiadokNastavenia(
+                ikona = Icons.Outlined.MonitorWeight,
+                farba = farbaTrening,
+                titul = "Telo a výživa",
+                popis = "Váha ${profil?.vahaKg?.let { formatujKg(it) } ?: "–"} kg · " +
+                    "cieľ bielkovín ${profil?.bielkovinyCielG ?: 0} g/deň",
+                onClick = naOnboarding,
+                vpravo = { Sipka() },
+            )
+            Oddelovac()
+            RiadokNastavenia(
+                ikona = Icons.Outlined.Replay,
+                farba = farbaTrening,
+                titul = "Spraviť vstupný test znova",
+                popis = stavTestu ?: ("Retest sa oplatí po štyroch týždňoch — a v podobnú dennú dobu ako " +
+                    "prvýkrát. Sila cez deň kolíše, inak by graf ukázal progres, ktorý žiadny nie je."),
+                onClick = {
+                    model.zopakujTest()
+                    haptika.potvrdenie()
+                    stavTestu = "Hotovo — test ťa čaká na obrazovke Dnes."
+                },
+            )
         }
-        Spacer(Modifier.height(10.dp))
-        OutlinedButton(onClick = naOnboarding) { Text("Zmeniť ciele a náradie") }
 
-        Spacer(Modifier.height(24.dp))
-        HorizontalDivider()
-        Spacer(Modifier.height(16.dp))
-
-        Text("Prehrávač", style = MaterialTheme.typography.titleLarge)
-        Prepinac("Hlas a pípanie", hlas) {
-            hlas = it
-            model.prefs.hlasZapnuty = it
-        }
-        Prepinac("Vibrácie na konci série", vibracie) {
-            vibracie = it
-            model.prefs.vibracieZapnute = it
-        }
-        Prepinac("Nechať obrazovku zapnutú", obrazovka) {
-            obrazovka = it
-            model.prefs.obrazovkaStaleZapnuta = it
-        }
-
-        Spacer(Modifier.height(24.dp))
-        HorizontalDivider()
-        Spacer(Modifier.height(16.dp))
-
-        Text("Pripomienka", style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.height(4.dp))
-        Text(
-            "Naviaž ju na niečo, čo sa deje aj tak — napríklad „keď uložím deti\". " +
-                "Kotva funguje lepšie než hodina.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(8.dp))
-        OutlinedTextField(
-            value = kotvaText,
-            onValueChange = { kotvaText = it },
-            label = { Text("Kotva (napr. keď uložím deti)") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Spacer(Modifier.height(8.dp))
-        OutlinedTextField(
-            value = kotvaCas,
-            onValueChange = { kotvaCas = it.filter { z -> z.isDigit() || z == ':' } },
-            label = { Text("Čas kontroly (HH:MM), prázdne = vypnuté") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Spacer(Modifier.height(8.dp))
-        OutlinedButton(onClick = {
-            val casti = kotvaCas.split(":")
-            val minuty = if (casti.size == 2) {
-                val h = casti[0].toIntOrNull()
-                val m = casti[1].toIntOrNull()
-                if (h != null && m != null && h in 0..23 && m in 0..59) h * 60 + m else -1
-            } else {
-                -1
+        // ------------------------------------------------------------ prehrávač
+        SekciaNastaveni("Prehrávač") {
+            RiadokPrepinaca(
+                ikona = Icons.Outlined.RecordVoiceOver,
+                farba = farbaPrehravac,
+                titul = "Hlas a pípanie",
+                popis = "Ohlási cvik a pípa pri odpočte",
+                hodnota = hlas,
+            ) {
+                hlas = it
+                model.prefs.hlasZapnuty = it
             }
-            model.ulozKotvu(kontext, kotvaText, minuty)
-        }) { Text("Uložiť pripomienku") }
+            Oddelovac()
+            RiadokPrepinaca(
+                ikona = Icons.Outlined.Vibration,
+                farba = farbaPrehravac,
+                titul = "Vibrácie na konci série",
+                popis = null,
+                hodnota = vibracie,
+            ) {
+                vibracie = it
+                model.prefs.vibracieZapnute = it
+            }
+            Oddelovac()
+            RiadokPrepinaca(
+                ikona = Icons.Outlined.LightMode,
+                farba = farbaPrehravac,
+                titul = "Nechať obrazovku zapnutú",
+                popis = "Počas tréningu nezhasne",
+                hodnota = obrazovka,
+            ) {
+                obrazovka = it
+                model.prefs.obrazovkaStaleZapnuta = it
+            }
+        }
 
-        Spacer(Modifier.height(24.dp))
-        HorizontalDivider()
-        Spacer(Modifier.height(16.dp))
-
-        Text("Deti", style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.height(4.dp))
-        Text(
-            "Pridané deti sa dajú vybrať pri tréningu — cvičia svoje zvieracie cviky " +
+        // ------------------------------------------------------------ rodina
+        SekciaNastaveni(
+            "Rodina",
+            pata = "Pridané deti sa dajú vybrať pri tréningu — cvičia svoje zvieracie cviky " +
                 "v tvojich pauzách a zbierajú zvieratá.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(8.dp))
-        if (deti.isEmpty()) {
-            Text("Zatiaľ žiadne.", style = MaterialTheme.typography.bodyMedium)
-        } else {
+        ) {
+            val poradieFarieb = deti.sortedBy { it.id }.mapIndexed { i, d -> d.id to i }.toMap()
             deti.forEach { d ->
-                Text("• ${d.meno} (${d.vek} r.)", style = MaterialTheme.typography.bodyLarge)
+                RiadokDietata(d, farbaDietataNastavenia(d, poradieFarieb[d.id] ?: 0))
+                Oddelovac()
+            }
+            RiadokNastavenia(
+                ikona = Icons.Outlined.PersonAdd,
+                farba = farbaRodina,
+                titul = "Pridať dieťa",
+                popis = if (deti.isEmpty()) "Zatiaľ žiadne" else null,
+                onClick = { dialogDieta = true },
+            )
+            Oddelovac()
+            RiadokNastavenia(
+                ikona = Icons.Outlined.Pets,
+                farba = farbaRodina,
+                titul = "Zbierka zvierat",
+                popis = "Zvieratá, ktoré deti objavili pri cvičení",
+                onClick = naZbierka,
+                vpravo = { Sipka() },
+            )
+        }
+
+        // ------------------------------------------------------------ pripomienky
+        SekciaNastaveni("Pripomienky", pata = "Kotva funguje lepšie než hodina.") {
+            val ulozenaKotva = profil?.kotvaText.orEmpty()
+            val ulozeneMinuty = profil?.kotvaMinuty ?: -1
+            val otocenie by animateFloatAsState(if (upravujemKotvu) 180f else 0f, label = "kotvaSipka")
+            RiadokNastavenia(
+                ikona = Icons.Outlined.NotificationsActive,
+                farba = farbaPripomienky,
+                titul = "Pripomienka s kotvou",
+                popis = stavKotvy ?: when {
+                    ulozeneMinuty < 0 -> "Vypnutá"
+                    ulozenaKotva.isBlank() -> "Každý deň o ${hhmm(ulozeneMinuty)}"
+                    else -> "„$ulozenaKotva“ · každý deň o ${hhmm(ulozeneMinuty)}"
+                },
+                onClick = {
+                    upravujemKotvu = !upravujemKotvu
+                    stavKotvy = null
+                },
+                vpravo = {
+                    Icon(
+                        Icons.Filled.ExpandMore,
+                        contentDescription = if (upravujemKotvu) "Zbaliť" else "Upraviť pripomienku",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.rotate(otocenie),
+                    )
+                },
+            )
+            AnimatedVisibility(
+                visible = upravujemKotvu,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut(),
+            ) {
+                Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp)) {
+                    Text(
+                        "Naviaž ju na niečo, čo sa deje aj tak — napríklad „keď uložím deti“. " +
+                            "Bez času je pripomienka vypnutá.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = kotvaText,
+                        onValueChange = { kotvaText = it },
+                        label = { Text("Kotva (napr. keď uložím deti)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedButton(onClick = { dialogCas = true }, modifier = Modifier.heightIn(min = 48.dp)) {
+                            Icon(Icons.Outlined.Schedule, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(if (kotvaMinuty >= 0) "Kontrola o ${hhmm(kotvaMinuty)}" else "Nastaviť čas")
+                        }
+                        if (kotvaMinuty >= 0) {
+                            Spacer(Modifier.width(8.dp))
+                            TextButton(onClick = { kotvaMinuty = -1 }) { Text("Bez času") }
+                        }
+                    }
+                    Spacer(Modifier.height(16.dp))
+                    Button(
+                        onClick = {
+                            model.ulozKotvu(kontext, kotvaText.trim(), kotvaMinuty)
+                            haptika.potvrdenie()
+                            upravujemKotvu = false
+                            stavKotvy = if (kotvaMinuty >= 0) {
+                                "Uložené — každý deň o ${hhmm(kotvaMinuty)}"
+                            } else {
+                                "Uložené — pripomienka je vypnutá"
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                        shape = RoundedCornerShape(16.dp),
+                    ) { Text("Uložiť pripomienku") }
+                }
             }
         }
-        Spacer(Modifier.height(8.dp))
-        Row {
-            OutlinedButton(onClick = { dialogDieta = true }) { Text("Pridať dieťa") }
-            Spacer(Modifier.width(10.dp))
-            OutlinedButton(onClick = naZbierka) { Text("Zbierka zvierat") }
-        }
 
-        Spacer(Modifier.height(24.dp))
-        HorizontalDivider()
-        Spacer(Modifier.height(16.dp))
-
-        Text("Prečo to tak je", style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.height(4.dp))
-        Text(
-            "Krátke vysvetlenia pravidiel appky — objem, pauzy, zlyhanie, deti a motivácia.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(8.dp))
-        OutlinedButton(onClick = naTeoria) { Text("Otvoriť teóriu") }
-
-        Spacer(Modifier.height(24.dp))
-        HorizontalDivider()
-        Spacer(Modifier.height(16.dp))
-
-        Text("Záloha", style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.height(4.dp))
-        Text(
-            "Celý denník (tréningy, testy, ciele, zvieratá) ako JSON do priečinka Downloads.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(8.dp))
-        OutlinedButton(onClick = { model.exportuj(kontext) { stavExportu = it } }) {
-            Text("Exportovať zálohu")
-        }
-        stavExportu?.let {
-            Spacer(Modifier.height(6.dp))
-            Text(it, style = MaterialTheme.typography.bodyMedium)
-        }
-
-        Spacer(Modifier.height(24.dp))
-        HorizontalDivider()
-        Spacer(Modifier.height(16.dp))
-
-        Text("Vstupný test", style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.height(4.dp))
-        Text(
-            "Retest sa oplatí po štyroch týždňoch — a v podobnú dennú dobu ako prvýkrát. " +
-                "Sila cez deň kolíše, inak by graf ukázal progres, ktorý žiadny nie je.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(10.dp))
-        OutlinedButton(onClick = model::zopakujTest) { Text("Spraviť test znova") }
-
-        Spacer(Modifier.height(24.dp))
-        HorizontalDivider()
-        Spacer(Modifier.height(16.dp))
-
-        Text("Aktualizácie", style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.height(4.dp))
-        Text(
-            "Appka sa raz denne sama pozrie, či nie je novšia verzia. Tu ju vieš skontrolovať hneď.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(10.dp))
-        OutlinedButton(
-            enabled = !hladam,
-            onClick = {
-                hladam = true
-                stavAktualizacie = null
-                rozsah.launch {
-                    val nova = AppUpdater.zisti(kontext, nasilu = true)
-                    if (nova == null) {
-                        hladam = false
-                        stavAktualizacie = "Máš najnovšiu verziu."
-                    } else if (!AppUpdater.smieInstalovat(kontext)) {
-                        hladam = false
-                        stavAktualizacie = "Je nová verzia ${nova.nazovVerzie}, ale Android najprv " +
-                            "potrebuje povolenie inštalovať aplikácie z tejto appky. Otváram nastavenie."
-                        AppUpdater.otvorPovolenie(kontext)
-                    } else {
-                        stavAktualizacie = "Sťahujem ${nova.nazovVerzie}…"
-                        val problem = AppUpdater.stiahniANainstaluj(kontext, nova)
-                        hladam = false
-                        stavAktualizacie = problem ?: "Stiahnuté — potvrď inštaláciu."
+        // ------------------------------------------------------------ dáta
+        SekciaNastaveni("Dáta") {
+            RiadokNastavenia(
+                ikona = Icons.Outlined.Download,
+                farba = farbaData,
+                titul = "Exportovať zálohu",
+                popis = stavExportu
+                    ?: "Celý denník (tréningy, testy, ciele, zvieratá) ako JSON do priečinka Downloads.",
+                onClick = if (exportujem) {
+                    null
+                } else {
+                    {
+                        exportujem = true
+                        stavExportu = null
+                        model.exportuj(kontext) {
+                            stavExportu = it
+                            exportujem = false
+                        }
                     }
-                }
-            },
-        ) { Text(if (hladam) "Kontrolujem…" else "Skontrolovať aktualizácie") }
-        stavAktualizacie?.let {
-            Spacer(Modifier.height(8.dp))
-            Text(it, style = MaterialTheme.typography.bodyMedium)
+                },
+                vpravo = if (exportujem) {
+                    { CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.5.dp) }
+                } else {
+                    null
+                },
+            )
         }
 
-        Spacer(Modifier.height(24.dp))
-        HorizontalDivider()
-        Spacer(Modifier.height(16.dp))
-
-        Text("O appke", style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.height(6.dp))
-        Text(
-            "Verzia ${BuildConfig.VERSION_NAME} (build ${BuildConfig.VERSION_CODE})\n" +
-                "Knižnica: $pocetCvikov cvikov\n" +
-                "Váha ${profil?.vahaKg ?: 0.0} kg · cieľ bielkovín ${profil?.bielkovinyCielG ?: 0} g/deň",
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        Spacer(Modifier.height(10.dp))
-        Text(
-            "Časť pravidiel v appke (nácvik zručností, prahy postupu, deload) vychádza " +
+        // ------------------------------------------------------------ o appke
+        SekciaNastaveni(
+            "O appke",
+            pata = "Časť pravidiel v appke (nácvik zručností, prahy postupu, deload) vychádza " +
                 "z praxe trénerov, nie z dôkazov — vedecké štúdie na ne zatiaľ neexistujú. " +
                 "Kde to tak je, appka to hovorí priamo.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(30.dp))
+        ) {
+            RiadokNastavenia(
+                ikona = Icons.Outlined.AutoStories,
+                farba = farbaOAppke,
+                titul = "Prečo to tak je",
+                popis = "Krátke vysvetlenia pravidiel appky — objem, pauzy, zlyhanie, deti a motivácia.",
+                onClick = naTeoria,
+                vpravo = { Sipka() },
+            )
+            Oddelovac()
+            RiadokNastavenia(
+                ikona = Icons.Outlined.SystemUpdate,
+                farba = farbaOAppke,
+                titul = "Skontrolovať aktualizácie",
+                popis = stavAktualizacie
+                    ?: "Appka sa raz denne sama pozrie, či nie je novšia verzia. Tu ju vieš skontrolovať hneď.",
+                onClick = if (hladam) {
+                    null
+                } else {
+                    {
+                        hladam = true
+                        stavAktualizacie = "Kontrolujem…"
+                        rozsah.launch {
+                            val nova = AppUpdater.zisti(kontext, nasilu = true)
+                            if (nova == null) {
+                                hladam = false
+                                stavAktualizacie = "Máš najnovšiu verziu."
+                            } else if (!AppUpdater.smieInstalovat(kontext)) {
+                                hladam = false
+                                stavAktualizacie = "Je nová verzia ${nova.nazovVerzie}, ale Android najprv " +
+                                    "potrebuje povolenie inštalovať aplikácie z tejto appky. Otváram nastavenie."
+                                AppUpdater.otvorPovolenie(kontext)
+                            } else {
+                                stavAktualizacie = "Sťahujem ${nova.nazovVerzie}…"
+                                val problem = AppUpdater.stiahniANainstaluj(kontext, nova)
+                                hladam = false
+                                stavAktualizacie = problem ?: "Stiahnuté — potvrď inštaláciu."
+                            }
+                        }
+                    }
+                },
+                vpravo = if (hladam) {
+                    { CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.5.dp) }
+                } else {
+                    null
+                },
+            )
+            Oddelovac()
+            RiadokNastavenia(
+                ikona = Icons.Outlined.Info,
+                farba = farbaOAppke,
+                titul = "Cvičíme ${BuildConfig.VERSION_NAME}",
+                popis = "Build ${BuildConfig.VERSION_CODE} · knižnica $pocetCvikov " +
+                    sklonuj(pocetCvikov, "cvik", "cviky", "cvikov"),
+            )
+        }
+
+        Spacer(Modifier.height(32.dp))
     }
 
     if (dialogDieta) {
@@ -382,56 +531,273 @@ fun NastaveniaObrazovka(
             uloz = { meno, vek -> model.pridajDieta(meno, vek) },
         )
     }
+    if (dialogCas) {
+        DialogCasu(
+            minuty = kotvaMinuty,
+            zavri = { dialogCas = false },
+            potvrd = { kotvaMinuty = it },
+        )
+    }
+}
+
+// ------------------------------------------------------------------ stavebné kamene
+
+@Composable
+private fun SekciaNastaveni(
+    nadpis: String,
+    pata: String? = null,
+    obsah: @Composable ColumnScope.() -> Unit,
+) {
+    Column(Modifier.fillMaxWidth().padding(top = 20.dp)) {
+        NadpisSekcie(nadpis, Modifier.padding(horizontal = 4.dp))
+        Spacer(Modifier.height(8.dp))
+        TonovanaKarta(vnutorneOdsadenie = 0.dp, obsah = obsah)
+        if (pata != null) {
+            Text(
+                pata,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 8.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun RiadokNastavenia(
+    ikona: ImageVector,
+    farba: Color,
+    titul: String,
+    popis: String? = null,
+    onClick: (() -> Unit)? = null,
+    vpravo: (@Composable () -> Unit)? = null,
+) {
+    val haptika = rememberHaptika()
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .then(
+                if (onClick != null) Modifier.clickable { haptika.klik(); onClick() } else Modifier
+            )
+            .heightIn(min = 64.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IkonaRiadku(ikona, farba)
+        Spacer(Modifier.width(16.dp))
+        Column(Modifier.weight(1f).animateContentSize()) {
+            Text(titul, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+            if (popis != null) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    popis,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        if (vpravo != null) {
+            Spacer(Modifier.width(12.dp))
+            vpravo()
+        }
+    }
+}
+
+@Composable
+private fun RiadokPrepinaca(
+    ikona: ImageVector,
+    farba: Color,
+    titul: String,
+    popis: String?,
+    hodnota: Boolean,
+    zmena: (Boolean) -> Unit,
+) {
+    val haptika = rememberHaptika()
+    // Celý riadok je prepínač (väčšia dotyková plocha, správna sémantika pre TalkBack).
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .toggleable(
+                value = hodnota,
+                role = Role.Switch,
+                onValueChange = { haptika.klik(); zmena(it) },
+            )
+            .heightIn(min = 64.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IkonaRiadku(ikona, farba)
+        Spacer(Modifier.width(16.dp))
+        Column(Modifier.weight(1f)) {
+            Text(titul, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+            if (popis != null) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    popis,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        Spacer(Modifier.width(12.dp))
+        Switch(checked = hodnota, onCheckedChange = null)
+    }
+}
+
+@Composable
+private fun RiadokDietata(dieta: DietaEntity, farba: Color) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 64.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(farba.copy(alpha = 0.24f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                dieta.meno.trim().take(1).uppercase(),
+                style = MaterialTheme.typography.titleLarge.copy(fontFamily = Grotesk),
+                color = citatelnaFarbaNastaveni(farba),
+            )
+        }
+        Spacer(Modifier.width(16.dp))
+        Column(Modifier.weight(1f)) {
+            Text(dieta.meno, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+            Text(
+                "${dieta.vek} ${sklonuj(dieta.vek, "rok", "roky", "rokov")}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun IkonaRiadku(ikona: ImageVector, farba: Color) {
+    Box(
+        Modifier
+            .size(40.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(farba.copy(alpha = 0.16f)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(ikona, contentDescription = null, tint = farba, modifier = Modifier.size(22.dp))
+    }
+}
+
+@Composable
+private fun Sipka() {
+    Icon(
+        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+        contentDescription = null,
+        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+@Composable
+private fun Oddelovac() {
+    HorizontalDivider(
+        Modifier.padding(start = 72.dp),
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
+    )
 }
 
 @Composable
 private fun DialogDieta(zavri: () -> Unit, uloz: (String, Int) -> Unit) {
     var meno by remember { mutableStateOf("") }
     var vek by remember { mutableStateOf("") }
-    androidx.compose.material3.AlertDialog(
+    val platne = meno.isNotBlank() && vek.toIntOrNull() != null
+    AlertDialog(
         onDismissRequest = zavri,
         title = { Text("Nové dieťa") },
         text = {
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = meno,
                     onValueChange = { meno = it },
                     label = { Text("Meno") },
                     singleLine = true,
                 )
-                Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = vek,
-                    onValueChange = { vek = it.filter { z -> z.isDigit() } },
+                    onValueChange = { vek = it.filter { z -> z.isDigit() }.take(2) },
                     label = { Text("Vek (roky)") },
                     singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
+                    ),
                 )
             }
         },
         confirmButton = {
-            androidx.compose.material3.TextButton(onClick = {
-                val v = vek.toIntOrNull()
-                if (meno.isNotBlank() && v != null) {
-                    uloz(meno.trim(), v)
-                    zavri()
-                }
-            }) { Text("Pridať") }
+            TextButton(
+                enabled = platne,
+                onClick = {
+                    val v = vek.toIntOrNull()
+                    if (meno.isNotBlank() && v != null) {
+                        uloz(meno.trim(), v)
+                        zavri()
+                    }
+                },
+            ) { Text("Pridať") }
         },
         dismissButton = {
-            androidx.compose.material3.TextButton(onClick = zavri) { Text("Zrušiť") }
+            TextButton(onClick = zavri) { Text("Zrušiť") }
         },
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun Prepinac(popis: String, hodnota: Boolean, zmena: (Boolean) -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp),
-        verticalAlignment = Alignment.CenterVertically,
+private fun DialogCasu(minuty: Int, zavri: () -> Unit, potvrd: (Int) -> Unit) {
+    val stav = rememberTimePickerState(
+        initialHour = if (minuty >= 0) minuty / 60 else 21,
+        initialMinute = if (minuty >= 0) minuty % 60 else 0,
+        is24Hour = true,
+    )
+    TimePickerDialog(
+        onDismissRequest = zavri,
+        title = { Text("Čas kontroly") },
+        confirmButton = {
+            TextButton(onClick = {
+                potvrd(stav.hour * 60 + stav.minute)
+                zavri()
+            }) { Text("Nastaviť") }
+        },
+        dismissButton = {
+            TextButton(onClick = zavri) { Text("Zrušiť") }
+        },
     ) {
-        Text(popis, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-        Switch(checked = hodnota, onCheckedChange = zmena)
+        TimePicker(state = stav)
     }
 }
+
+// ------------------------------------------------------------------ pomocníci
+
+private fun hhmm(minuty: Int): String = "%02d:%02d".format(minuty / 60, minuty % 60)
+
+private fun formatujKg(kg: Double): String = kg.toString().removeSuffix(".0").replace('.', ',')
+
+/** Rovnaká paleta a pravidlo ako v Zbierke: farba z DB, inak podľa poradia pridania. */
+private val PALETA_DETI_NASTAVENIA = listOf(
+    Color(0xFFF2B138),
+    Color(0xFF4FA3D9),
+    Color(0xFFE57AA6),
+    Color(0xFF6E9B5A),
+    Color(0xFF9C7AD9),
+    Color(0xFFE0703C),
+)
+
+private fun farbaDietataNastavenia(dieta: DietaEntity, poradie: Int): Color =
+    if (dieta.farba != 0) Color(dieta.farba) else PALETA_DETI_NASTAVENIA[poradie % PALETA_DETI_NASTAVENIA.size]
+
+@Composable
+private fun citatelnaFarbaNastaveni(farba: Color): Color =
+    if (MaterialTheme.colorScheme.background.luminance() < 0.5f) lerp(farba, Color.White, 0.22f)
+    else lerp(farba, Color.Black, 0.32f)
