@@ -127,6 +127,13 @@ class Hlas(context: Context) {
         }
     }
 
+    /** Utne práve hovorenú vetu (prepnutie na pípanie/ticho). */
+    fun stichni() {
+        tts?.stop()
+        rozpravane.clear()
+        vratFocus()
+    }
+
     /** Krátke pípnutie odpočtu (posledné 3 sekundy). */
     fun pipni(zapnuty: Boolean) {
         if (!zapnuty) return

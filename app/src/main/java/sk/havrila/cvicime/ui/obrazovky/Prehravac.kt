@@ -353,7 +353,7 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
         val novy = _zvuk.value.dalsi()
         _zvuk.value = novy
         repo.prefs.rezimZvuku = novy
-        if (!novy.hlas) hlas.povedz("", false)
+        if (!novy.hlas) hlas.stichni()
     }
 
     fun prepniTv() {
@@ -1045,7 +1045,9 @@ fun PrehravacObrazovka(
         val veta = when (d.krok) {
             DetskyKrok.VYBER -> {
                 val mena = d.moznosti.map { c -> c.zviera?.let { Zvierata.podla(it) }?.meno ?: c.nazov }
-                if (mena.size == 2) "${d.meno}, vyber si: ${mena[0]}, alebo ${mena[1]}?" else null
+                // Po spravenom cviku najprv pochvala za labku, potom ďalší výber.
+                val pochvala = if (d.spravene.isNotEmpty()) "Labka je tvoja! " else ""
+                if (mena.size == 2) "$pochvala${d.meno}, vyber si: ${mena[0]}, alebo ${mena[1]}?" else null
             }
             DetskyKrok.CVICI -> d.aktualny?.let { c ->
                 val pokyn = c.cue.split("|").firstOrNull { it.isNotBlank() }?.trim().orEmpty()
