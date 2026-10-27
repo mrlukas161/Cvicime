@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,8 +24,18 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      # android-actions/setup-android padala od 0.6 - SDK sa inštaluje priamo (rovnako ako vo workflow Testy).
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        run: |
+          SDK="$RUNNER_TEMP/android-sdk"
+          mkdir -p "$SDK/cmdline-tools"
+          curl -sSfL -o "$RUNNER_TEMP/ct.zip" https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip
+          unzip -q "$RUNNER_TEMP/ct.zip" -d "$SDK/cmdline-tools"
+          mv "$SDK/cmdline-tools/cmdline-tools" "$SDK/cmdline-tools/latest"
+          yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$SDK" --licenses > /dev/null
+          "$SDK/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$SDK" "platforms;android-37.0" "build-tools;36.0.0" > /dev/null
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+          echo "sdk.dir=$SDK" > local.properties
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
