@@ -92,6 +92,19 @@ class KatalogAUkladanieTest {
         }
     }
 
+    /** Katalóg v4: každý cvik má animáciu a vzor naozaj existuje (pohyb sa prenesie do databázy). */
+    @Test
+    fun `kazdy cvik v databaze ma existujuci pohyb`() = runTest {
+        val app = ApplicationProvider.getApplicationContext<android.app.Application>()
+        val pohyby = sk.havrila.cvicime.ui.komponenty.pohyb.Pohyby.katalog(app)
+        for (r in repo.rebriky()) {
+            for (c in repo.cvikyRebrika(r.id)) {
+                assertNotNull("cvik ${c.id} nemá pohyb", c.pohyb)
+                assertTrue("cvik ${c.id} má neznámy pohyb '${c.pohyb}'", pohyby.ma(c.pohyb))
+            }
+        }
+    }
+
     /** Mobilita a rozohriatie nesmú nafukovať týždenný objem. */
     @Test
     fun `rozohriatie a mobilita nemaju priradene partie`() = runTest {

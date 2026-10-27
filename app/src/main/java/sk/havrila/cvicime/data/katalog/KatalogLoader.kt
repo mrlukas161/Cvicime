@@ -19,7 +19,8 @@ import org.json.JSONObject
  *         { "id": "kliky-1", "uroven": 1, "nazov": "Kliky o stenu",
  *           "meranie": "opakovania", "cielMin": 8, "cielMax": 15,
  *           "naradie": ["stena"], "partie": {"hrudnik": 1.0, "triceps": 0.5},
- *           "cue": ["..."], "chyby": ["..."], "jeDetsky": false, "zviera": null }
+ *           "cue": ["..."], "chyby": ["..."], "jeDetsky": false, "zviera": null,
+ *           "pohyb": "klik-stena" }
  *       ]
  *     }
  *   ]
@@ -92,6 +93,7 @@ object KatalogLoader {
                     jeDetsky = c.optBoolean("jeDetsky", false),
                     zviera = c.optString("zviera").takeIf { it.isNotBlank() && it != "null" },
                     znacky = c.optJSONArray("znacky").naCsv(),
+                    pohyb = c.optString("pohyb").takeIf { it.isNotBlank() && it != "null" },
                 )
             }
         }

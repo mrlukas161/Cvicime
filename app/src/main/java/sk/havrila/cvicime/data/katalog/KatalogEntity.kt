@@ -61,4 +61,9 @@ data class CvikEntity(
      * Podľa nich engine vylučuje cviky pri obmedzeniach - viď [sk.havrila.cvicime.data.model.Obmedzenie].
      */
     @ColumnInfo(name = "znacky", defaultValue = "") val znacky: String = "",
+    /**
+     * Id vzoru animácie z assets/pohyby.json (napr. "klik-stena", "australsky-pritah").
+     * Null = kreslí sa predvolený pohyb rebríka. Viď [sk.havrila.cvicime.ui.komponenty.pohyb.Pohyby].
+     */
+    @ColumnInfo(name = "pohyb") val pohyb: String? = null,
 )

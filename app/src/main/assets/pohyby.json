@@ -1,0 +1,863 @@
+{
+ "verzia": 1,
+ "kostra": {"trup": 0.3, "krk": 0.11, "hlava": 0.065, "stehno": 0.245, "holen": 0.245, "chodidlo": 0.07, "rameno": 0.18, "predlaktie": 0.16, "dlan": 0.05, "panva": 0.07, "plecia": 0.13},
+ "pohyby": [
+  {"id": "vysoke-kolena", "nazov": "Vysoké kolená na mieste", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0, 0.52], "trup": 90, "nP": [8, -82], "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-125, -45], "rZ": [-55, 20], "t": 450},
+   {"bok": [0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": [8, -82], "rP": [-55, 20], "rZ": [-125, -45], "t": 450}
+  ]},
+  {"id": "kruzenie-ramien", "nazov": "Krúženie ramenami", "pohlad": "bok", "druh": "opakovanie", "krivka": "linearna", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-90, -90], "rZ": [-100, -100], "t": 450},
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [0, 0], "rZ": [-10, -10], "t": 450},
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [90, 90], "rZ": [80, 80], "t": 450},
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [180, 180], "rZ": [170, 170], "t": 450},
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [270, 270], "rZ": [260, 260], "t": 0}
+  ]},
+  {"id": "macka-tava", "nazov": "Mačka – ťava", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.35, "x2": 0.45}], "pozy": [
+   {"bok": [0.0, 0.285], "trup": 16, "hlava": -45, "chrbat": 0.05, "nP": {"na": [0.0, 0.04], "u2": 180, "c": 180}, "rP": {"ik": [0.3, 0.03], "o": -1, "c": 0}, "t": 1500, "drz": 300},
+   {"bok": [0.0, 0.285], "trup": 16, "hlava": 45, "chrbat": -0.04, "nP": {"na": [0.0, 0.04], "u2": 180, "c": 180}, "rP": {"ik": [0.3, 0.03], "o": -1, "c": 0}, "t": 1500, "drz": 300}
+  ]},
+  {"id": "svihy-nohou", "nazov": "Švihy nohou vpred a vzad", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": [-35, -30], "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-96, -90], "rZ": [-10, -5], "t": 650},
+   {"bok": [0.0, 0.52], "trup": 90, "nP": [-140, -150], "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-96, -90], "rZ": [-10, -5], "t": 650}
+  ]},
+  {"id": "vypad-rotacia", "nazov": "Hlboký výpad s rotáciou", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.45, "x2": 0.5}], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-96, -90], "rZ": [-92, -95], "t": 500},
+   {"bok": [0.04, 0.47], "trup": 90, "nP": {"ik": [0.2, 0.13], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1, "c": -30}, "rP": [-100, -90], "rZ": [-90, -90], "t": 600},
+   {"bok": [0.07, 0.27], "trup": 12, "hlava": 70, "nP": {"ik": [0.34, 0.03], "o": 1}, "nZ": {"ik": [-0.33, 0.06], "o": 1, "c": -55}, "rP": [88, 90], "rZ": {"ik": [0.38, 0.03], "o": -1, "c": 0}, "t": 1000, "drz": 900}
+  ]},
+  {"id": "panak", "nazov": "Panák", "pohlad": "pred", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0, 0.52], "trup": 90, "nP": {"ik": [0.08, 0.03], "o": 1}, "rP": [-82, -86], "t": 380},
+   {"bok": [0, 0.5], "trup": 90, "nP": {"ik": [0.25, 0.04], "o": 1}, "rP": [58, 75], "t": 380}
+  ]},
+  {"id": "podpor-zdvih-panvy", "nazov": "Podpor so zdvihom panvy", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.3, "x2": 0.6}], "pozy": [
+   {"bok": [0, 0.07], "trup": 90, "nP": [-1.169, -1.169, 93.831], "rP": {"ik": [0.06, 0.03], "o": -1, "c": 0}, "t": 900, "drz": 300},
+   {"bok": [0, 0.13], "trup": 90, "lopatky": -0.06, "nP": [-8.13, -8.13, 86.87], "rP": {"ik": [0.06, 0.03], "o": -1, "c": 0}, "t": 900, "drz": 1500}
+  ]},
+  {"id": "podpor-jedna-noha", "nazov": "Podpor so zdvihnutou nohou", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.3, "x2": 0.6}], "pozy": [
+   {"bok": [0, 0.13], "trup": 90, "lopatky": -0.06, "nP": [3, 3, 95], "rP": {"ik": [0.06, 0.03], "o": -1, "c": 0}, "t": 2000, "drz": 0},
+   {"bok": [0, 0.13], "trup": 90, "lopatky": -0.06, "nP": [3, 3, 95], "rP": {"ik": [0.06, 0.03], "o": -1, "c": 0}, "t": 2000, "drz": 0}
+  ]},
+  {"id": "tuck-lsit", "nazov": "Tuck L-sit", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.3, "x2": 0.45}], "pozy": [
+   {"bok": [-0.03, 0.145], "trup": 88, "lopatky": -0.08, "nP": [40, -100, -20], "nZ": [43, -103, -20], "rP": {"ik": [0.04, 0.03], "o": -1, "c": 0}, "t": 2000},
+   {"bok": [-0.03, 0.145], "trup": 88, "lopatky": -0.08, "nP": [40, -100, -20], "nZ": [43, -103, -20], "rP": {"ik": [0.04, 0.03], "o": -1, "c": 0}, "t": 2000}
+  ]},
+  {"id": "tuck-lsit-vyvysene", "nazov": "Tuck L-sit na vyvýšení", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "schod", "x1": -0.06, "x2": 0.12, "h": 0.1}], "pozy": [
+   {"bok": [-0.03, 0.245], "trup": 88, "lopatky": -0.08, "nP": [40, -100, -20], "nZ": [43, -103, -20], "rP": {"ik": [0.04, 0.13], "o": -1, "c": 0}, "t": 2000},
+   {"bok": [-0.03, 0.245], "trup": 88, "lopatky": -0.08, "nP": [40, -100, -20], "nZ": [43, -103, -20], "rP": {"ik": [0.04, 0.13], "o": -1, "c": 0}, "t": 2000}
+  ]},
+  {"id": "tuck-lsit-rozsireny", "nazov": "Rozšírený tuck L-sit", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.3, "x2": 0.6}], "pozy": [
+   {"bok": [-0.03, 0.145], "trup": 88, "lopatky": -0.08, "nP": [16, -42, 30], "nZ": [18, -44, 30], "rP": {"ik": [0.04, 0.03], "o": -1, "c": 0}, "t": 2000},
+   {"bok": [-0.03, 0.145], "trup": 88, "lopatky": -0.08, "nP": [16, -42, 30], "nZ": [18, -44, 30], "rP": {"ik": [0.04, 0.03], "o": -1, "c": 0}, "t": 2000}
+  ]},
+  {"id": "lsit-jedna-noha", "nazov": "L-sit s jednou nohou", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.3, "x2": 0.6}], "pozy": [
+   {"bok": [-0.03, 0.145], "trup": 88, "lopatky": -0.08, "nP": [3, 3, 5], "nZ": [40, -100, -20], "rP": {"ik": [0.04, 0.03], "o": -1, "c": 0}, "t": 2000},
+   {"bok": [-0.03, 0.145], "trup": 88, "lopatky": -0.08, "nP": [3, 3, 5], "nZ": [40, -100, -20], "rP": {"ik": [0.04, 0.03], "o": -1, "c": 0}, "t": 2000}
+  ]},
+  {"id": "lsit", "nazov": "L-sit", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.3, "x2": 0.6}], "pozy": [
+   {"bok": [-0.03, 0.145], "trup": 88, "lopatky": -0.08, "nP": [3, 3, 5], "nZ": [1, 1, 5], "rP": {"ik": [0.04, 0.03], "o": -1, "c": 0}, "t": 2000},
+   {"bok": [-0.03, 0.145], "trup": 88, "lopatky": -0.08, "nP": [3, 3, 5], "nZ": [1, 1, 5], "rP": {"ik": [0.04, 0.03], "o": -1, "c": 0}, "t": 2000}
+  ]},
+  {"id": "lsit-vyvysene", "nazov": "L-sit na vyvýšení", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "schod", "x1": -0.06, "x2": 0.12, "h": 0.1}], "pozy": [
+   {"bok": [-0.03, 0.245], "trup": 88, "lopatky": -0.08, "nP": [1, 1, 5], "nZ": [0, 0, 5], "rP": {"ik": [0.04, 0.13], "o": -1, "c": 0}, "t": 2000},
+   {"bok": [-0.03, 0.245], "trup": 88, "lopatky": -0.08, "nP": [1, 1, 5], "nZ": [0, 0, 5], "rP": {"ik": [0.04, 0.13], "o": -1, "c": 0}, "t": 2000}
+  ]},
+  {"id": "stena-ruky-hore", "nazov": "Stoj pri stene, ruky hore", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "stena", "x": -0.075, "y1": 0.0, "y2": 1.3}], "pozy": [
+   {"bok": [0, 0.52], "trup": 90, "nP": {"ik": [0.05, 0.03], "o": 1}, "nZ": {"ik": [0.03, 0.03], "o": 1}, "rP": [97, 97], "rZ": [95, 95], "t": 2000},
+   {"bok": [0, 0.52], "trup": 90, "nP": {"ik": [0.05, 0.03], "o": 1}, "nZ": {"ik": [0.03, 0.03], "o": 1}, "rP": [97, 97], "rZ": [95, 95], "t": 2000}
+  ]},
+  {"id": "planche-lean", "nazov": "Predklon opory (planche lean)", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.75, "x2": 0.25}], "pozy": [
+   {"bok": [-0.155, 0.24], "trup": 20.247, "nP": [200.247, 200.247], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 2000},
+   {"bok": [-0.155, 0.24], "trup": 20.247, "nP": [200.247, 200.247], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 2000}
+  ]},
+  {"id": "pike-hold", "nazov": "Psík hlavou dole (pike hold)", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.4, "x2": 0.45}], "pozy": [
+   {"bok": [-0.128, 0.503], "trup": -47.909, "hlava": -47.909, "nP": {"ik": [-0.25, 0.03], "o": 1, "c": 0}, "rP": {"ik": [0.3, 0.03], "o": -1, "c": 0}, "t": 2000},
+   {"bok": [-0.128, 0.503], "trup": -47.909, "hlava": -47.909, "nP": {"ik": [-0.25, 0.03], "o": 1, "c": 0}, "rP": {"ik": [0.3, 0.03], "o": -1, "c": 0}, "t": 2000}
+  ]},
+  {"id": "pike-hold-stolicka", "nazov": "Pike hold s nohami na stoličke", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": -0.294}], "pozy": [
+   {"bok": [0.079, 0.667], "trup": -86, "hlava": -86, "nP": [227, 227, 180], "rP": {"ik": [0.1, 0.03], "o": -1, "c": 0}, "t": 2000},
+   {"bok": [0.079, 0.667], "trup": -86, "hlava": -86, "nP": [227, 227, 180], "rP": {"ik": [0.1, 0.03], "o": -1, "c": 0}, "t": 2000}
+  ]},
+  {"id": "chodenie-po-stene", "nazov": "Chodenie po stene", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stena", "x": -0.5, "y1": 0.0, "y2": 1.35}], "pozy": [
+   {"bok": [-0.013, 0.263], "trup": -21.453, "hlava": -21.453, "nP": {"ik": [-0.46, 0.07], "o": 1}, "rP": {"ik": [0.58, 0.03], "o": -1, "c": 0}, "t": 1200, "drz": 300},
+   {"bok": [-0.011, 0.66], "trup": -81.801, "hlava": -81.801, "nP": {"ik": [-0.45, 0.45], "o": 1}, "rP": {"ik": [0.08, 0.03], "o": -1, "c": 0}, "t": 1200},
+   {"bok": [-0.29, 0.666], "trup": -93.643, "hlava": -93.643, "nP": {"ik": [-0.465, 1.12], "o": 1}, "rP": {"ik": [-0.33, 0.03], "o": -1, "c": 0}, "t": 1200, "drz": 900},
+   {"bok": [-0.011, 0.66], "trup": -81.801, "hlava": -81.801, "nP": {"ik": [-0.45, 0.45], "o": 1}, "rP": {"ik": [0.08, 0.03], "o": -1, "c": 0}, "t": 1200}
+  ]},
+  {"id": "unik-zo-stojky", "nazov": "Bezpečný únik zo stojky", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.15, "x2": 0.65}], "pozy": [
+   {"bok": [0.0, 0.668], "trup": -90, "hlava": -90, "nP": [90.0, 90.0, 90.0], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 700, "drz": 400},
+   {"bok": [0.03, 0.668], "trup": -90, "hlava": -90, "nP": [20, 10], "nZ": [100, 100], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 500},
+   {"bok": [0.22, 0.4], "trup": -20, "hlava": -10, "nP": {"ik": [0.42, 0.03], "o": 1}, "nZ": [110, 120], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "rZ": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 600},
+   {"bok": [0.42, 0.52], "trup": 90, "nP": {"ik": [0.44, 0.03], "o": 1}, "nZ": {"ik": [0.4, 0.03], "o": 1}, "rP": [-96, -90], "rZ": [-92, -95], "t": 900, "drz": 400},
+   {"bok": [0.15, 0.42], "trup": -45, "hlava": -45, "nP": {"ik": [0.4, 0.03], "o": 1}, "nZ": [200, 200], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 700}
+  ]},
+  {"id": "stojka-chrbtom-k-stene", "nazov": "Stojka chrbtom k stene", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "stena", "x": 0.215, "y1": 0.0, "y2": 1.35}], "pozy": [
+   {"bok": [0.07, 0.664], "trup": -98, "hlava": -98, "nP": [78.8, 78.8, 78.8], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 2000},
+   {"bok": [0.07, 0.664], "trup": -98, "hlava": -98, "nP": [78.8, 78.8, 78.8], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 2000}
+  ]},
+  {"id": "stojka-bruchom-k-stene", "nazov": "Stojka bruchom k stene", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "stena", "x": -0.174, "y1": 0.0, "y2": 1.35}], "pozy": [
+   {"bok": [-0.053, 0.666], "trup": -84, "hlava": -84, "nP": [98.4, 98.4, 98.4], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 2000},
+   {"bok": [-0.053, 0.666], "trup": -84, "hlava": -84, "nP": [98.4, 98.4, 98.4], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 2000}
+  ]},
+  {"id": "stojka-odlepenie", "nazov": "Stojka pri stene, odlepenie pät", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stena", "x": -0.174, "y1": 0.0, "y2": 1.35}], "pozy": [
+   {"bok": [-0.053, 0.666], "trup": -84, "hlava": -84, "nP": [98.4, 98.4, 98.4], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 1200, "drz": 1000},
+   {"bok": [0.0, 0.668], "trup": -90, "hlava": -90, "nP": [90.0, 90.0, 90.0], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 1200, "drz": 1500}
+  ]},
+  {"id": "stojka-jedna-ruka", "nazov": "Stojka pri stene, odtiahnutie ruky", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stena", "x": -0.174, "y1": 0.0, "y2": 1.35}], "pozy": [
+   {"bok": [-0.053, 0.666], "trup": -84, "hlava": -84, "nP": [98.4, 98.4, 98.4], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 900, "drz": 800},
+   {"bok": [-0.043, 0.666], "trup": -84, "hlava": -84, "nP": [98.4, 98.4, 98.4], "rP": [-40, -10, -10], "rZ": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 900, "drz": 1500}
+  ]},
+  {"id": "kop-do-stojky", "nazov": "Kop do stojky", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stena", "x": 0.3, "y1": 0.0, "y2": 1.35}], "pozy": [
+   {"bok": [-0.3, 0.52], "trup": 90, "nP": {"ik": [-0.28, 0.03], "o": 1}, "nZ": {"ik": [-0.32, 0.03], "o": 1}, "rP": [95, 95], "rZ": [93, 93], "t": 600, "drz": 300},
+   {"bok": [-0.12, 0.4], "trup": 20, "hlava": 20, "nP": {"ik": [0.08, 0.03], "o": 1}, "nZ": {"ik": [-0.42, 0.04], "o": 1, "c": -40}, "rP": [20, 20], "rZ": [18, 18], "t": 500},
+   {"bok": [-0.05, 0.5], "trup": -55, "hlava": -55, "nP": {"ik": [-0.02, 0.03], "o": 1}, "nZ": [160, 160], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 500},
+   {"bok": [0.026, 0.667], "trup": -93, "hlava": -93, "nP": [85.8, 85.8, 85.8], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 900, "drz": 1200},
+   {"bok": [-0.05, 0.5], "trup": -55, "hlava": -55, "nP": {"ik": [-0.02, 0.03], "o": 1}, "nZ": [160, 160], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 700}
+  ]},
+  {"id": "stojka", "nazov": "Voľná stojka", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.3, "x2": 0.3}], "pozy": [
+   {"bok": [0.013, 0.668], "trup": -91.5, "hlava": -91.5, "nP": [87.9, 87.9, 87.9], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 1800},
+   {"bok": [-0.013, 0.668], "trup": -88.5, "hlava": -88.5, "nP": [92.1, 92.1, 92.1], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 1800}
+  ]},
+  {"id": "vis", "nazov": "Mŕtvy vis", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "hrazda", "x": 0.0, "y": 1.0}], "pozy": [
+   {"bok": [-0.043, 0.324], "trup": 93, "lopatky": 0.02, "nP": [-88, -96], "nZ": [-94, -102], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 2000},
+   {"bok": [-0.043, 0.324], "trup": 93, "lopatky": 0.02, "nP": [-88, -96], "nZ": [-94, -102], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 2000}
+  ]},
+  {"id": "vis-aktivny", "nazov": "Aktívny vis", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "hrazda", "x": 0.0, "y": 1.0}], "pozy": [
+   {"bok": [-0.047, 0.389], "trup": 93, "lopatky": -0.045, "nP": [-88, -96], "nZ": [-94, -102], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 2000},
+   {"bok": [-0.047, 0.389], "trup": 93, "lopatky": -0.045, "nP": [-88, -96], "nZ": [-94, -102], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 2000}
+  ]},
+  {"id": "skapularny-pritah", "nazov": "Škapulárny príťah", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "hrazda", "x": 0.0, "y": 1.0}], "pozy": [
+   {"bok": [-0.043, 0.324], "trup": 93, "lopatky": 0.02, "nP": [-88, -96], "nZ": [-94, -102], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 900, "drz": 300},
+   {"bok": [-0.047, 0.389], "trup": 93, "lopatky": -0.045, "nP": [-88, -96], "nZ": [-94, -102], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 1200, "drz": 600}
+  ]},
+  {"id": "falosny-uchop-vis", "nazov": "Vis vo falošnom úchope", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "hrazda", "x": 0.0, "y": 1.0}], "pozy": [
+   {"bok": [-0.066, 0.399], "trup": 93, "lopatky": -0.03, "nP": [-88, -96], "nZ": [-94, -102], "rP": {"ik": [-0.02, 1.0], "o": -1, "c": 20}, "t": 2000},
+   {"bok": [-0.066, 0.399], "trup": 93, "lopatky": -0.03, "nP": [-88, -96], "nZ": [-94, -102], "rP": {"ik": [-0.02, 1.0], "o": -1, "c": 20}, "t": 2000}
+  ]},
+  {"id": "pritah", "nazov": "Príťah", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "hrazda", "x": 0.0, "y": 1.0}], "pozy": [
+   {"bok": [-0.044, 0.344], "trup": 93, "nP": [-88, -96], "nZ": [-94, -102], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 1100, "drz": 300},
+   {"bok": [-0.053, 0.602], "trup": 97, "nP": [-80, -100], "nZ": [-86, -106], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 1600, "drz": 200}
+  ]},
+  {"id": "pritah-zataz", "nazov": "Príťah so záťažou", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "hrazda", "x": 0.0, "y": 1.0}, {"typ": "jednorucka", "bod": "nP"}], "pozy": [
+   {"bok": [-0.044, 0.344], "trup": 93, "nP": [-88, -96], "nZ": [-94, -102], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 1100, "drz": 300},
+   {"bok": [-0.053, 0.602], "trup": 97, "nP": [-80, -100], "nZ": [-86, -106], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 1600, "drz": 200}
+  ]},
+  {"id": "negativny-pritah", "nazov": "Negatívny príťah", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "hrazda", "x": 0.0, "y": 1.0}], "pozy": [
+   {"bok": [-0.053, 0.602], "trup": 97, "nP": [-80, -100], "nZ": [-86, -106], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 4500, "drz": 500},
+   {"bok": [-0.044, 0.344], "trup": 93, "nP": [-88, -96], "nZ": [-94, -102], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 900, "drz": 300}
+  ]},
+  {"id": "vis-skrcene-ruky", "nazov": "Vis so skrčenými rukami", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "hrazda", "x": 0.0, "y": 1.0}], "pozy": [
+   {"bok": [-0.053, 0.602], "trup": 97, "nP": [-80, -100], "nZ": [-86, -106], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 2000},
+   {"bok": [-0.053, 0.602], "trup": 97, "nP": [-80, -100], "nZ": [-86, -106], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 2000}
+  ]},
+  {"id": "pritah-hrudnik", "nazov": "Príťah hrudníkom k hrazde", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "hrazda", "x": 0.0, "y": 1.0}], "pozy": [
+   {"bok": [-0.044, 0.344], "trup": 93, "nP": [-88, -96], "nZ": [-94, -102], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 900, "drz": 300},
+   {"bok": [0.008, 0.67], "trup": 108, "hlava": 98, "nP": [-70, -95], "nZ": [-76, -100], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 1600, "drz": 200}
+  ]},
+  {"id": "pritah-k-pasu", "nazov": "Explozívny príťah k pásu", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "hrazda", "x": 0.0, "y": 1.0}], "pozy": [
+   {"bok": [-0.044, 0.344], "trup": 93, "nP": [-88, -96], "nZ": [-94, -102], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 700, "drz": 500},
+   {"bok": [0.067, 0.866], "trup": 125, "hlava": 100, "nP": [-70, -95], "nZ": [-76, -100], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 70}, "t": 1400, "drz": 700}
+  ]},
+  {"id": "podpor-hrazda", "nazov": "Podpor nad hrazdou", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "hrazda", "x": 0.0, "y": 1.0}], "pozy": [
+   {"bok": [-0.045, 1.065], "trup": 80, "lopatky": -0.03, "nP": [-96, -96], "nZ": [-99, -99], "rP": {"ik": [0.03, 1.025], "o": -1, "c": 0}, "t": 2000},
+   {"bok": [-0.045, 1.065], "trup": 80, "lopatky": -0.03, "nP": [-96, -96], "nZ": [-99, -99], "rP": {"ik": [0.03, 1.025], "o": -1, "c": 0}, "t": 2000}
+  ]},
+  {"id": "dip-hrazda", "nazov": "Kliky v podpore na hrazde", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "hrazda", "x": 0.0, "y": 1.0}], "pozy": [
+   {"bok": [-0.045, 1.065], "trup": 80, "lopatky": -0.03, "nP": [-96, -96], "nZ": [-99, -99], "rP": {"ik": [0.03, 1.025], "o": -1, "c": 0}, "t": 1600, "drz": 300},
+   {"bok": [-0.049, 0.856], "trup": 58, "nP": [-112, -112], "nZ": [-115, -115], "rP": {"ik": [0.03, 1.025], "o": -1, "c": 0}, "t": 1000}
+  ]},
+  {"id": "muscleup", "nazov": "Muscle-up", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "hrazda", "x": 0.0, "y": 1.0}], "pozy": [
+   {"bok": [-0.044, 0.344], "trup": 93, "nP": [-88, -96], "nZ": [-94, -102], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 650, "drz": 400},
+   {"bok": [0.067, 0.866], "trup": 125, "hlava": 100, "nP": [-70, -95], "nZ": [-76, -100], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 70}, "t": 350},
+   {"bok": [-0.137, 0.877], "trup": 78, "hlava": 70, "nP": [-100, -105], "nZ": [-104, -110], "rP": {"ik": [0.012, 1.01], "o": -1, "c": 30}, "t": 450},
+   {"bok": [-0.045, 1.065], "trup": 80, "lopatky": -0.03, "nP": [-96, -96], "nZ": [-99, -99], "rP": {"ik": [0.03, 1.025], "o": -1, "c": 0}, "t": 700, "drz": 600},
+   {"bok": [-0.137, 0.877], "trup": 78, "hlava": 70, "nP": [-100, -105], "nZ": [-104, -110], "rP": {"ik": [0.012, 1.01], "o": -1, "c": 30}, "t": 600},
+   {"bok": [0.067, 0.866], "trup": 125, "hlava": 100, "nP": [-70, -95], "nZ": [-76, -100], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 70}, "t": 500}
+  ]},
+  {"id": "muscleup-negativ", "nazov": "Negatívny muscle-up", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "hrazda", "x": 0.0, "y": 1.0}], "pozy": [
+   {"bok": [-0.045, 1.065], "trup": 80, "lopatky": -0.03, "nP": [-96, -96], "nZ": [-99, -99], "rP": {"ik": [0.03, 1.025], "o": -1, "c": 0}, "t": 1600, "drz": 500},
+   {"bok": [-0.137, 0.877], "trup": 78, "hlava": 70, "nP": [-100, -105], "nZ": [-104, -110], "rP": {"ik": [0.012, 1.01], "o": -1, "c": 30}, "t": 1500},
+   {"bok": [0.067, 0.866], "trup": 125, "hlava": 100, "nP": [-70, -95], "nZ": [-76, -100], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 70}, "t": 1300},
+   {"bok": [-0.044, 0.344], "trup": 93, "nP": [-88, -96], "nZ": [-94, -102], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 600, "drz": 400},
+   {"bok": [0.067, 0.866], "trup": 125, "hlava": 100, "nP": [-70, -95], "nZ": [-76, -100], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 70}, "t": 300},
+   {"bok": [-0.137, 0.877], "trup": 78, "hlava": 70, "nP": [-100, -105], "nZ": [-104, -110], "rP": {"ik": [0.012, 1.01], "o": -1, "c": 30}, "t": 400}
+  ]},
+  {"id": "muscleup-zem", "nazov": "Prechod muscle-upu naprázdno", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.35, "x2": 0.35}], "pozy": [
+   {"bok": [0.0, 0.285], "trup": 90, "hlava": 90, "nP": {"na": [0.0, 0.04], "u2": 180, "c": 180}, "rP": [42, 140, 90], "t": 550, "drz": 200},
+   {"bok": [0.0, 0.285], "trup": 90, "hlava": 90, "nP": {"na": [0.0, 0.04], "u2": 180, "c": 180}, "rP": [-115, 15, 20], "t": 450},
+   {"bok": [0.0, 0.285], "trup": 90, "hlava": 90, "nP": {"na": [0.0, 0.04], "u2": 180, "c": 180}, "rP": [-100, -80, 0], "t": 900, "drz": 400}
+  ]},
+  {"id": "vis-kolena-45", "nazov": "Vis a zdvih kolien", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "hrazda", "x": 0.0, "y": 1.0}], "pozy": [
+   {"bok": [-0.043, 0.324], "trup": 93, "lopatky": 0.02, "nP": [-88, -96], "nZ": [-94, -102], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 900, "drz": 200},
+   {"bok": [-0.044, 0.344], "trup": 93, "nP": [-40, -110], "nZ": [-44, -114], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 1300, "drz": 300}
+  ]},
+  {"id": "vis-kolena-hrud", "nazov": "Vis a kolená k hrudníku", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "hrazda", "x": 0.0, "y": 1.0}], "pozy": [
+   {"bok": [-0.043, 0.324], "trup": 93, "lopatky": 0.02, "nP": [-88, -96], "nZ": [-94, -102], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 1000, "drz": 200},
+   {"bok": [-0.008, 0.348], "trup": 100, "nP": [48, -78], "nZ": [44, -82], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 1300, "drz": 400}
+  ]},
+  {"id": "vis-nohy-90", "nazov": "Vis a zdvih nôh do 90°", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "hrazda", "x": 0.0, "y": 1.0}], "pozy": [
+   {"bok": [-0.043, 0.324], "trup": 93, "lopatky": 0.02, "nP": [-88, -96], "nZ": [-94, -102], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 1100, "drz": 200},
+   {"bok": [0.013, 0.352], "trup": 104, "nP": [0, 0, 0], "nZ": [-3, -3, -3], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 1400, "drz": 300}
+  ]},
+  {"id": "vis-l", "nazov": "Vis s nohami v 90°", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "hrazda", "x": 0.0, "y": 1.0}], "pozy": [
+   {"bok": [0.013, 0.352], "trup": 104, "nP": [0, 0, 0], "nZ": [-3, -3, -3], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 2000},
+   {"bok": [0.013, 0.352], "trup": 104, "nP": [0, 0, 0], "nZ": [-3, -3, -3], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 2000}
+  ]},
+  {"id": "nohy-k-hrazde", "nazov": "Nohy k hrazde", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "hrazda", "x": 0.0, "y": 1.0}], "pozy": [
+   {"bok": [-0.043, 0.324], "trup": 93, "lopatky": 0.02, "nP": [-88, -96], "nZ": [-94, -102], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 1000, "drz": 200},
+   {"bok": [-0.015, 0.474], "trup": 128, "hlava": 130, "nP": [88, 86, 70], "nZ": [85, 83, 70], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 1300, "drz": 200}
+  ]},
+  {"id": "vis-odlahceny", "nazov": "Vis s odľahčením", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "hrazda", "x": 0, "y": 1.06}], "pozy": [
+   {"bok": [-0.04, 0.4], "trup": 91, "lopatky": 0.03, "nP": {"ik": [0.12, 0.03], "o": 1}, "nZ": {"ik": [0.08, 0.03], "o": 1}, "rP": {"ik": [0.0, 1.035], "o": -1, "c": 90}, "t": 2000},
+   {"bok": [-0.04, 0.4], "trup": 91, "lopatky": 0.03, "nP": {"ik": [0.12, 0.03], "o": 1}, "nZ": {"ik": [0.08, 0.03], "o": 1}, "rP": {"ik": [0.0, 1.035], "o": -1, "c": 90}, "t": 2000}
+  ]},
+  {"id": "vis-uterak", "nazov": "Vis na uteráku", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "hrazda", "x": 0.0, "y": 1.0}, {"typ": "uterak", "x": 0.0, "y": 1.0, "y2": 0.86}], "pozy": [
+   {"bok": [-0.044, 0.229], "trup": 93, "nP": [-88, -96], "nZ": [-94, -102], "rP": {"ik": [0.0, 0.86], "o": -1, "c": 90}, "t": 2000},
+   {"bok": [-0.044, 0.229], "trup": 93, "nP": [-88, -96], "nZ": [-94, -102], "rP": {"ik": [0.0, 0.86], "o": -1, "c": 90}, "t": 2000}
+  ]},
+  {"id": "vis-jednoruc", "nazov": "Vis jednoruč s dopomocou", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "hrazda", "x": 0.0, "y": 1.0}], "pozy": [
+   {"bok": [-0.044, 0.344], "trup": 93, "nP": [-88, -96], "nZ": [-94, -102], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 2000, "rZ": [35.372, 127.217]},
+   {"bok": [-0.044, 0.344], "trup": 93, "nP": [-88, -96], "nZ": [-94, -102], "rP": {"ik": [0.0, 0.975], "o": -1, "c": 90}, "t": 2000, "rZ": [35.372, 127.217]}
+  ]},
+  {"id": "vis-prehmatavanie", "nazov": "Vis s prehmatávaním", "pohlad": "pred", "druh": "opakovanie", "rekvizity": [{"typ": "hrazda", "x": 0.08, "y": 1.0, "dlzka": 0.9}], "pozy": [
+   {"bok": [0.0, 0.335], "trup": 90, "nP": [-91, -91], "nZ": [-89, -89], "rP": {"ik": [0.15, 0.975], "o": -1, "c": 90}, "rZ": {"ik": [-0.15, 0.975], "o": 1, "c": 90}, "t": 700, "drz": 300},
+   {"bok": [0.05, 0.335], "trup": 90, "nP": [-91, -91], "nZ": [-89, -89], "rP": {"ik": [0.32, 0.975], "o": -1, "c": 90}, "rZ": {"ik": [-0.15, 0.975], "o": 1, "c": 90}, "t": 700, "drz": 300},
+   {"bok": [0.17, 0.335], "trup": 90, "nP": [-91, -91], "nZ": [-89, -89], "rP": {"ik": [0.32, 0.975], "o": -1, "c": 90}, "rZ": {"ik": [0.03, 0.975], "o": 1, "c": 90}, "t": 700, "drz": 300},
+   {"bok": [0.1, 0.335], "trup": 90, "nP": [-91, -91], "nZ": [-89, -89], "rP": {"ik": [0.15, 0.975], "o": -1, "c": 90}, "rZ": {"ik": [0.03, 0.975], "o": 1, "c": 90}, "t": 700, "drz": 300}
+  ]},
+  {"id": "klik", "nazov": "Klik", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.5, "x2": 0.5}], "pozy": [
+   {"bok": [0.054, 0.254], "trup": 22.005, "hlava": 22.005, "nP": {"ik": [-0.4, 0.07], "o": -1}, "rP": {"ik": [0.332, 0.03], "o": -1, "c": 0}, "t": 2000, "drz": 300},
+   {"bok": [0.089, 0.107], "trup": 4.356, "hlava": 4.356, "nP": {"ik": [-0.4, 0.07], "o": -1}, "rP": {"ik": [0.332, 0.03], "o": -1, "c": 0}, "t": 1000, "drz": 150}
+  ]},
+  {"id": "klik-diamant", "nazov": "Diamantový klik", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.5, "x2": 0.5}], "pozy": [
+   {"bok": [0.056, 0.25], "trup": 21.614, "hlava": 21.614, "nP": {"ik": [-0.4, 0.07], "o": -1}, "rP": {"ik": [0.262, 0.03], "o": -1, "c": 0}, "t": 2000, "drz": 300},
+   {"bok": [0.088, 0.113], "trup": 5.084, "hlava": 5.084, "nP": {"ik": [-0.4, 0.07], "o": -1}, "rP": {"ik": [0.262, 0.03], "o": -1, "c": 0}, "t": 1000, "drz": 150}
+  ]},
+  {"id": "klik-lukostrelecky", "nazov": "Lukostrelecký klik", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.5, "x2": 0.75}], "pozy": [
+   {"bok": [0.054, 0.254], "trup": 22.005, "hlava": 22.005, "nP": {"ik": [-0.4, 0.07], "o": -1}, "rP": {"ik": [0.332, 0.03], "o": -1, "c": 0}, "t": 2000, "drz": 300, "rZ": {"ik": [0.502, 0.06], "o": -1, "c": 0}},
+   {"bok": [0.088, 0.113], "trup": 5.084, "hlava": 5.084, "nP": {"ik": [-0.4, 0.07], "o": -1}, "rP": {"ik": [0.332, 0.03], "o": -1, "c": 0}, "t": 1000, "drz": 150, "rZ": {"ik": [0.692, 0.03], "o": -1, "c": 0}}
+  ]},
+  {"id": "klik-jednoruc", "nazov": "Jednoručný klik", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.5, "x2": 0.5}], "pozy": [
+   {"bok": [0.054, 0.254], "trup": 22.005, "hlava": 22.005, "nP": {"ik": [-0.4, 0.07], "o": -1}, "rP": {"ik": [0.292, 0.03], "o": -1, "c": 0}, "t": 2000, "drz": 300, "rZ": [-129.054, 143.035]},
+   {"bok": [0.087, 0.12], "trup": 5.812, "hlava": 5.812, "nP": {"ik": [-0.4, 0.07], "o": -1}, "rP": {"ik": [0.292, 0.03], "o": -1, "c": 0}, "t": 1000, "drz": 150, "rZ": [214.753, 126.842]}
+  ]},
+  {"id": "klik-jednoruc-negativ", "nazov": "Negatívny jednoručný klik", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.5, "x2": 0.5}], "pozy": [
+   {"bok": [0.054, 0.254], "trup": 22.005, "hlava": 22.005, "nP": {"ik": [-0.4, 0.07], "o": -1}, "rP": {"ik": [0.292, 0.03], "o": -1, "c": 0}, "t": 4500, "drz": 300, "rZ": [-129.054, 143.035]},
+   {"bok": [0.087, 0.12], "trup": 5.812, "hlava": 5.812, "nP": {"ik": [-0.4, 0.07], "o": -1}, "rP": {"ik": [0.292, 0.03], "o": -1, "c": 0}, "t": 400, "drz": 150, "rZ": [214.753, 126.842]},
+   {"bok": [0.087, 0.12], "trup": 5.812, "hlava": 5.812, "nP": {"ik": [-0.4, 0.07], "o": -1}, "rP": {"ik": [0.292, 0.03], "o": -1, "c": 0}, "t": 1000, "rZ": {"ik": [0.312, 0.03], "o": -1, "c": 0}},
+   {"bok": [0.054, 0.254], "trup": 22.005, "hlava": 22.005, "nP": {"ik": [-0.4, 0.07], "o": -1}, "rP": {"ik": [0.292, 0.03], "o": -1, "c": 0}, "t": 400, "drz": 200, "rZ": {"ik": [0.312, 0.03], "o": -1, "c": 0}}
+  ]},
+  {"id": "klik-kolena", "nazov": "Klik na kolenách", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.45, "x2": 0.45}], "pozy": [
+   {"bok": [0.076, 0.187], "trup": 36.739, "hlava": 36.739, "nP": {"na": [-0.12, 0.04], "u2": 168}, "rP": {"ik": [0.317, 0.03], "o": -1, "c": 0}, "t": 2000, "drz": 300},
+   {"bok": [0.122, 0.08], "trup": 9.505, "hlava": 9.505, "nP": {"na": [-0.12, 0.04], "u2": 168}, "rP": {"ik": [0.317, 0.03], "o": -1, "c": 0}, "t": 1000, "drz": 150}
+  ]},
+  {"id": "klik-stena", "nazov": "Klik o stenu", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stena", "x": 0.36, "y1": 0.0, "y2": 1.3}], "pozy": [
+   {"bok": [-0.12, 0.485], "trup": 65.836, "hlava": 65.836, "nP": {"ik": [-0.32, 0.04], "o": 1, "c": 0}, "rP": {"ik": [0.33, 0.8], "o": -1, "c": 90}, "t": 2000, "drz": 300},
+   {"bok": [-0.003, 0.411], "trup": 49.461, "hlava": 49.461, "nP": {"ik": [-0.32, 0.04], "o": 1, "c": 0}, "rP": {"ik": [0.33, 0.8], "o": -1, "c": 90}, "t": 1000, "drz": 150}
+  ]},
+  {"id": "klik-operadlo", "nazov": "Klik o operadlo stoličky", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": 0.41, "operadlo": -1}, {"typ": "stena", "x": 0.56, "y1": 0.0, "y2": 1.0}], "pozy": [
+   {"bok": [-0.142, 0.461], "trup": 55.295, "hlava": 55.295, "nP": {"ik": [-0.42, 0.06], "o": -1}, "rP": {"ik": [0.3, 0.52], "o": -1, "c": 0}, "t": 2000, "drz": 300},
+   {"bok": [-0.048, 0.376], "trup": 40.384, "hlava": 40.384, "nP": {"ik": [-0.42, 0.06], "o": -1}, "rP": {"ik": [0.3, 0.52], "o": -1, "c": 0}, "t": 1000, "drz": 150}
+  ]},
+  {"id": "klik-sedadlo", "nazov": "Klik o sedadlo stoličky", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": 0.42, "operadlo": 1}], "pozy": [
+   {"bok": [-0.074, 0.381], "trup": 39.527, "hlava": 39.527, "nP": {"ik": [-0.45, 0.07], "o": -1}, "rP": {"ik": [0.33, 0.29], "o": -1, "c": 0}, "t": 2000, "drz": 300},
+   {"bok": [-0.005, 0.27], "trup": 24.211, "hlava": 24.211, "nP": {"ik": [-0.45, 0.07], "o": -1}, "rP": {"ik": [0.33, 0.29], "o": -1, "c": 0}, "t": 1000, "drz": 150}
+  ]},
+  {"id": "klik-jednoruc-stolicka", "nazov": "Jednoručný klik s rukou na stoličke", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": 0.42, "operadlo": 1}], "pozy": [
+   {"bok": [-0.074, 0.381], "trup": 39.527, "hlava": 39.527, "nP": {"ik": [-0.45, 0.07], "o": -1}, "rP": {"ik": [0.33, 0.29], "o": -1, "c": 0}, "t": 2000, "drz": 300, "rZ": [-111.532, 160.557]},
+   {"bok": [-0.008, 0.276], "trup": 24.942, "hlava": 24.942, "nP": {"ik": [-0.45, 0.07], "o": -1}, "rP": {"ik": [0.33, 0.29], "o": -1, "c": 0}, "t": 1000, "drz": 150, "rZ": [-126.117, 145.972]}
+  ]},
+  {"id": "klik-nohy-vyssie", "nazov": "Klik s nohami na stoličke", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": -0.52}], "pozy": [
+   {"bok": [0.029, 0.345], "trup": 4.065, "hlava": 4.065, "nP": {"ik": [-0.46, 0.31], "o": -1}, "rP": {"ik": [0.328, 0.03], "o": -1, "c": 0}, "t": 2000, "drz": 300},
+   {"bok": [0.017, 0.198], "trup": -13.17, "hlava": -13.17, "nP": {"ik": [-0.46, 0.31], "o": -1}, "rP": {"ik": [0.328, 0.03], "o": -1, "c": 0}, "t": 1000, "drz": 150}
+  ]},
+  {"id": "klik-hlboky", "nazov": "Hlboký klik na stoličkách", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": 0.202}], "pozy": [
+   {"bok": [-0.148, 0.411], "trup": 44.123, "hlava": 44.123, "nP": {"ik": [-0.5, 0.07], "o": -1}, "rP": {"ik": [0.182, 0.29], "o": -1, "c": 0}, "t": 2000, "drz": 300},
+   {"bok": [-0.019, 0.163], "trup": 10.945, "hlava": 10.945, "nP": {"ik": [-0.5, 0.07], "o": -1}, "rP": {"ik": [0.182, 0.29], "o": -1, "c": 0}, "t": 1000, "drz": 150}
+  ]},
+  {"id": "pike-klik", "nazov": "Klik v predklone (pike)", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.4, "x2": 0.4}], "pozy": [
+   {"bok": [-0.216, 0.514], "trup": -49.312, "hlava": -49.312, "nP": {"ik": [-0.28, 0.03], "o": 1, "c": 0}, "rP": {"ik": [0.2, 0.03], "o": -1, "c": 0}, "t": 1800, "drz": 300},
+   {"bok": [-0.117, 0.488], "trup": -47.349, "hlava": -47.349, "nP": {"ik": [-0.28, 0.03], "o": 1, "c": 0}, "rP": {"ik": [0.2, 0.03], "o": -1, "c": 0}, "t": 1000, "drz": 150}
+  ]},
+  {"id": "pike-klik-schod", "nazov": "Pike klik s nohami na schode", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "schod", "x1": -0.45, "x2": -0.22, "h": 0.14}], "pozy": [
+   {"bok": [-0.077, 0.614], "trup": -66.258, "hlava": -66.258, "nP": {"ik": [-0.3, 0.18], "o": 1}, "rP": {"ik": [0.18, 0.03], "o": -1, "c": 0}, "t": 1800, "drz": 300},
+   {"bok": [0.007, 0.557], "trup": -65.013, "hlava": -65.013, "nP": {"ik": [-0.3, 0.18], "o": 1}, "rP": {"ik": [0.18, 0.03], "o": -1, "c": 0}, "t": 1000, "drz": 150}
+  ]},
+  {"id": "pike-klik-stolicka", "nazov": "Pike klik s nohami na stoličke", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": -0.294}], "pozy": [
+   {"bok": [0.079, 0.667], "trup": -86, "hlava": -86, "nP": {"ik": [-0.254, 0.31], "o": 1, "c": 180}, "rP": {"ik": [0.1, 0.03], "o": -1, "c": 0}, "t": 1800, "drz": 300},
+   {"bok": [0.154, 0.575], "trup": -90.465, "hlava": -90.465, "nP": {"ik": [-0.254, 0.31], "o": 1, "c": 180}, "rP": {"ik": [0.1, 0.03], "o": -1, "c": 0}, "t": 1000, "drz": 150}
+  ]},
+  {"id": "pike-klik-vyvysene", "nazov": "Pike klik s dlaňami na vyvýšení", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "schod", "x1": 0.12, "x2": 0.3, "h": 0.13}], "pozy": [
+   {"bok": [-0.33, 0.515], "trup": -33.858, "hlava": -33.858, "nP": {"ik": [-0.28, 0.03], "o": 1, "c": 0}, "rP": {"ik": [0.2, 0.16], "o": -1, "c": 0}, "t": 1800, "drz": 300},
+   {"bok": [-0.178, 0.505], "trup": -44.119, "hlava": -44.119, "nP": {"ik": [-0.28, 0.03], "o": 1, "c": 0}, "rP": {"ik": [0.2, 0.16], "o": -1, "c": 0}, "t": 1000, "drz": 150}
+  ]},
+  {"id": "klik-stojka-ciastocny", "nazov": "Klik do stojky pri stene, čiastočný", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stena", "x": 0.215, "y1": 0.0, "y2": 1.35}], "pozy": [
+   {"bok": [0.07, 0.664], "trup": -98, "hlava": -98, "nP": [78.8, 78.8, 78.8], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 1800, "drz": 300},
+   {"bok": [0.062, 0.567], "trup": -98, "hlava": -98, "nP": [78.8, 78.8, 78.8], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 1000, "drz": 150}
+  ]},
+  {"id": "klik-stojka-negativ", "nazov": "Negatívny klik do stojky", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stena", "x": 0.215, "y1": 0.0, "y2": 1.35}, {"typ": "podlozka", "x1": -0.2, "x2": 0.2}], "pozy": [
+   {"bok": [0.07, 0.664], "trup": -98, "hlava": -98, "nP": [78.8, 78.8, 78.8], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 4500, "drz": 300},
+   {"bok": [0.062, 0.497], "trup": -98, "hlava": -98, "nP": [78.8, 78.8, 78.8], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 900, "drz": 150}
+  ]},
+  {"id": "klik-stojka-bruchom", "nazov": "Klik do stojky bruchom k stene", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stena", "x": -0.174, "y1": 0.0, "y2": 1.35}], "pozy": [
+   {"bok": [-0.053, 0.666], "trup": -84, "hlava": -84, "nP": [98.4, 98.4, 98.4], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 1800, "drz": 300},
+   {"bok": [-0.051, 0.498], "trup": -84, "hlava": -84, "nP": [98.4, 98.4, 98.4], "rP": {"ik": [0.0, 0.03], "o": -1, "c": 0}, "t": 1000, "drz": 150}
+  ]},
+  {"id": "tlak-sed-operadlo", "nazov": "Tlak nad hlavu v sede s oporou", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": 0.0, "operadlo": -1}, {"typ": "jednorucka", "bod": "rP"}, {"typ": "jednorucka", "bod": "rZ"}], "pozy": [
+   {"bok": [-0.05, 0.31], "trup": 92, "nP": {"ik": [0.22, 0.03], "o": 1}, "nZ": {"ik": [0.19, 0.03], "o": 1}, "rP": [-58, 95, 90], "t": 1000, "drz": 200, "rZ": [-55, 96, 90]},
+   {"bok": [-0.05, 0.31], "trup": 92, "nP": {"ik": [0.22, 0.03], "o": 1}, "nZ": {"ik": [0.19, 0.03], "o": 1}, "rP": [87, 89, 90], "t": 2000, "drz": 300, "rZ": [90, 90, 90]}
+  ]},
+  {"id": "tlak-sed", "nazov": "Tlak nad hlavu v sede", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": 0.0, "operadlo": -1}, {"typ": "jednorucka", "bod": "rP"}, {"typ": "jednorucka", "bod": "rZ"}], "pozy": [
+   {"bok": [0.06, 0.31], "trup": 90, "nP": {"ik": [0.3, 0.03], "o": 1}, "nZ": {"ik": [0.27, 0.03], "o": 1}, "rP": [-58, 95, 90], "t": 1000, "drz": 200, "rZ": [-55, 96, 90]},
+   {"bok": [0.06, 0.31], "trup": 90, "nP": {"ik": [0.3, 0.03], "o": 1}, "nZ": {"ik": [0.27, 0.03], "o": 1}, "rP": [87, 89, 90], "t": 2000, "drz": 300, "rZ": [90, 90, 90]}
+  ]},
+  {"id": "tlak-stoj", "nazov": "Tlak nad hlavu v stoji", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "jednorucka", "bod": "rP"}, {"typ": "jednorucka", "bod": "rZ"}], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-58, 95, 90], "rZ": [-55, 96, 90], "t": 1000, "drz": 200},
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [87, 89, 90], "rZ": [90, 90, 90], "t": 2000, "drz": 300}
+  ]},
+  {"id": "tlak-stoj-jednoruc", "nazov": "Jednoručný tlak v stoji", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "jednorucka", "bod": "rP"}], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-58, 95, 90], "rZ": [-92, -94], "t": 1000, "drz": 200},
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [87, 89, 90], "rZ": [-92, -94], "t": 2000, "drz": 300}
+  ]},
+  {"id": "tlak-poklak", "nazov": "Tlak z pokľaku", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.3, "x2": 0.35}, {"typ": "jednorucka", "bod": "rP"}], "pozy": [
+   {"bok": [0.0, 0.285], "trup": 90, "nP": {"na": [0.0, 0.04], "u2": 180, "c": 180}, "nZ": {"ik": [0.245, 0.03], "o": 1, "c": 0}, "rP": [-58, 95, 90], "t": 1000, "drz": 200, "rZ": [-92, -94]},
+   {"bok": [0.0, 0.285], "trup": 90, "nP": {"na": [0.0, 0.04], "u2": 180, "c": 180}, "nZ": {"ik": [0.245, 0.03], "o": 1, "c": 0}, "rP": [87, 89, 90], "t": 2000, "drz": 300, "rZ": [-92, -94]}
+  ]},
+  {"id": "tlak-sed-zem", "nazov": "Tlak v sede na zemi (Z-press)", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.2, "x2": 0.6}, {"typ": "jednorucka", "bod": "rP"}, {"typ": "jednorucka", "bod": "rZ"}], "pozy": [
+   {"bok": [0.0, 0.07], "trup": 90, "nP": [-1, -1], "rP": [-58, 95, 90], "t": 1000, "drz": 200, "rZ": [-55, 96, 90]},
+   {"bok": [0.0, 0.07], "trup": 90, "nP": [-1, -1], "rP": [87, 89, 90], "t": 2000, "drz": 300, "rZ": [90, 90, 90]}
+  ]},
+  {"id": "vzpor-bradla", "nazov": "Vzpor na bradlách", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "bradla", "x1": -0.28, "x2": 0.28, "y": 0.8}], "pozy": [
+   {"bok": [-0.015, 0.897], "trup": 84, "lopatky": -0.04, "nP": [-96, -100], "nZ": [-98, -103], "rP": {"ik": [0.0, 0.82], "o": -1, "c": 0}, "t": 2000},
+   {"bok": [-0.015, 0.897], "trup": 84, "lopatky": -0.04, "nP": [-96, -100], "nZ": [-98, -103], "rP": {"ik": [0.0, 0.82], "o": -1, "c": 0}, "t": 2000}
+  ]},
+  {"id": "dip", "nazov": "Dip", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "bradla", "x1": -0.28, "x2": 0.28, "y": 0.8}], "pozy": [
+   {"bok": [-0.015, 0.897], "trup": 84, "lopatky": -0.04, "nP": [-100, -142], "nZ": [-104, -146], "rP": {"ik": [0.0, 0.82], "o": -1, "c": 0}, "t": 2000, "drz": 300},
+   {"bok": [0.018, 0.7], "trup": 64, "nP": [-100, -142], "nZ": [-104, -146], "rP": {"ik": [0.0, 0.82], "o": -1, "c": 0}, "t": 1000, "drz": 150}
+  ]},
+  {"id": "dip-pauza", "nazov": "Dip s pauzou dole", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "bradla", "x1": -0.28, "x2": 0.28, "y": 0.8}], "pozy": [
+   {"bok": [-0.015, 0.897], "trup": 84, "lopatky": -0.04, "nP": [-100, -142], "nZ": [-104, -146], "rP": {"ik": [0.0, 0.82], "o": -1, "c": 0}, "t": 2000, "drz": 300},
+   {"bok": [0.018, 0.7], "trup": 64, "nP": [-100, -142], "nZ": [-104, -146], "rP": {"ik": [0.0, 0.82], "o": -1, "c": 0}, "t": 1000, "drz": 2000}
+  ]},
+  {"id": "dip-zataz", "nazov": "Dip so záťažou", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "bradla", "x1": -0.28, "x2": 0.28, "y": 0.8}, {"typ": "jednorucka", "bod": "nP"}], "pozy": [
+   {"bok": [-0.015, 0.897], "trup": 84, "lopatky": -0.04, "nP": [-100, -142], "nZ": [-104, -146], "rP": {"ik": [0.0, 0.82], "o": -1, "c": 0}, "t": 2000, "drz": 300},
+   {"bok": [0.018, 0.7], "trup": 64, "nP": [-100, -142], "nZ": [-104, -146], "rP": {"ik": [0.0, 0.82], "o": -1, "c": 0}, "t": 1000, "drz": 150}
+  ]},
+  {"id": "dip-negativ", "nazov": "Negatívny dip", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "bradla", "x1": -0.28, "x2": 0.28, "y": 0.8}], "pozy": [
+   {"bok": [-0.015, 0.897], "trup": 84, "lopatky": -0.04, "nP": [-100, -142], "nZ": [-104, -146], "rP": {"ik": [0.0, 0.82], "o": -1, "c": 0}, "t": 3200, "drz": 400},
+   {"bok": [0.018, 0.7], "trup": 64, "nP": [-100, -142], "nZ": [-104, -146], "rP": {"ik": [0.0, 0.82], "o": -1, "c": 0}, "t": 800, "drz": 100}
+  ]},
+  {"id": "dip-dopomoc", "nazov": "Dip s dopomocou nohami", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "bradla", "x1": -0.15, "x2": 0.3, "y": 0.68}, {"typ": "stolicka", "x": -0.33}], "pozy": [
+   {"bok": [-0.015, 0.777], "trup": 84, "lopatky": -0.04, "nP": {"ik": [-0.27, 0.3], "o": -1, "c": -30}, "nZ": {"ik": [-0.29, 0.3], "o": -1, "c": -30}, "rP": {"ik": [0.0, 0.7], "o": -1, "c": 0}, "t": 2000, "drz": 300},
+   {"bok": [0.018, 0.58], "trup": 64, "nP": {"ik": [-0.27, 0.3], "o": -1, "c": -30}, "nZ": {"ik": [-0.29, 0.3], "o": -1, "c": -30}, "rP": {"ik": [0.0, 0.7], "o": -1, "c": 0}, "t": 1000, "drz": 150}
+  ]},
+  {"id": "dip-stolicky", "nazov": "Dip medzi stoličkami", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": -0.05, "operadlo": -1}], "pozy": [
+   {"bok": [-0.004, 0.357], "trup": 86, "lopatky": -0.03, "nP": {"ik": [0.34, 0.03], "o": 1}, "rP": {"ik": [0.0, 0.29], "o": -1, "c": 0}, "t": 2000, "drz": 300},
+   {"bok": [0.047, 0.157], "trup": 74, "nP": {"ik": [0.34, 0.03], "o": 1}, "rP": {"ik": [0.0, 0.29], "o": -1, "c": 0}, "t": 1000, "drz": 150}
+  ]},
+  {"id": "vzpor-kruhy", "nazov": "Vzpor na kruhoch", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "kruhy", "x": 0.0, "y": 0.82}], "pozy": [
+   {"bok": [-0.015, 0.897], "trup": 84, "lopatky": -0.04, "nP": [-96, -100], "nZ": [-98, -103], "rP": {"ik": [0.0, 0.82], "o": -1, "c": 0}, "t": 2000},
+   {"bok": [-0.015, 0.897], "trup": 84, "lopatky": -0.04, "nP": [-96, -100], "nZ": [-98, -103], "rP": {"ik": [0.0, 0.82], "o": -1, "c": 0}, "t": 2000}
+  ]},
+  {"id": "dip-kruhy", "nazov": "Dip na kruhoch", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "kruhy", "x": 0.0, "y": 0.82}], "pozy": [
+   {"bok": [-0.015, 0.897], "trup": 84, "lopatky": -0.04, "nP": [-96, -100], "nZ": [-98, -103], "rP": {"ik": [0.0, 0.82], "o": -1, "c": 0}, "t": 2000, "drz": 300},
+   {"bok": [0.018, 0.7], "trup": 64, "nP": [-100, -142], "nZ": [-104, -146], "rP": {"ik": [0.0, 0.82], "o": -1, "c": 0}, "t": 1000, "drz": 150}
+  ]},
+  {"id": "podpor-stolicky", "nazov": "Podpor medzi stoličkami", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": 0.11, "operadlo": -1}], "pozy": [
+   {"bok": [-0.008, 0.607], "trup": 86, "lopatky": -0.04, "nP": [-100, -150], "nZ": [-104, -154], "rP": {"ik": [0.0, 0.53], "o": -1, "c": 0}, "t": 2000},
+   {"bok": [-0.008, 0.607], "trup": 86, "lopatky": -0.04, "nP": [-100, -150], "nZ": [-104, -154], "rP": {"ik": [0.0, 0.53], "o": -1, "c": 0}, "t": 2000}
+  ]},
+  {"id": "australsky-pritah", "nazov": "Austrálsky príťah", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "hrazda", "x": -0.25, "y": 0.55}], "pozy": [
+   {"bok": [-0.106, 0.158], "trup": 167.263, "hlava": 175.263, "nP": {"ik": [0.37, 0.05], "o": 1}, "rP": {"ik": [-0.25, 0.525], "o": -1, "c": 90}, "t": 1100, "drz": 300},
+   {"bok": [-0.056, 0.288], "trup": 150.834, "hlava": 158.834, "nP": {"ik": [0.37, 0.05], "o": 1}, "rP": {"ik": [-0.25, 0.525], "o": -1, "c": 90}, "t": 1600, "drz": 500}
+  ]},
+  {"id": "australsky-pritah-strmy", "nazov": "Austrálsky príťah so strmým telom", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "hrazda", "x": -0.2, "y": 0.78}], "pozy": [
+   {"bok": [-0.174, 0.329], "trup": 145.069, "hlava": 153.069, "nP": {"ik": [0.226, 0.05], "o": 1}, "rP": {"ik": [-0.2, 0.755], "o": -1, "c": 90}, "t": 1100, "drz": 300},
+   {"bok": [-0.08, 0.43], "trup": 128.878, "hlava": 136.878, "nP": {"ik": [0.226, 0.05], "o": 1}, "rP": {"ik": [-0.2, 0.755], "o": -1, "c": 90}, "t": 1600, "drz": 500}
+  ]},
+  {"id": "australsky-pritah-stolicka", "nazov": "Austrálsky príťah s nohami na stoličke", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "hrazda", "x": -0.25, "y": 0.7}, {"typ": "stolicka", "x": 0.404}], "pozy": [
+   {"bok": [-0.063, 0.344], "trup": 177.199, "hlava": 185.199, "nP": {"ik": [0.424, 0.32], "o": 1}, "rP": {"ik": [-0.25, 0.675], "o": -1, "c": 90}, "t": 1100, "drz": 300},
+   {"bok": [-0.035, 0.484], "trup": 160.401, "hlava": 168.401, "nP": {"ik": [0.424, 0.32], "o": 1}, "rP": {"ik": [-0.25, 0.675], "o": -1, "c": 90}, "t": 1600, "drz": 500}
+  ]},
+  {"id": "pritah-dopomoc-stolicka", "nazov": "Príťah s dopomocou nohy", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "hrazda", "x": 0.0, "y": 1.185}, {"typ": "stolicka", "x": 0.13}], "pozy": [
+   {"bok": [-0.019, 0.523], "trup": 93, "nP": {"ik": [0.11, 0.3], "o": 1, "c": 0}, "nZ": [-110, -160], "rP": {"ik": [0.0, 1.16], "o": -1, "c": 90}, "t": 1100, "drz": 300},
+   {"bok": [-0.054, 0.787], "trup": 96, "nP": {"ik": [0.11, 0.3], "o": 1, "c": 0}, "nZ": [-100, -150], "rP": {"ik": [0.0, 1.16], "o": -1, "c": 90}, "t": 1600, "drz": 200}
+  ]},
+  {"id": "veslovanie-operadlo", "nazov": "Veslovanie s hrudníkom o operadlo", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": 0.02, "operadlo": 1}, {"typ": "jednorucka", "bod": "rP"}, {"typ": "jednorucka", "bod": "rZ"}], "pozy": [
+   {"bok": [-0.03, 0.31], "trup": 62, "nP": {"ik": [0.2, 0.03], "o": 1}, "nZ": {"ik": [0.17, 0.03], "o": 1}, "rP": [-91.736, -69.721, -90], "t": 1000, "drz": 200, "rZ": [-91.736, -69.721, -90]},
+   {"bok": [-0.03, 0.31], "trup": 62, "nP": {"ik": [0.2, 0.03], "o": 1}, "nZ": {"ik": [0.17, 0.03], "o": 1}, "rP": [-154.558, -27.014, -90], "t": 1800, "drz": 500, "rZ": [-154.558, -27.014, -90]}
+  ]},
+  {"id": "veslovanie-jednoruc-stolicka", "nazov": "Jednoručné veslovanie s oporou", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": 0.09}, {"typ": "jednorucka", "bod": "rP"}], "pozy": [
+   {"bok": [0.0, 0.54], "trup": 12, "hlava": 0, "nP": {"ik": [-0.1, 0.03], "o": 1}, "nZ": {"na": [0.0, 0.3], "u2": 180, "c": 180}, "rP": [-99.27, -79.559, -90], "rZ": {"ik": [0.2, 0.29], "o": -1, "c": 0}, "t": 1000, "drz": 200},
+   {"bok": [0.0, 0.54], "trup": 12, "hlava": 0, "nP": {"ik": [-0.1, 0.03], "o": 1}, "nZ": {"na": [0.0, 0.3], "u2": 180, "c": 180}, "rP": [-190.549, -72.933, -90], "rZ": {"ik": [0.2, 0.29], "o": -1, "c": 0}, "t": 1800, "drz": 500}
+  ]},
+  {"id": "veslovanie-predklon", "nazov": "Veslovanie v predklone", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "jednorucka", "bod": "rP"}, {"typ": "jednorucka", "bod": "rZ"}], "pozy": [
+   {"bok": [-0.06, 0.48], "trup": 38, "hlava": 20, "nP": {"ik": [0.04, 0.03], "o": 1}, "nZ": {"ik": [0.0, 0.03], "o": 1}, "rP": [-97.421, -78.007, -90], "t": 1000, "drz": 200, "rZ": [-97.421, -78.007, -90]},
+   {"bok": [-0.06, 0.48], "trup": 38, "hlava": 20, "nP": {"ik": [0.04, 0.03], "o": 1}, "nZ": {"ik": [0.0, 0.03], "o": 1}, "rP": [-185.968, -68.352, -90], "t": 1800, "drz": 500, "rZ": [-185.968, -68.352, -90]}
+  ]},
+  {"id": "veslovanie-predklon-jednoruc", "nazov": "Jednoručné veslovanie v predklone", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "jednorucka", "bod": "rP"}], "pozy": [
+   {"bok": [-0.06, 0.48], "trup": 38, "hlava": 20, "nP": {"ik": [0.04, 0.03], "o": 1}, "nZ": {"ik": [0.0, 0.03], "o": 1}, "rP": [-97.421, -78.007, -90], "t": 1000, "drz": 200, "rZ": [-97.421, -78.007, -90]},
+   {"bok": [-0.06, 0.48], "trup": 38, "hlava": 20, "nP": {"ik": [0.04, 0.03], "o": 1}, "nZ": {"ik": [0.0, 0.03], "o": 1}, "rP": [-185.968, -68.352, -90], "t": 1800, "drz": 500, "rZ": [-97.421, -78.007, -90]}
+  ]},
+  {"id": "supermanka", "nazov": "Supermanka", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.55, "x2": 0.75}], "pozy": [
+   {"bok": [0.0, 0.075], "trup": 0, "hlava": -3, "nP": [180, 180, 270], "rP": [2, 2, 2], "t": 1200, "drz": 300},
+   {"bok": [0.0, 0.075], "trup": 13, "hlava": 14, "nP": [174, 174, 264], "rP": [16, 16, 16], "t": 1200, "drz": 1000}
+  ]},
+  {"id": "ytw", "nazov": "Y-T-W (pohľad zhora)", "pohlad": "zhora", "druh": "opakovanie", "rekvizity": [], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": [-90, -90, -90], "rP": [58, 58, 58], "t": 700, "drz": 600},
+   {"bok": [0.0, 0.52], "trup": 90, "nP": [-90, -90, -90], "rP": [0, 0, 0], "t": 700, "drz": 600},
+   {"bok": [0.0, 0.52], "trup": 90, "nP": [-90, -90, -90], "rP": [-38, 62, 62], "t": 700, "drz": 600}
+  ]},
+  {"id": "rozpazovanie-predklon", "nazov": "Rozpažovanie v predklone (spredu)", "pohlad": "pred", "druh": "opakovanie", "priemetTrupu": 0.3, "rekvizity": [{"typ": "zem"}, {"typ": "jednorucka", "bod": "rP"}, {"typ": "jednorucka", "bod": "rZ"}], "pozy": [
+   {"bok": [0.0, 0.5], "trup": 90, "hlava": 90, "nP": {"ik": [0.1, 0.03], "o": 1}, "rP": [-88, -90, -90], "t": 1000, "drz": 200},
+   {"bok": [0.0, 0.5], "trup": 90, "hlava": 90, "nP": {"ik": [0.1, 0.03], "o": 1}, "rP": [6, -6, -6], "t": 1800, "drz": 500}
+  ]},
+  {"id": "zapastie-sed", "nazov": "Zápästie s jednoručkou v sede", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": -0.03}, {"typ": "jednorucka", "bod": "rP"}], "pozy": [
+   {"bok": [0.0, 0.31], "trup": 58, "nP": {"ik": [0.25, 0.03], "o": 1}, "nZ": {"ik": [0.22, 0.03], "o": 1}, "rP": [-100, -4, -70], "rZ": [-102, -6, -60], "t": 1000, "drz": 150},
+   {"bok": [0.0, 0.31], "trup": 58, "nP": {"ik": [0.25, 0.03], "o": 1}, "nZ": {"ik": [0.22, 0.03], "o": 1}, "rP": [-100, -4, 45], "rZ": [-102, -6, -60], "t": 1200, "drz": 150}
+  ]},
+  {"id": "zapastie-kladivo", "nazov": "Zápästné kladivo", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "jednorucka", "bod": "rP"}], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-92, 0, 0], "rZ": [-92, -95], "t": 800, "drz": 150},
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-92, 0, 55], "rZ": [-92, -95], "t": 800, "drz": 150},
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-92, 0, 0], "rZ": [-92, -95], "t": 800, "drz": 150},
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-92, 0, -55], "rZ": [-92, -95], "t": 800, "drz": 150}
+  ]},
+  {"id": "biceps-zdvih", "nazov": "Kladivový zdvih", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "jednorucka", "bod": "rP"}, {"typ": "jednorucka", "bod": "rZ"}], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-92, -90, -90], "rZ": [-90, -88, -90], "t": 1000, "drz": 150},
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-97, 78, 78], "rZ": [-95, 80, 80], "t": 1800, "drz": 300}
+  ]},
+  {"id": "farmar", "nazov": "Farmárska chôdza", "pohlad": "bok", "druh": "opakovanie", "posun": 0.8, "krivka": "linearna", "rekvizity": [{"typ": "zem"}, {"typ": "jednorucka", "bod": "rP"}, {"typ": "jednorucka", "bod": "rZ"}], "pozy": [
+   {"bok": [0, 0.5], "trup": 90, "nP": {"ik": [0.2, 0.03], "o": 1}, "nZ": {"ik": [-0.2, 0.03], "o": 1, "c": -40}, "rP": [-90, -90, -90], "rZ": [-90, -90, -90], "t": 300},
+   {"bok": [0, 0.52], "trup": 90, "nP": {"ik": [0.0, 0.03], "o": 1}, "nZ": [-80, -125], "rP": [-90, -90, -90], "rZ": [-90, -90, -90], "t": 300},
+   {"bok": [0, 0.5], "trup": 90, "nP": {"ik": [-0.2, 0.03], "o": 1, "c": -40}, "nZ": {"ik": [0.2, 0.03], "o": 1}, "rP": [-90, -90, -90], "rZ": [-90, -90, -90], "t": 300},
+   {"bok": [0, 0.52], "trup": 90, "nP": [-80, -125], "nZ": {"ik": [0.0, 0.03], "o": 1}, "rP": [-90, -90, -90], "rZ": [-90, -90, -90], "t": 300}
+  ]},
+  {"id": "chodza-pulz", "nazov": "Chôdza so stiahnutím", "pohlad": "bok", "druh": "opakovanie", "posun": 0.8, "krivka": "linearna", "rekvizity": [{"typ": "zem"}, {"typ": "pulz"}], "pozy": [
+   {"bok": [0, 0.5], "trup": 90, "nP": {"ik": [0.2, 0.03], "o": 1}, "nZ": {"ik": [-0.2, 0.03], "o": 1, "c": -40}, "rP": [-115, -105], "rZ": [-65, -55], "t": 300},
+   {"bok": [0, 0.52], "trup": 90, "nP": {"ik": [0.0, 0.03], "o": 1}, "nZ": [-80, -125], "rP": [-91, -89], "rZ": [-91, -89], "t": 300},
+   {"bok": [0, 0.5], "trup": 90, "nP": {"ik": [-0.2, 0.03], "o": 1, "c": -40}, "nZ": {"ik": [0.2, 0.03], "o": 1}, "rP": [-65, -55], "rZ": [-115, -105], "t": 300},
+   {"bok": [0, 0.52], "trup": 90, "nP": [-80, -125], "nZ": {"ik": [0.0, 0.03], "o": 1}, "rP": [-91, -89], "rZ": [-91, -89], "t": 300}
+  ]},
+  {"id": "zirafa", "nazov": "Žirafia chôdza", "pohlad": "bok", "druh": "opakovanie", "posun": 0.68, "krivka": "linearna", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0, 0.56], "trup": 90, "nP": {"ik": [0.17, 0.09], "o": 1, "c": -55}, "nZ": {"ik": [-0.17, 0.09], "o": 1, "c": -55}, "rP": [93, 93], "rZ": [93, 93], "t": 300},
+   {"bok": [0, 0.58], "trup": 90, "nP": {"ik": [0.0, 0.09], "o": 1, "c": -55}, "nZ": [-80, -125], "rP": [93, 93], "rZ": [93, 93], "t": 300},
+   {"bok": [0, 0.56], "trup": 90, "nP": {"ik": [-0.17, 0.09], "o": 1, "c": -55}, "nZ": {"ik": [0.17, 0.09], "o": 1, "c": -55}, "rP": [93, 93], "rZ": [93, 93], "t": 300},
+   {"bok": [0, 0.58], "trup": 90, "nP": [-80, -125], "nZ": {"ik": [0.0, 0.09], "o": 1, "c": -55}, "rP": [93, 93], "rZ": [93, 93], "t": 300}
+  ]},
+  {"id": "tucniak", "nazov": "Tučniačia chôdza", "pohlad": "bok", "druh": "opakovanie", "posun": 0.28, "krivka": "linearna", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0, 0.515], "trup": 86, "nP": {"ik": [0.07, 0.03], "o": 1, "c": 35}, "nZ": {"ik": [-0.07, 0.03], "o": 1, "c": 35}, "rP": [-80, -70, -20], "rZ": [-80, -70, -20], "t": 260, "hlava": 86},
+   {"bok": [0, 0.535], "trup": 86, "nP": {"ik": [0.0, 0.03], "o": 1, "c": 35}, "nZ": [-88, -133], "rP": [-80, -70, -20], "rZ": [-80, -70, -20], "t": 260, "hlava": 86},
+   {"bok": [0, 0.515], "trup": 94, "nP": {"ik": [-0.07, 0.03], "o": 1, "c": 35}, "nZ": {"ik": [0.07, 0.03], "o": 1, "c": 35}, "rP": [-80, -70, -20], "rZ": [-80, -70, -20], "t": 260, "hlava": 94},
+   {"bok": [0, 0.535], "trup": 94, "nP": [-88, -133], "nZ": {"ik": [0.0, 0.03], "o": 1, "c": 35}, "rP": [-80, -70, -20], "rZ": [-80, -70, -20], "t": 260, "hlava": 94}
+  ]},
+  {"id": "slon", "nazov": "Sloní chôdza", "pohlad": "bok", "druh": "opakovanie", "posun": 0.96, "krivka": "linearna", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0, 0.47], "trup": 35, "nP": {"ik": [0.24, 0.03], "o": 1}, "nZ": {"ik": [-0.24, 0.03], "o": 1, "c": -40}, "rP": [-94, -105], "rZ": [-92, -103], "t": 420, "hlava": 10},
+   {"bok": [0, 0.49], "trup": 35, "nP": {"ik": [0.0, 0.03], "o": 1}, "nZ": [-60, -105], "rP": [-82, -85], "rZ": [-80, -83], "t": 420, "hlava": 10},
+   {"bok": [0, 0.47], "trup": 35, "nP": {"ik": [-0.24, 0.03], "o": 1, "c": -40}, "nZ": {"ik": [0.24, 0.03], "o": 1}, "rP": [-94, -105], "rZ": [-92, -103], "t": 420, "hlava": 10},
+   {"bok": [0, 0.49], "trup": 35, "nP": [-60, -105], "nZ": {"ik": [0.0, 0.03], "o": 1}, "rP": [-82, -85], "rZ": [-80, -83], "t": 420, "hlava": 10}
+  ]},
+  {"id": "kacacia-chodza", "nazov": "Kačacia chôdza", "pohlad": "bok", "druh": "opakovanie", "posun": 0.32, "krivka": "linearna", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [-0.06, 0.21], "trup": 62, "hlava": 85, "nP": {"ik": [0.2, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.04, 0.03], "o": 1, "c": 0}, "rP": [-130, -70], "rZ": [-125, -65], "t": 300},
+   {"bok": [-0.06, 0.23], "trup": 62, "hlava": 85, "nP": {"ik": [0.12, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.12, 0.12], "o": 1, "c": 0}, "rP": [-130, -70], "rZ": [-125, -65], "t": 300},
+   {"bok": [-0.06, 0.21], "trup": 62, "hlava": 85, "nP": {"ik": [0.04, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.2, 0.03], "o": 1, "c": 0}, "rP": [-130, -70], "rZ": [-125, -65], "t": 300},
+   {"bok": [-0.06, 0.23], "trup": 62, "hlava": 85, "nP": {"ik": [0.12, 0.12], "o": 1, "c": 0}, "nZ": {"ik": [0.12, 0.03], "o": 1, "c": 0}, "rP": [-130, -70], "rZ": [-125, -65], "t": 300}
+  ]},
+  {"id": "medvedia-chodza", "nazov": "Medvedia chôdza", "pohlad": "bok", "druh": "opakovanie", "posun": 0.36, "krivka": "linearna", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0.0, 0.43], "trup": -8, "hlava": -8, "nP": {"ik": [-0.05, 0.03], "o": 1}, "nZ": {"ik": [0.13, 0.03], "o": 1}, "rP": {"ik": [0.41, 0.03], "o": -1, "c": 0}, "rZ": {"ik": [0.23, 0.03], "o": -1, "c": 0}, "t": 320},
+   {"bok": [0.0, 0.43], "trup": -8, "hlava": -8, "nP": {"ik": [0.04, 0.11], "o": 1}, "nZ": {"ik": [0.04, 0.03], "o": 1}, "rP": {"ik": [0.32, 0.03], "o": -1, "c": 0}, "rZ": {"ik": [0.32, 0.11], "o": -1, "c": 0}, "t": 320},
+   {"bok": [0.0, 0.43], "trup": -8, "hlava": -8, "nP": {"ik": [0.13, 0.03], "o": 1}, "nZ": {"ik": [-0.05, 0.03], "o": 1}, "rP": {"ik": [0.23, 0.03], "o": -1, "c": 0}, "rZ": {"ik": [0.41, 0.03], "o": -1, "c": 0}, "t": 320},
+   {"bok": [0.0, 0.43], "trup": -8, "hlava": -8, "nP": {"ik": [0.04, 0.03], "o": 1}, "nZ": {"ik": [0.04, 0.11], "o": 1}, "rP": {"ik": [0.32, 0.11], "o": -1, "c": 0}, "rZ": {"ik": [0.32, 0.03], "o": -1, "c": 0}, "t": 320}
+  ]},
+  {"id": "pavucia-chodza", "nazov": "Pavúčia chôdza", "pohlad": "bok", "druh": "opakovanie", "posun": 0.32, "krivka": "linearna", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0.0, 0.25], "trup": 8, "hlava": 30, "nP": {"ik": [-0.1, 0.03], "o": 1}, "nZ": {"ik": [0.06, 0.03], "o": 1}, "rP": {"ik": [0.4, 0.03], "o": -1, "c": 0}, "rZ": {"ik": [0.24, 0.03], "o": -1, "c": 0}, "t": 320},
+   {"bok": [0.0, 0.25], "trup": 8, "hlava": 30, "nP": {"ik": [-0.02, 0.11], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": {"ik": [0.32, 0.03], "o": -1, "c": 0}, "rZ": {"ik": [0.32, 0.11], "o": -1, "c": 0}, "t": 320},
+   {"bok": [0.0, 0.25], "trup": 8, "hlava": 30, "nP": {"ik": [0.06, 0.03], "o": 1}, "nZ": {"ik": [-0.1, 0.03], "o": 1}, "rP": {"ik": [0.24, 0.03], "o": -1, "c": 0}, "rZ": {"ik": [0.4, 0.03], "o": -1, "c": 0}, "t": 320},
+   {"bok": [0.0, 0.25], "trup": 8, "hlava": 30, "nP": {"ik": [-0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.11], "o": 1}, "rP": {"ik": [0.32, 0.11], "o": -1, "c": 0}, "rZ": {"ik": [0.32, 0.03], "o": -1, "c": 0}, "t": 320}
+  ]},
+  {"id": "krabia-chodza", "nazov": "Krabia chôdza", "pohlad": "bok", "druh": "opakovanie", "posun": 0.3, "krivka": "linearna", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0.0, 0.25], "trup": 158, "hlava": 120, "nP": {"ik": [0.195, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.345, 0.03], "o": 1, "c": 0}, "rP": {"ik": [-0.225, 0.03], "o": 1, "c": 180}, "rZ": {"ik": [-0.375, 0.03], "o": 1, "c": 180}, "t": 320},
+   {"bok": [0.0, 0.25], "trup": 158, "hlava": 120, "nP": {"ik": [0.27, 0.11], "o": 1, "c": 0}, "nZ": {"ik": [0.27, 0.03], "o": 1, "c": 0}, "rP": {"ik": [-0.3, 0.03], "o": 1, "c": 180}, "rZ": {"ik": [-0.3, 0.11], "o": 1, "c": 180}, "t": 320},
+   {"bok": [0.0, 0.25], "trup": 158, "hlava": 120, "nP": {"ik": [0.345, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.195, 0.03], "o": 1, "c": 0}, "rP": {"ik": [-0.375, 0.03], "o": 1, "c": 180}, "rZ": {"ik": [-0.225, 0.03], "o": 1, "c": 180}, "t": 320},
+   {"bok": [0.0, 0.25], "trup": 158, "hlava": 120, "nP": {"ik": [0.27, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.27, 0.11], "o": 1, "c": 0}, "rP": {"ik": [-0.3, 0.11], "o": 1, "c": 180}, "rZ": {"ik": [-0.3, 0.03], "o": 1, "c": 180}, "t": 320}
+  ]},
+  {"id": "rak", "nazov": "Rakova chôdza vzad", "pohlad": "bok", "druh": "opakovanie", "posun": -0.3, "krivka": "linearna", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0.0, 0.25], "trup": 158, "hlava": 120, "nP": {"ik": [0.27, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.27, 0.11], "o": 1, "c": 0}, "rP": {"ik": [-0.3, 0.11], "o": 1, "c": 180}, "rZ": {"ik": [-0.3, 0.03], "o": 1, "c": 180}, "t": 320},
+   {"bok": [0.0, 0.25], "trup": 158, "hlava": 120, "nP": {"ik": [0.345, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.195, 0.03], "o": 1, "c": 0}, "rP": {"ik": [-0.375, 0.03], "o": 1, "c": 180}, "rZ": {"ik": [-0.225, 0.03], "o": 1, "c": 180}, "t": 320},
+   {"bok": [0.0, 0.25], "trup": 158, "hlava": 120, "nP": {"ik": [0.27, 0.11], "o": 1, "c": 0}, "nZ": {"ik": [0.27, 0.03], "o": 1, "c": 0}, "rP": {"ik": [-0.3, 0.03], "o": 1, "c": 180}, "rZ": {"ik": [-0.3, 0.11], "o": 1, "c": 180}, "t": 320},
+   {"bok": [0.0, 0.25], "trup": 158, "hlava": 120, "nP": {"ik": [0.195, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.345, 0.03], "o": 1, "c": 0}, "rP": {"ik": [-0.225, 0.03], "o": 1, "c": 180}, "rZ": {"ik": [-0.375, 0.03], "o": 1, "c": 180}, "t": 320}
+  ]},
+  {"id": "krokodil", "nazov": "Krokodílie plazenie", "pohlad": "bok", "druh": "opakovanie", "posun": 0.28, "krivka": "linearna", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0.067, 0.12], "trup": 5.812, "hlava": 10.812, "nP": {"ik": [-0.47, 0.07], "o": -1}, "nZ": {"ik": [-0.33, 0.07], "o": -1}, "rP": {"ik": [0.416, 0.03], "o": -1, "c": 0}, "rZ": {"ik": [0.276, 0.03], "o": -1, "c": 0}, "t": 320},
+   {"bok": [0.067, 0.12], "trup": 5.812, "hlava": 10.812, "nP": {"ik": [-0.4, 0.12], "o": -1}, "nZ": {"ik": [-0.4, 0.07], "o": -1}, "rP": {"ik": [0.346, 0.03], "o": -1, "c": 0}, "rZ": {"ik": [0.346, 0.08], "o": -1, "c": 0}, "t": 320},
+   {"bok": [0.067, 0.12], "trup": 5.812, "hlava": 10.812, "nP": {"ik": [-0.33, 0.07], "o": -1}, "nZ": {"ik": [-0.47, 0.07], "o": -1}, "rP": {"ik": [0.276, 0.03], "o": -1, "c": 0}, "rZ": {"ik": [0.416, 0.03], "o": -1, "c": 0}, "t": 320},
+   {"bok": [0.067, 0.12], "trup": 5.812, "hlava": 10.812, "nP": {"ik": [-0.4, 0.07], "o": -1}, "nZ": {"ik": [-0.4, 0.12], "o": -1}, "rP": {"ik": [0.346, 0.08], "o": -1, "c": 0}, "rZ": {"ik": [0.346, 0.03], "o": -1, "c": 0}, "t": 320}
+  ]},
+  {"id": "hadie-plazenie", "nazov": "Hadie plazenie", "pohlad": "bok", "druh": "opakovanie", "posun": 0.44, "krivka": "linearna", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.55, "x2": 0.75}], "pozy": [
+   {"bok": [0.0, 0.075], "trup": 6, "hlava": 25, "nP": [186, 186, 270], "rP": {"ik": [0.64, 0.04], "o": 1, "c": 0}, "rZ": {"ik": [0.4, 0.04], "o": 1, "c": 0}, "t": 600},
+   {"bok": [0.0, 0.075], "trup": 6, "hlava": 25, "nP": [186, 186, 270], "rP": {"ik": [0.4, 0.04], "o": 1, "c": 0}, "rZ": {"ik": [0.64, 0.04], "o": 1, "c": 0}, "t": 600}
+  ]},
+  {"id": "husenica", "nazov": "Húsenicová chôdza", "pohlad": "bok", "druh": "opakovanie", "posun": 0.75, "krivka": "linearna", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [-0.285, 0.539], "trup": -52.934, "hlava": -52.934, "nP": {"ik": [-0.15, 0.07], "o": 1}, "rP": {"ik": [0.1, 0.03], "o": -1, "c": 0}, "t": 1200},
+   {"bok": [-0.099, 0.308], "trup": -25.859, "hlava": -25.859, "nP": {"ik": [-0.525, 0.07], "o": 1}, "rP": {"ik": [0.475, 0.03], "o": -1, "c": 0}, "t": 1200}
+  ]},
+  {"id": "drep", "nazov": "Drep", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-5, -2], "rZ": [-7, -4], "t": 2000, "drz": 300},
+   {"bok": [-0.14, 0.3], "trup": 52, "hlava": 75, "nP": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.0, 0.03], "o": 1, "c": 0}, "rP": [0, 0], "rZ": [0, 0], "t": 1000, "drz": 150}
+  ]},
+  {"id": "drep-hlboky", "nazov": "Hlboký drep", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-5, -2], "rZ": [-7, -4], "t": 2200, "drz": 300},
+   {"bok": [-0.08, 0.17], "trup": 62, "hlava": 80, "nP": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.0, 0.03], "o": 1, "c": 0}, "rP": [-5, 0], "rZ": [-5, 0], "t": 1000, "drz": 150}
+  ]},
+  {"id": "hlboky-drep-vydrz", "nazov": "Výdrž v hlbokom drepe", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [-0.08, 0.17], "trup": 62, "hlava": 80, "nP": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.0, 0.03], "o": 1, "c": 0}, "rP": [-69.911, 68.679, 60], "rZ": [-69.911, 68.679, 60], "t": 2000},
+   {"bok": [-0.08, 0.17], "trup": 62, "hlava": 80, "nP": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.0, 0.03], "o": 1, "c": 0}, "rP": [-69.911, 68.679, 60], "rZ": [-69.911, 68.679, 60], "t": 2000}
+  ]},
+  {"id": "drep-vydrz-schod", "nazov": "Hlboký drep s pätami na schode", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "schod", "x1": -0.04, "x2": 0.05, "h": 0.05}], "pozy": [
+   {"bok": [-0.09, 0.19], "trup": 62, "hlava": 80, "nP": {"ik": [0.035, 0.085], "o": 1, "c": -22}, "nZ": {"ik": [0.005, 0.085], "o": 1, "c": -22}, "rP": [-70.611, 68.585, 60], "rZ": [-70.611, 68.585, 60], "t": 2000},
+   {"bok": [-0.09, 0.19], "trup": 62, "hlava": 80, "nP": {"ik": [0.035, 0.085], "o": 1, "c": -22}, "nZ": {"ik": [0.005, 0.085], "o": 1, "c": -22}, "rP": [-70.611, 68.585, 60], "rZ": [-70.611, 68.585, 60], "t": 2000}
+  ]},
+  {"id": "drep-vydrz-stolicka", "nazov": "Hlboký drep s pridržaním", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": 0.44, "operadlo": -1}], "pozy": [
+   {"bok": [-0.08, 0.17], "trup": 62, "hlava": 80, "nP": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.0, 0.03], "o": 1, "c": 0}, "rP": {"ik": [0.33, 0.47], "o": -1, "c": 90}, "rZ": {"ik": [0.33, 0.47], "o": -1, "c": 90}, "t": 2000},
+   {"bok": [-0.08, 0.17], "trup": 62, "hlava": 80, "nP": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.0, 0.03], "o": 1, "c": 0}, "rP": {"ik": [0.33, 0.47], "o": -1, "c": 90}, "rZ": {"ik": [0.33, 0.47], "o": -1, "c": 90}, "t": 2000}
+  ]},
+  {"id": "hlboky-drep-presuny", "nazov": "Hlboký drep s prenášaním váhy", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [-0.11, 0.18], "trup": 58, "hlava": 80, "nP": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.0, 0.03], "o": 1, "c": 0}, "rP": [-70.611, 68.585, 60], "rZ": [-70.611, 68.585, 60], "t": 1100, "drz": 200},
+   {"bok": [-0.03, 0.19], "trup": 70, "hlava": 85, "nP": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.0, 0.03], "o": 1, "c": 0}, "rP": [-70.611, 68.585, 60], "rZ": [-70.611, 68.585, 60], "t": 1100, "drz": 200}
+  ]},
+  {"id": "goblet-drep", "nazov": "Goblet drep", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "jednorucka", "bod": "rP"}], "pozy": [
+   {"bok": [0, 0.52], "trup": 90, "nP": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.0, 0.03], "o": 1, "c": 0}, "rP": [-88.69, 48.565, 90], "rZ": [-88.69, 48.565, 90], "t": 2000, "drz": 300},
+   {"bok": [-0.1, 0.25], "trup": 66, "hlava": 85, "nP": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.0, 0.03], "o": 1, "c": 0}, "rP": [-112.69, 24.565, 90], "rZ": [-112.69, 24.565, 90], "t": 1000, "drz": 150}
+  ]},
+  {"id": "sed-stoj-stolicka", "nazov": "Sed – stoj zo stoličky", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": -0.2, "operadlo": -1}], "pozy": [
+   {"bok": [-0.17, 0.31], "trup": 82, "nP": {"ik": [0.06, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "rP": [0, 0], "t": 1000, "drz": 300, "rZ": [0, 0]},
+   {"bok": [-0.15, 0.32], "trup": 48, "hlava": 85, "nP": {"ik": [0.06, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "rP": [0, 0], "t": 900, "rZ": [0, 0]},
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.06, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "rP": [0, 0], "t": 900, "drz": 300, "rZ": [0, 0]},
+   {"bok": [-0.1, 0.4], "trup": 58, "hlava": 85, "nP": {"ik": [0.06, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "rP": [0, 0], "t": 700, "rZ": [0, 0]}
+  ]},
+  {"id": "sed-stoj-ruky", "nazov": "Sed – stoj s pomocou rúk", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": -0.2, "operadlo": -1}], "pozy": [
+   {"bok": [-0.17, 0.31], "trup": 82, "nP": {"ik": [0.06, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "rP": [-83.947, -40.811], "t": 1000, "drz": 300, "rZ": [-83.947, -40.811]},
+   {"bok": [-0.15, 0.32], "trup": 48, "hlava": 85, "nP": {"ik": [0.06, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "rP": [-141.332, -41.326], "t": 900, "rZ": [-141.332, -41.326]},
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.06, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "rP": [-87.941, -85.734], "t": 900, "drz": 300, "rZ": [-87.941, -85.734]},
+   {"bok": [-0.1, 0.4], "trup": 58, "hlava": 85, "nP": {"ik": [0.06, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "rP": [-112.676, -65.52], "t": 700, "rZ": [-112.676, -65.52]}
+  ]},
+  {"id": "sed-stoj-ruky-hrud", "nazov": "Sed – stoj s rukami na hrudi", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": -0.2, "operadlo": -1}, {"typ": "pulz"}], "pozy": [
+   {"bok": [-0.17, 0.31], "trup": 82, "nP": {"ik": [0.06, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "rP": [-111.151, 38.095], "t": 1000, "drz": 300, "rZ": [-111.151, 38.095]},
+   {"bok": [-0.15, 0.32], "trup": 48, "hlava": 85, "nP": {"ik": [0.06, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "rP": [-145.151, 4.095], "t": 900, "rZ": [-145.151, 4.095]},
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.06, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "rP": [-103.151, 46.095], "t": 900, "drz": 300, "rZ": [-103.151, 46.095]},
+   {"bok": [-0.1, 0.4], "trup": 58, "hlava": 85, "nP": {"ik": [0.06, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "rP": [-135.151, 14.095], "t": 700, "rZ": [-135.151, 14.095]}
+  ]},
+  {"id": "drep-k-stolicke", "nazov": "Drep k stoličke", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": -0.2, "operadlo": -1}, {"typ": "pulz"}], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.06, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "rP": [-80, -60], "t": 1800, "drz": 300, "rZ": [-80, -60]},
+   {"bok": [-0.1, 0.4], "trup": 58, "hlava": 85, "nP": {"ik": [0.06, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "rP": [-80, -60], "t": 900, "rZ": [-80, -60]},
+   {"bok": [-0.17, 0.335], "trup": 60, "nP": {"ik": [0.06, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "rP": [-80, -60], "t": 1000, "drz": 100, "rZ": [-80, -60], "hlava": 85}
+  ]},
+  {"id": "bulharsky-drep", "nazov": "Bulharský drep", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": -0.5}], "pozy": [
+   {"bok": [0.0, 0.46], "trup": 86, "nP": {"ik": [0.25, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [-0.4, 0.32], "o": 1, "c": 205}, "rP": [-80, -70], "rZ": [-80, -70], "t": 2000, "drz": 300},
+   {"bok": [-0.01, 0.26], "trup": 84, "nP": {"ik": [0.25, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [-0.4, 0.32], "o": 1, "c": 205}, "rP": [-80, -70], "rZ": [-80, -70], "t": 1000, "drz": 150}
+  ]},
+  {"id": "bulharsky-drep-jednorucky", "nazov": "Bulharský drep s jednoručkami", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": -0.5}, {"typ": "jednorucka", "bod": "rP"}, {"typ": "jednorucka", "bod": "rZ"}], "pozy": [
+   {"bok": [0.0, 0.46], "trup": 86, "nP": {"ik": [0.25, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [-0.4, 0.32], "o": 1, "c": 205}, "rP": [-92, -90, -90], "rZ": [-92, -90, -90], "t": 2000, "drz": 300},
+   {"bok": [-0.01, 0.26], "trup": 84, "nP": {"ik": [0.25, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [-0.4, 0.32], "o": 1, "c": 205}, "rP": [-92, -90, -90], "rZ": [-92, -90, -90], "t": 1000, "drz": 150}
+  ]},
+  {"id": "pistol-stolicka", "nazov": "Drep na jednej nohe na stoličku", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": -0.24, "operadlo": -1}], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "nZ": [-55, -55, 30], "rP": [-2, -2], "rZ": [-4, -4], "t": 2000, "drz": 300},
+   {"bok": [-0.18, 0.33], "trup": 58, "hlava": 85, "nP": {"ik": [0.06, 0.03], "o": 1, "c": 0}, "nZ": [6, 6, 80], "rP": [-2, -2], "rZ": [-4, -4], "t": 1000, "drz": 200}
+  ]},
+  {"id": "pistol-zarubna", "nazov": "Pištoľ s pridržaním", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stena", "x": 0.24, "y1": 0.0, "y2": 1.25}], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "nZ": [-55, -55, 30], "rP": {"ik": [0.22, 0.86], "o": -1, "c": 90}, "rZ": [-4, -4], "t": 2200, "drz": 300},
+   {"bok": [-0.07, 0.135], "trup": 58, "hlava": 85, "nP": {"ik": [0.04, 0.03], "o": 1, "c": 0}, "nZ": [8, 8, 80], "rP": {"ik": [0.22, 0.47], "o": -1, "c": 90}, "rZ": [0, 0], "t": 1000, "drz": 200}
+  ]},
+  {"id": "pistol", "nazov": "Pištoľ", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "nZ": [-55, -55, 30], "rP": [-2, -2], "rZ": [-4, -4], "t": 2200, "drz": 300},
+   {"bok": [-0.07, 0.135], "trup": 52, "hlava": 85, "nP": {"ik": [0.04, 0.03], "o": 1, "c": 0}, "nZ": [8, 8, 80], "rP": [2, 2], "rZ": [0, 0], "t": 1000, "drz": 200}
+  ]},
+  {"id": "rozkroceny-drep", "nazov": "Rozkročený drep", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0.0, 0.465], "trup": 88, "nP": {"ik": [0.24, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [-0.26, 0.06], "o": 1, "c": -45}, "rP": [-80, -60], "rZ": [-80, -60], "t": 2000, "drz": 300},
+   {"bok": [-0.01, 0.285], "trup": 87, "nP": {"ik": [0.24, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [-0.26, 0.06], "o": 1, "c": -45}, "rP": [-80, -60], "rZ": [-80, -60], "t": 1000, "drz": 150}
+  ]},
+  {"id": "rozkroceny-drep-stolicka", "nazov": "Rozkročený drep s oporou", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": -0.05, "operadlo": 1}], "pozy": [
+   {"bok": [0.0, 0.465], "trup": 88, "nP": {"ik": [0.24, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [-0.26, 0.06], "o": 1, "c": -45}, "rP": [-80, -60], "rZ": [-118.258, -32.628, 0], "t": 2000, "drz": 300},
+   {"bok": [-0.01, 0.285], "trup": 87, "nP": {"ik": [0.24, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [-0.26, 0.06], "o": 1, "c": -45}, "rP": [-80, -60], "rZ": [-112.673, 39.374, 0], "t": 1000, "drz": 150}
+  ]},
+  {"id": "vypad-vzad", "nazov": "Výpad vzad", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-80, -60], "rZ": [-80, -60], "t": 450, "drz": 250},
+   {"bok": [-0.04, 0.48], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [-0.26, 0.13], "o": 1}, "rP": [-80, -60], "rZ": [-80, -60], "t": 550},
+   {"bok": [-0.2, 0.285], "trup": 88, "nP": {"ik": [0.02, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [-0.58, 0.06], "o": 1, "c": -40}, "rP": [-80, -60], "rZ": [-80, -60], "t": 500, "drz": 200},
+   {"bok": [-0.06, 0.47], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [-0.24, 0.14], "o": 1}, "rP": [-80, -60], "rZ": [-80, -60], "t": 450}
+  ]},
+  {"id": "vypad-vpred", "nazov": "Výpad vpred", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [-0.15, 0.52], "trup": 90, "nP": {"ik": [-0.13, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [-0.17, 0.03], "o": 1, "c": 0}, "rP": [-80, -60], "rZ": [-80, -60], "t": 450, "drz": 250},
+   {"bok": [0.0, 0.48], "trup": 90, "nP": {"ik": [0.16, 0.13], "o": 1}, "nZ": {"ik": [-0.17, 0.03], "o": 1, "c": -20}, "rP": [-80, -60], "rZ": [-80, -60], "t": 500},
+   {"bok": [0.17, 0.285], "trup": 88, "nP": {"ik": [0.4, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [-0.17, 0.06], "o": 1, "c": -40}, "rP": [-80, -60], "rZ": [-80, -60], "t": 500, "drz": 200},
+   {"bok": [0.0, 0.47], "trup": 90, "nP": {"ik": [0.14, 0.14], "o": 1}, "nZ": {"ik": [-0.17, 0.03], "o": 1, "c": -20}, "rP": [-80, -60], "rZ": [-80, -60], "t": 450}
+  ]},
+  {"id": "vypad-jednorucky", "nazov": "Výpady s jednoručkami", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "jednorucka", "bod": "rP"}, {"typ": "jednorucka", "bod": "rZ"}], "pozy": [
+   {"bok": [-0.15, 0.52], "trup": 90, "nP": {"ik": [-0.13, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [-0.17, 0.03], "o": 1, "c": 0}, "rP": [-91, -90, -90], "rZ": [-91, -90, -90], "t": 450, "drz": 250},
+   {"bok": [0.0, 0.48], "trup": 90, "nP": {"ik": [0.16, 0.13], "o": 1}, "nZ": {"ik": [-0.17, 0.03], "o": 1, "c": -20}, "rP": [-91, -90, -90], "rZ": [-91, -90, -90], "t": 500},
+   {"bok": [0.17, 0.285], "trup": 88, "nP": {"ik": [0.4, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [-0.17, 0.06], "o": 1, "c": -40}, "rP": [-91, -90, -90], "rZ": [-91, -90, -90], "t": 500, "drz": 200},
+   {"bok": [0.0, 0.47], "trup": 90, "nP": {"ik": [0.14, 0.14], "o": 1}, "nZ": {"ik": [-0.17, 0.03], "o": 1, "c": -20}, "rP": [-91, -90, -90], "rZ": [-91, -90, -90], "t": 450}
+  ]},
+  {"id": "vystup-stolicka", "nazov": "Výstup na stoličku", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": 0.33, "operadlo": 1}], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-96, -90], "rZ": [-92, -95], "t": 600, "drz": 200},
+   {"bok": [0.02, 0.52], "trup": 88, "nP": {"ik": [0.28, 0.29], "o": 1, "c": 0}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-80, -70], "rZ": [-100, -95], "t": 700, "drz": 150},
+   {"bok": [0.22, 0.66], "trup": 84, "nP": {"ik": [0.28, 0.29], "o": 1, "c": 0}, "nZ": [-75, -120], "rP": [-95, -90], "rZ": [-90, -88], "t": 500},
+   {"bok": [0.31, 0.78], "trup": 90, "nP": {"ik": [0.3, 0.29], "o": 1, "c": 0}, "nZ": {"ik": [0.34, 0.29], "o": 1, "c": 0}, "rP": [-96, -90], "rZ": [-92, -95], "t": 900, "drz": 300},
+   {"bok": [0.15, 0.58], "trup": 88, "nP": {"ik": [0.29, 0.29], "o": 1, "c": 0}, "nZ": [-100, -95], "rP": [-95, -90], "rZ": [-90, -88], "t": 700}
+  ]},
+  {"id": "koleno-k-stene", "nazov": "Koleno k stene", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stena", "x": 0.36, "y1": 0.0, "y2": 1.1}], "pozy": [
+   {"bok": [-0.05, 0.43], "trup": 86, "nP": {"ik": [0.2, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [-0.3, 0.03], "o": 1, "c": 0}, "rP": {"ik": [0.34, 0.62], "o": -1, "c": 90}, "t": 1000, "drz": 300},
+   {"bok": [0.06, 0.38], "trup": 82, "nP": {"ik": [0.2, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [-0.3, 0.03], "o": 1, "c": -10}, "rP": {"ik": [0.34, 0.62], "o": -1, "c": 90}, "t": 1000, "drz": 700}
+  ]},
+  {"id": "bocian", "nazov": "Bocian – stoj na jednej nohe", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0, 0.52], "trup": 90, "nP": [0, -90, 0], "nZ": {"ik": [-0.01, 0.03], "o": 1, "c": 0}, "rP": [-70, -60], "rZ": [-110, -100], "t": 2000},
+   {"bok": [0, 0.52], "trup": 90, "nP": [0, -90, 0], "nZ": {"ik": [-0.01, 0.03], "o": 1, "c": 0}, "rP": [-70, -60], "rZ": [-110, -100], "t": 2000}
+  ]},
+  {"id": "plameniak", "nazov": "Plameniak", "pohlad": "bok", "druh": "vydrz", "oko": false, "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0, 0.52], "trup": 90, "nP": [-62, 158, 200], "nZ": {"ik": [-0.01, 0.03], "o": 1, "c": 0}, "rP": [-150, -130], "rZ": [-30, -50], "t": 2000},
+   {"bok": [0, 0.52], "trup": 90, "nP": [-62, 158, 200], "nZ": {"ik": [-0.01, 0.03], "o": 1, "c": 0}, "rP": [-150, -130], "rZ": [-30, -50], "t": 2000}
+  ]},
+  {"id": "predklon-bokov-stena", "nazov": "Predklon v bokoch k stene", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stena", "x": -0.28, "y1": 0.0, "y2": 1.0}], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-95, -92], "rZ": [-95, -92], "t": 1800, "drz": 200},
+   {"bok": [-0.2, 0.47], "trup": 24, "hlava": 49, "nP": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.0, 0.03], "o": 1, "c": 0}, "rP": [-95, -92], "rZ": [-95, -92], "t": 1300, "drz": 300}
+  ]},
+  {"id": "rumunsky-mrtvy-tah", "nazov": "Rumunský mŕtvy ťah", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "jednorucka", "bod": "rP"}, {"typ": "jednorucka", "bod": "rZ"}], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-92, -90, -90], "rZ": [-92, -90, -90], "t": 1800, "drz": 200},
+   {"bok": [-0.2, 0.47], "trup": 24, "hlava": 49, "nP": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.0, 0.03], "o": 1, "c": 0}, "rP": [-97.421, -78.007, -90], "rZ": [-97.421, -78.007, -90], "t": 1300, "drz": 300}
+  ]},
+  {"id": "mrtvy-tah-jednonoz", "nazov": "Mŕtvy ťah na jednej nohe", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0, 0.52], "trup": 90, "nP": [-95, -95, 0], "nZ": {"ik": [0.0, 0.03], "o": 1, "c": 0}, "rP": [-92, -90, -90], "rZ": [-92, -95], "t": 2000, "drz": 300},
+   {"bok": [-0.03, 0.495], "trup": 6, "hlava": -5, "nP": [186, 186, 276], "nZ": {"ik": [0.0, 0.03], "o": 1, "c": 0}, "rP": [-99.27, -79.559, -90], "rZ": [-99.27, -79.559, -90], "t": 1200, "drz": 300}
+  ]},
+  {"id": "mrtvy-tah-jednonoz-jednorucka", "nazov": "Mŕtvy ťah na jednej nohe s jednoručkou", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "jednorucka", "bod": "rP"}], "pozy": [
+   {"bok": [0, 0.52], "trup": 90, "nP": [-95, -95, 0], "nZ": {"ik": [0.0, 0.03], "o": 1, "c": 0}, "rP": [-92, -90, -90], "rZ": [-92, -95], "t": 2000, "drz": 300},
+   {"bok": [-0.03, 0.495], "trup": 6, "hlava": -5, "nP": [186, 186, 276], "nZ": {"ik": [0.0, 0.03], "o": 1, "c": 0}, "rP": [-99.27, -79.559, -90], "rZ": [-99.27, -79.559, -90], "t": 1200, "drz": 300}
+  ]},
+  {"id": "mrtvy-tah-jednonoz-stolicka", "nazov": "Mŕtvy ťah na jednej nohe s oporou", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": 0.01, "operadlo": 1}], "pozy": [
+   {"bok": [0, 0.52], "trup": 90, "nP": [-95, -95, 0], "nZ": {"ik": [0.0, 0.03], "o": 1, "c": 0}, "rP": [-92, -90, -90], "rZ": [-87.137, -46.067, 0], "t": 2000, "drz": 300},
+   {"bok": [-0.03, 0.495], "trup": 6, "hlava": -5, "nP": [186, 186, 276], "nZ": {"ik": [0.0, 0.03], "o": 1, "c": 0}, "rP": [-99.27, -79.559, -90], "rZ": [-236.83, -108.163, 0], "t": 1200, "drz": 300}
+  ]},
+  {"id": "most", "nazov": "Most", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.45, "x2": 0.45}], "pozy": [
+   {"bok": [0.05, 0.068], "trup": 180.5, "hlava": 180, "nP": {"ik": [0.33, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.31, 0.03], "o": 1, "c": 0}, "rP": [0, 0, 0], "t": 900, "drz": 200},
+   {"bok": [0.002, 0.228], "trup": 213, "hlava": 180, "nP": {"ik": [0.33, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.31, 0.03], "o": 1, "c": 0}, "rP": [0, 0, 0], "t": 1400, "drz": 800}
+  ]},
+  {"id": "most-vydrz", "nazov": "Most – výdrž", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.45, "x2": 0.45}], "pozy": [
+   {"bok": [0.002, 0.228], "trup": 213, "hlava": 180, "nP": {"ik": [0.33, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.31, 0.03], "o": 1, "c": 0}, "rP": [0, 0, 0], "t": 2000},
+   {"bok": [0.002, 0.228], "trup": 213, "hlava": 180, "nP": {"ik": [0.33, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.31, 0.03], "o": 1, "c": 0}, "rP": [0, 0, 0], "t": 2000}
+  ]},
+  {"id": "most-jednonoz", "nazov": "Most na jednej nohe", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.45, "x2": 0.45}], "pozy": [
+   {"bok": [0.05, 0.068], "trup": 180.5, "hlava": 180, "nP": [40, 40, 130], "nZ": {"ik": [0.31, 0.03], "o": 1, "c": 0}, "rP": [0, 0, 0], "t": 900, "drz": 200},
+   {"bok": [0.002, 0.228], "trup": 213, "hlava": 180, "nP": [33, 33, 120], "nZ": {"ik": [0.31, 0.03], "o": 1, "c": 0}, "rP": [0, 0, 0], "t": 1400, "drz": 800}
+  ]},
+  {"id": "hip-thrust", "nazov": "Hip thrust", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": -0.42}], "pozy": [
+   {"bok": [-0.047, 0.099], "trup": 138, "hlava": 103, "nP": {"ik": [0.3, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.28, 0.03], "o": 1, "c": 0}, "rP": [5.128, -64.767], "t": 1000, "drz": 200, "rZ": [5.128, -64.767]},
+   {"bok": [0.03, 0.3], "trup": 180, "hlava": 145, "nP": {"ik": [0.3, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.28, 0.03], "o": 1, "c": 0}, "rP": [47.128, -22.767], "t": 1500, "drz": 600, "rZ": [47.128, -22.767]}
+  ]},
+  {"id": "hip-thrust-jednorucka", "nazov": "Hip thrust s jednoručkou", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": -0.42}, {"typ": "jednorucka", "bod": "bok"}], "pozy": [
+   {"bok": [-0.047, 0.099], "trup": 138, "hlava": 103, "nP": {"ik": [0.3, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.28, 0.03], "o": 1, "c": 0}, "rP": [5.128, -64.767], "t": 1000, "drz": 200, "rZ": [5.128, -64.767]},
+   {"bok": [0.03, 0.3], "trup": 180, "hlava": 145, "nP": {"ik": [0.3, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.28, 0.03], "o": 1, "c": 0}, "rP": [47.128, -22.767], "t": 1500, "drz": 600, "rZ": [47.128, -22.767]}
+  ]},
+  {"id": "vypon-stena", "nazov": "Výpon pri stene", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stena", "x": 0.33, "y1": 0.0, "y2": 1.2}], "pozy": [
+   {"bok": [0.005, 0.517], "trup": 90, "nP": {"ik": [0.005, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [-0.015, 0.03], "o": 1, "c": 0}, "rP": {"ik": [0.31, 0.92], "o": -1, "c": 90}, "rZ": {"ik": [0.31, 0.92], "o": -1, "c": 90}, "t": 800, "drz": 200},
+   {"bok": [0.032, 0.572], "trup": 90, "nP": {"ik": [0.032, 0.085], "o": 1, "c": -52}, "nZ": {"ik": [0.012, 0.085], "o": 1, "c": -52}, "rP": {"ik": [0.31, 0.92], "o": -1, "c": 90}, "rZ": {"ik": [0.31, 0.92], "o": -1, "c": 90}, "t": 1500, "drz": 800}
+  ]},
+  {"id": "vypon-jednonoz-stena", "nazov": "Výpon na jednej nohe pri stene", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stena", "x": 0.33, "y1": 0.0, "y2": 1.2}], "pozy": [
+   {"bok": [0.005, 0.517], "trup": 90, "nP": {"ik": [0.005, 0.03], "o": 1, "c": 0}, "nZ": [-100, -150], "rP": {"ik": [0.31, 0.92], "o": -1, "c": 90}, "rZ": {"ik": [0.31, 0.92], "o": -1, "c": 90}, "t": 800, "drz": 200},
+   {"bok": [0.032, 0.572], "trup": 90, "nP": {"ik": [0.032, 0.085], "o": 1, "c": -52}, "nZ": [-100, -150], "rP": {"ik": [0.31, 0.92], "o": -1, "c": 90}, "rZ": {"ik": [0.31, 0.92], "o": -1, "c": 90}, "t": 1500, "drz": 800}
+  ]},
+  {"id": "vypon-schod", "nazov": "Výpon na schode", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "schod", "x1": 0.04, "x2": 0.4, "h": 0.12}], "pozy": [
+   {"bok": [0.028, 0.589], "trup": 90, "nP": {"ik": [0.028, 0.102], "o": 1, "c": 28}, "nZ": {"ik": [0.008, 0.102], "o": 1, "c": 28}, "rP": [-92, -90], "rZ": [-92, -90], "t": 800, "drz": 900},
+   {"bok": [0.047, 0.677], "trup": 90, "nP": {"ik": [0.047, 0.19], "o": 1, "c": -52}, "nZ": {"ik": [0.027, 0.19], "o": 1, "c": -52}, "rP": [-92, -90], "rZ": [-92, -90], "t": 1500, "drz": 800}
+  ]},
+  {"id": "vypon-jednonoz-schod", "nazov": "Výpon na jednej nohe na schode", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "schod", "x1": 0.04, "x2": 0.4, "h": 0.12}], "pozy": [
+   {"bok": [0.028, 0.589], "trup": 90, "nP": {"ik": [0.028, 0.102], "o": 1, "c": 28}, "nZ": [-100, -150], "rP": [-92, -90], "rZ": [-92, -90], "t": 800, "drz": 900},
+   {"bok": [0.047, 0.677], "trup": 90, "nP": {"ik": [0.047, 0.19], "o": 1, "c": -52}, "nZ": [-100, -150], "rP": [-92, -90], "rZ": [-92, -90], "t": 1500, "drz": 800}
+  ]},
+  {"id": "vypon-jednonoz-jednorucka", "nazov": "Výpon na jednej nohe s jednoručkou", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "schod", "x1": 0.04, "x2": 0.4, "h": 0.12}, {"typ": "jednorucka", "bod": "rP"}], "pozy": [
+   {"bok": [0.028, 0.589], "trup": 90, "nP": {"ik": [0.028, 0.102], "o": 1, "c": 28}, "nZ": [-100, -150], "rP": [-92, -90, -90], "rZ": [-92, -90, -90], "t": 800, "drz": 900},
+   {"bok": [0.047, 0.677], "trup": 90, "nP": {"ik": [0.047, 0.19], "o": 1, "c": -52}, "nZ": [-100, -150], "rP": [-92, -90, -90], "rZ": [-92, -90, -90], "t": 1500, "drz": 800}
+  ]},
+  {"id": "poskok", "nazov": "Poskoky na špičkách", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0, 0.553], "trup": 90, "nP": {"ik": [0.01, 0.075], "o": 1, "c": -50}, "nZ": {"ik": [-0.02, 0.075], "o": 1, "c": -50}, "rP": [-80, -40], "rZ": [-80, -40], "t": 220},
+   {"bok": [0, 0.608], "trup": 90, "nP": {"ik": [0.01, 0.13], "o": 1, "c": -70}, "nZ": {"ik": [-0.02, 0.13], "o": 1, "c": -70}, "rP": [-80, -40], "rZ": [-80, -40], "t": 220}
+  ]},
+  {"id": "poskok-jednonoz", "nazov": "Poskoky na jednej nohe", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0, 0.553], "trup": 90, "nP": {"ik": [0.01, 0.075], "o": 1, "c": -50}, "nZ": [-100, -155], "rP": [-80, -40], "rZ": [-80, -40], "t": 240},
+   {"bok": [0, 0.618], "trup": 90, "nP": {"ik": [0.01, 0.14], "o": 1, "c": -70}, "nZ": [-100, -155], "rP": [-80, -40], "rZ": [-80, -40], "t": 240}
+  ]},
+  {"id": "poskok-ciara", "nazov": "Poskoky cez čiaru", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "ciara", "x": 0.0}], "pozy": [
+   {"bok": [0.1, 0.553], "trup": 90, "nP": {"ik": [0.11, 0.075], "o": 1, "c": -50}, "nZ": {"ik": [0.08, 0.075], "o": 1, "c": -50}, "rP": [-80, -40], "rZ": [-80, -40], "t": 200},
+   {"bok": [0.0, 0.638], "trup": 90, "nP": {"ik": [0.01, 0.16], "o": 1, "c": -70}, "nZ": {"ik": [-0.02, 0.16], "o": 1, "c": -70}, "rP": [-80, -40], "rZ": [-80, -40], "t": 200},
+   {"bok": [-0.1, 0.553], "trup": 90, "nP": {"ik": [-0.09, 0.075], "o": 1, "c": -50}, "nZ": {"ik": [-0.12, 0.075], "o": 1, "c": -50}, "rP": [-80, -40], "rZ": [-80, -40], "t": 200},
+   {"bok": [0.0, 0.638], "trup": 90, "nP": {"ik": [0.01, 0.16], "o": 1, "c": -70}, "nZ": {"ik": [-0.02, 0.16], "o": 1, "c": -70}, "rP": [-80, -40], "rZ": [-80, -40], "t": 200}
+  ]},
+  {"id": "skok-jednonoz-vpred", "nazov": "Skoky na jednej nohe vpred", "pohlad": "bok", "druh": "opakovanie", "posun": 0.5, "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0.0, 0.47], "trup": 84, "nP": {"ik": [0.04, 0.03], "o": 1, "c": 0}, "nZ": [-110, -160], "rP": [-60, -10], "rZ": [-115, -70], "t": 260},
+   {"bok": [0.02, 0.53], "trup": 80, "nP": {"ik": [-0.08, 0.075], "o": 1, "c": -60}, "nZ": [-100, -160], "rP": [-40, 10], "rZ": [-130, -80], "t": 260},
+   {"bok": [0.0, 0.62], "trup": 84, "nP": [-70, -110], "nZ": [-115, -165], "rP": [-60, -20], "rZ": [-115, -70], "t": 300}
+  ]},
+  {"id": "vyskok-schod", "nazov": "Výskok na schod z jednej nohy", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "schod", "x1": 0.2, "x2": 0.55, "h": 0.14}], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1, "c": 0}, "nZ": [-80, -120], "rP": [-96, -90], "rZ": [-92, -95], "t": 500, "drz": 200},
+   {"bok": [-0.04, 0.4], "trup": 70, "nP": {"ik": [0.03, 0.03], "o": 1, "c": 0}, "nZ": [-70, -130], "rP": [-140, -120], "rZ": [-140, -120], "t": 300},
+   {"bok": [0.2, 0.62], "trup": 80, "nP": [-30, -120], "nZ": [-40, -125], "rP": [40, 60], "rZ": [40, 60], "t": 300},
+   {"bok": [0.33, 0.47], "trup": 62, "hlava": 85, "nP": {"ik": [0.38, 0.17], "o": 1, "c": 0}, "nZ": {"ik": [0.35, 0.17], "o": 1, "c": 0}, "rP": [-10, 10], "rZ": [-10, 10], "t": 500, "drz": 200},
+   {"bok": [0.36, 0.66], "trup": 90, "nP": {"ik": [0.38, 0.17], "o": 1, "c": 0}, "nZ": {"ik": [0.35, 0.17], "o": 1, "c": 0}, "rP": [-96, -90], "rZ": [-92, -95], "t": 600, "drz": 200},
+   {"bok": [0.15, 0.5], "trup": 90, "nP": {"ik": [0.06, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.3, 0.17], "o": 1, "c": 0}, "rP": [-96, -90], "rZ": [-92, -95], "t": 500}
+  ]},
+  {"id": "doska", "nazov": "Doska na predlaktiach", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.55, "x2": 0.55}], "pozy": [
+   {"bok": [0.005, 0.156], "trup": 10.06, "hlava": 10.06, "nP": {"ik": [-0.478, 0.07], "o": -1}, "rP": [-90, 0, 0], "t": 2000},
+   {"bok": [0.005, 0.156], "trup": 10.06, "hlava": 10.06, "nP": {"ik": [-0.478, 0.07], "o": -1}, "rP": [-90, 0, 0], "t": 2000}
+  ]},
+  {"id": "doska-kolena", "nazov": "Doska na kolenách", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.4, "x2": 0.55}], "pozy": [
+   {"bok": [0.015, 0.116], "trup": 17.954, "hlava": 17.954, "nP": {"na": [-0.218, 0.04], "u2": 172}, "rP": [-90, 0, 0], "t": 2000},
+   {"bok": [0.015, 0.116], "trup": 17.954, "hlava": 17.954, "nP": {"na": [-0.218, 0.04], "u2": 172}, "rP": [-90, 0, 0], "t": 2000}
+  ]},
+  {"id": "doska-stolicka", "nazov": "Doska s rukami na stoličke", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": 0.42}], "pozy": [
+   {"bok": [0.065, 0.309], "trup": 31.946, "hlava": 31.946, "nP": {"ik": [-0.35, 0.05], "o": -1}, "rP": [-90, 0, 0], "t": 2000},
+   {"bok": [0.065, 0.309], "trup": 31.946, "hlava": 31.946, "nP": {"ik": [-0.35, 0.05], "o": -1}, "rP": [-90, 0, 0], "t": 2000}
+  ]},
+  {"id": "doska-dotyk-ramien", "nazov": "Doska s dotykom ramien", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.5, "x2": 0.5}], "pozy": [
+   {"bok": [0.054, 0.254], "trup": 22.005, "hlava": 22.005, "nP": {"ik": [-0.4, 0.07], "o": -1}, "rP": {"ik": [0.332, 0.03], "o": -1, "c": 0}, "t": 450, "drz": 200},
+   {"bok": [0.054, 0.254], "trup": 22.005, "hlava": 22.005, "nP": {"ik": [-0.4, 0.07], "o": -1}, "rP": [88.109, -110.465], "t": 450, "drz": 200},
+   {"bok": [0.054, 0.254], "trup": 22.005, "hlava": 22.005, "nP": {"ik": [-0.4, 0.07], "o": -1}, "rP": {"ik": [0.332, 0.03], "o": -1, "c": 0}, "t": 450, "drz": 200},
+   {"bok": [0.054, 0.254], "trup": 22.005, "hlava": 22.005, "nP": {"ik": [-0.4, 0.07], "o": -1}, "rP": {"ik": [0.332, 0.03], "o": -1, "c": 0}, "t": 450, "drz": 200, "rZ": [88.109, -110.465]}
+  ]},
+  {"id": "bocna-doska", "nazov": "Bočná doska", "pohlad": "bok", "druh": "vydrz", "oko": false, "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.55, "x2": 0.55}], "pozy": [
+   {"bok": [0.005, 0.152], "trup": 10.798, "hlava": 10.798, "nP": {"ik": [-0.476, 0.06], "o": -1, "c": 270}, "rP": [90, 90, 90], "rZ": [-90, 0, 0], "t": 2000},
+   {"bok": [0.005, 0.152], "trup": 10.798, "hlava": 10.798, "nP": {"ik": [-0.476, 0.06], "o": -1, "c": 270}, "rP": [90, 90, 90], "rZ": [-90, 0, 0], "t": 2000}
+  ]},
+  {"id": "bocna-doska-kolena", "nazov": "Bočná doska na kolenách", "pohlad": "bok", "druh": "vydrz", "oko": false, "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.4, "x2": 0.55}], "pozy": [
+   {"bok": [0.015, 0.116], "trup": 17.954, "hlava": 17.954, "nP": {"na": [-0.218, 0.04], "u2": 172}, "rP": [90, 90, 90], "rZ": [-90, 0, 0], "t": 2000},
+   {"bok": [0.015, 0.116], "trup": 17.954, "hlava": 17.954, "nP": {"na": [-0.218, 0.04], "u2": 172}, "rP": [90, 90, 90], "rZ": [-90, 0, 0], "t": 2000}
+  ]},
+  {"id": "hollow-hold", "nazov": "Hollow hold", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.45, "x2": 0.6}], "pozy": [
+   {"bok": [0.0, 0.075], "trup": 159, "hlava": 145, "chrbat": 0.02, "nP": [11, 11, 100], "rP": [-7, -7, -7], "t": 2000},
+   {"bok": [0.0, 0.075], "trup": 159, "hlava": 145, "chrbat": 0.02, "nP": [11, 11, 100], "rP": [-7, -7, -7], "t": 2000}
+  ]},
+  {"id": "hollow-tuck", "nazov": "Tuck hollow hold", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.45, "x2": 0.45}], "pozy": [
+   {"bok": [0.0, 0.075], "trup": 162, "hlava": 145, "chrbat": 0.02, "nP": [112, 5, 80], "rP": [-7, -7, -7], "t": 2000},
+   {"bok": [0.0, 0.075], "trup": 162, "hlava": 145, "chrbat": 0.02, "nP": [112, 5, 80], "rP": [-7, -7, -7], "t": 2000}
+  ]},
+  {"id": "hollow-jedna-noha", "nazov": "Hollow hold s jednou nohou", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.45, "x2": 0.6}], "pozy": [
+   {"bok": [0.0, 0.075], "trup": 159, "hlava": 145, "chrbat": 0.02, "nP": [11, 11, 100], "nZ": [112, 5, 80], "rP": [-7, -7, -7], "t": 2000},
+   {"bok": [0.0, 0.075], "trup": 159, "hlava": 145, "chrbat": 0.02, "nP": [11, 11, 100], "nZ": [112, 5, 80], "rP": [-7, -7, -7], "t": 2000}
+  ]},
+  {"id": "hollow-ruky-hore", "nazov": "Hollow hold s rukami nad hlavou", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.75, "x2": 0.6}], "pozy": [
+   {"bok": [0.0, 0.075], "trup": 159, "hlava": 168, "chrbat": 0.02, "nP": [11, 11, 100], "rP": [176, 176, 176], "t": 2000},
+   {"bok": [0.0, 0.075], "trup": 159, "hlava": 168, "chrbat": 0.02, "nP": [11, 11, 100], "rP": [176, 176, 176], "t": 2000}
+  ]},
+  {"id": "hollow-rocks", "nazov": "Hollow rocks", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.75, "x2": 0.6}], "pozy": [
+   {"bok": [0.006, 0.079], "trup": 155, "hlava": 156, "chrbat": 0.02, "nP": [4, 4, 91], "rP": [165, 165, 165], "t": 650},
+   {"bok": [-0.006, 0.079], "trup": 173, "hlava": 174, "chrbat": 0.02, "nP": [22, 22, 109], "rP": [183, 183, 183], "t": 650}
+  ]},
+  {"id": "mrtvy-chrobak", "nazov": "Mŕtvy chrobák", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.55, "x2": 0.6}], "pozy": [
+   {"bok": [0.0, 0.075], "trup": 180, "hlava": 172, "nP": [90, 0, 90], "rP": [90, 90, 90], "t": 800, "drz": 150},
+   {"bok": [0.0, 0.075], "trup": 180, "hlava": 172, "nP": [90, 0, 90], "rP": [172, 172, 172], "t": 800, "drz": 150, "nZ": [9, 9, 95]},
+   {"bok": [0.0, 0.075], "trup": 180, "hlava": 172, "nP": [90, 0, 90], "rP": [90, 90, 90], "t": 800, "drz": 150},
+   {"bok": [0.0, 0.075], "trup": 180, "hlava": 172, "nP": [9, 9, 95], "rP": [90, 90, 90], "t": 800, "drz": 150, "rZ": [172, 172, 172]}
+  ]},
+  {"id": "zdvihy-nohy-lah", "nazov": "Striedavé zdvihy nôh v ľahu", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.45, "x2": 0.6}], "pozy": [
+   {"bok": [0.0, 0.075], "trup": 180, "hlava": 180, "nP": [0, 0, 90], "rP": [0, 0, 0], "t": 900, "drz": 100},
+   {"bok": [0.0, 0.075], "trup": 180, "hlava": 180, "nP": [82, 82, 170], "rP": [0, 0, 0], "t": 900, "drz": 100},
+   {"bok": [0.0, 0.075], "trup": 180, "hlava": 180, "nP": [0, 0, 90], "rP": [0, 0, 0], "t": 900, "drz": 100},
+   {"bok": [0.0, 0.075], "trup": 180, "hlava": 180, "nP": [0, 0, 90], "rP": [0, 0, 0], "t": 900, "drz": 100, "nZ": [82, 82, 170]}
+  ]},
+  {"id": "predklon-sed", "nazov": "Predklon v sede", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.3, "x2": 0.6}], "pozy": [
+   {"bok": [0.0, 0.075], "trup": 30, "hlava": 10, "nP": [-1, -1, 100], "rP": [-73.562, 21.117, 0], "t": 2000},
+   {"bok": [0.0, 0.075], "trup": 30, "hlava": 10, "nP": [-1, -1, 100], "rP": [-73.562, 21.117, 0], "t": 2000}
+  ]},
+  {"id": "predklon-sed-pokrcene", "nazov": "Predklon v sede s pokrčenými kolenami", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.3, "x2": 0.6}], "pozy": [
+   {"bok": [0.0, 0.075], "trup": 38, "hlava": 20, "nP": {"ik": [0.36, 0.04], "o": 1, "c": 30}, "rP": [-91.648, -7.099, -20], "t": 2000},
+   {"bok": [0.0, 0.075], "trup": 38, "hlava": 20, "nP": {"ik": [0.36, 0.04], "o": 1, "c": 30}, "rP": [-91.648, -7.099, -20], "t": 2000}
+  ]},
+  {"id": "kompresia-sed", "nazov": "Aktívna kompresia v sede", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.3, "x2": 0.6}], "pozy": [
+   {"bok": [0.0, 0.075], "trup": 92, "nP": [-1, -1, 100], "rP": {"ik": [-0.01, 0.03], "o": -1, "c": 0}, "t": 700, "drz": 300},
+   {"bok": [0.0, 0.075], "trup": 96, "nP": [7, 7, 100], "rP": {"ik": [-0.01, 0.03], "o": -1, "c": 0}, "t": 700, "drz": 2500}
+  ]},
+  {"id": "kompresia-tah", "nazov": "Kompresia s ťahom rúk", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.3, "x2": 0.6}], "pozy": [
+   {"bok": [0.0, 0.075], "trup": 100, "hlava": 90, "nP": [8, 8, 103], "rP": [-56.97, -54.44, 0], "t": 900, "drz": 200},
+   {"bok": [0.0, 0.075], "trup": 80, "hlava": 70, "nP": [32, 32, 127], "rP": [-108.685, -28.011, 0], "t": 900, "drz": 3000}
+  ]},
+  {"id": "motyli-sed", "nazov": "Motýlí sed (spredu)", "pohlad": "pred", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.45, "x2": 0.45}], "pozy": [
+   {"bok": [0.0, 0.08], "trup": 90, "nP": [4, -174.559, -90], "rP": {"ik": [0.06, 0.1], "o": 1, "c": -60}, "t": 420},
+   {"bok": [0.0, 0.08], "trup": 90, "nP": [30, -152.281, -90], "rP": {"ik": [0.06, 0.1], "o": 1, "c": -60}, "t": 420}
+  ]},
+  {"id": "strecing-zarubna", "nazov": "Strečing prsných svalov o zárubňu", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "stena", "x": -0.155, "y1": 0.0, "y2": 1.25}], "pozy": [
+   {"bok": [0.06, 0.5], "trup": 88, "nP": {"ik": [0.26, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [-0.16, 0.03], "o": 1, "c": -10}, "rP": [180, 92, 90], "rZ": [-92, -95], "t": 2000},
+   {"bok": [0.06, 0.5], "trup": 88, "nP": {"ik": [0.26, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [-0.16, 0.03], "o": 1, "c": -10}, "rP": [180, 92, 90], "rZ": [-92, -95], "t": 2000}
+  ]},
+  {"id": "strecing-chrbta-stolicka", "nazov": "Strečing chrbta o stoličku", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": 0.5}, {"typ": "podlozka", "x1": -0.35, "x2": 0.3}], "pozy": [
+   {"bok": [-0.07, 0.27], "trup": 4, "hlava": -15, "nP": {"na": [0.0, 0.04], "u2": 180, "c": 180}, "rP": {"ik": [0.56, 0.29], "o": -1, "c": 0}, "t": 2000},
+   {"bok": [-0.07, 0.27], "trup": 4, "hlava": -15, "nP": {"na": [0.0, 0.04], "u2": 180, "c": 180}, "rP": {"ik": [0.56, 0.29], "o": -1, "c": 0}, "t": 2000}
+  ]},
+  {"id": "klzanie-po-stene", "nazov": "Kĺzanie predlaktí po stene (spredu)", "pohlad": "pred", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.09, 0.03], "o": 1}, "rP": [-30, 72], "t": 1300, "drz": 200},
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.09, 0.03], "o": 1}, "rP": [62, 80], "t": 1300, "drz": 400}
+  ]},
+  {"id": "opora-klak-hojdanie", "nazov": "Opora v kľaku, prenášanie váhy", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.35, "x2": 0.45}], "pozy": [
+   {"bok": [0.0, 0.285], "trup": 16, "hlava": 10, "nP": {"na": [0.0, 0.04], "u2": 180, "c": 180}, "rP": {"ik": [0.3, 0.03], "o": -1, "c": 0}, "t": 1100, "drz": 200},
+   {"bok": [0.06, 0.285], "trup": 11, "hlava": 10, "nP": {"na": [0.0, 0.04], "u2": 180, "c": 180}, "rP": {"ik": [0.3, 0.03], "o": -1, "c": 0}, "t": 1100, "drz": 500}
+  ]},
+  {"id": "opora-klak-vzad", "nazov": "Opora v kľaku, prsty vzad", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.35, "x2": 0.45}], "pozy": [
+   {"bok": [0.0, 0.285], "trup": 16, "hlava": 10, "nP": {"na": [0.0, 0.04], "u2": 180, "c": 180}, "rP": {"ik": [0.3, 0.03], "o": -1, "c": 180}, "t": 1200, "drz": 200},
+   {"bok": [-0.07, 0.25], "trup": 24, "hlava": 15, "nP": {"na": [0.0, 0.04], "u2": 180, "c": 180}, "rP": {"ik": [0.3, 0.03], "o": -1, "c": 180}, "t": 1200, "drz": 500}
+  ]},
+  {"id": "opora-klak-vydrz", "nazov": "Opora v kľaku", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.35, "x2": 0.45}], "pozy": [
+   {"bok": [0.0, 0.285], "trup": 16, "hlava": 10, "nP": {"na": [0.0, 0.04], "u2": 180, "c": 180}, "rP": {"ik": [0.3, 0.03], "o": -1, "c": 0}, "t": 2000},
+   {"bok": [0.0, 0.285], "trup": 16, "hlava": 10, "nP": {"na": [0.0, 0.04], "u2": 180, "c": 180}, "rP": {"ik": [0.3, 0.03], "o": -1, "c": 0}, "t": 2000}
+  ]},
+  {"id": "kruzenie-zapasti", "nazov": "Krúženie zápästí", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-70, 12, 40], "rZ": [-72, 10, 40], "t": 350},
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-70, 12, 0], "rZ": [-72, 10, 0], "t": 350},
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-70, 12, -40], "rZ": [-72, 10, -40], "t": 350},
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-70, 12, 0], "rZ": [-72, 10, 0], "t": 350}
+  ]},
+  {"id": "klbko", "nazov": "Korytnačka – klbko", "pohlad": "bok", "druh": "vydrz", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.45, "x2": 0.35}], "pozy": [
+   {"bok": [-0.2, 0.13], "trup": 14, "hlava": -55, "nP": {"na": [0.0, 0.04], "u2": 180, "c": 180}, "rP": [190, 185, 180], "t": 2000},
+   {"bok": [-0.2, 0.13], "trup": 14, "hlava": -55, "nP": {"na": [0.0, 0.04], "u2": 180, "c": 180}, "rP": [190, 185, 180], "t": 2000}
+  ]},
+  {"id": "psik", "nazov": "Psík hlavou dole", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.4, "x2": 0.45}], "pozy": [
+   {"bok": [0.0, 0.285], "trup": 16, "hlava": 10, "nP": {"ik": [-0.245, 0.04], "o": 1, "c": 180}, "rP": {"ik": [0.3, 0.03], "o": -1, "c": 0}, "t": 1000, "drz": 300},
+   {"bok": [-0.129, 0.503], "trup": -47.801, "hlava": -47.801, "nP": {"ik": [-0.25, 0.03], "o": 1, "c": 0}, "rP": {"ik": [0.3, 0.03], "o": -1, "c": 0}, "t": 1000, "drz": 800}
+  ]},
+  {"id": "kobra", "nazov": "Kobrí vzpor", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.55, "x2": 0.45}], "pozy": [
+   {"bok": [0.0, 0.075], "trup": 0, "hlava": 5, "nP": [180, 180, 270], "rP": {"ik": [0.26, 0.04], "o": -1, "c": 0}, "t": 1100, "drz": 300},
+   {"bok": [0.0, 0.075], "trup": 34, "hlava": 65, "nP": [180, 180, 270], "rP": {"ik": [0.26, 0.04], "o": -1, "c": 0}, "t": 1100, "drz": 1000}
+  ]},
+  {"id": "zabie-skoky", "nazov": "Žabie skoky", "pohlad": "bok", "druh": "opakovanie", "posun": 0.55, "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [-0.06, 0.17], "trup": 52, "hlava": 85, "nP": {"ik": [0.05, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.02, 0.03], "o": 1, "c": 0}, "rP": {"ik": [0.16, 0.03], "o": -1, "c": 0}, "rZ": {"ik": [0.16, 0.03], "o": -1, "c": 0}, "t": 350, "drz": 250},
+   {"bok": [0.0, 0.72], "trup": 70, "hlava": 75, "nP": [-105, -112, -60], "nZ": [-110, -117, -60], "rP": [60, 70], "rZ": [58, 68], "t": 350}
+  ]},
+  {"id": "zajacie-skoky", "nazov": "Zajačie skoky", "pohlad": "bok", "druh": "opakovanie", "posun": 0.4, "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [-0.07, 0.34], "trup": 66, "hlava": 85, "nP": {"ik": [0.05, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.02, 0.03], "o": 1, "c": 0}, "rP": [-60, 70], "rZ": [-60, 70], "t": 260, "drz": 120},
+   {"bok": [0.0, 0.62], "trup": 80, "hlava": 85, "nP": [-60, -130], "nZ": [-64, -134], "rP": [-60, 70], "t": 320}
+  ]},
+  {"id": "klokan", "nazov": "Klokanie skoky", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [-0.09, 0.32], "trup": 62, "hlava": 85, "nP": {"ik": [0.05, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.02, 0.03], "o": 1, "c": 0}, "rP": [-60, 70], "rZ": [-60, 70], "t": 300, "drz": 150},
+   {"bok": [0.0, 0.82], "trup": 86, "hlava": 88, "nP": [-75, -125], "nZ": [-79, -129], "rP": [-60, 70], "t": 380}
+  ]},
+  {"id": "delfin", "nazov": "Delfíní výskok", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}], "pozy": [
+   {"bok": [-0.1, 0.33], "trup": 60, "hlava": 85, "nP": {"ik": [0.05, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.02, 0.03], "o": 1, "c": 0}, "rP": [-130, -125], "rZ": [-130, -125], "t": 320, "drz": 150},
+   {"bok": [0.0, 0.8], "trup": 90, "nP": [-92, -92, -95], "nZ": [-94, -94, -95], "rP": [91, 91, 91], "rZ": [89, 89, 89], "t": 420}
+  ]},
+  {"id": "panvove-dno-lah", "nazov": "Panvové dno v ľahu", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "podlozka", "x1": -0.45, "x2": 0.45}, {"typ": "pulz"}], "pozy": [
+   {"bok": [0.05, 0.068], "trup": 180.5, "hlava": 180, "nP": {"ik": [0.33, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.31, 0.03], "o": 1, "c": 0}, "rP": [0, 0, 0], "t": 1500},
+   {"bok": [0.05, 0.073], "trup": 181.6, "hlava": 180, "nP": {"ik": [0.33, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.31, 0.03], "o": 1, "c": 0}, "rP": [0, 0, 0], "t": 1500}
+  ]},
+  {"id": "panvove-dno-sed", "nazov": "Panvové dno v sede", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "stolicka", "x": -0.05, "operadlo": -1}, {"typ": "pulz"}], "pozy": [
+   {"bok": [-0.03, 0.31], "trup": 90, "nP": {"ik": [0.23, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.2, 0.03], "o": 1, "c": 0}, "rP": [-58.255, -55.58, 0], "t": 1500, "rZ": [-58.255, -55.58, 0]},
+   {"bok": [-0.03, 0.31], "trup": 91.5, "nP": {"ik": [0.23, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.2, 0.03], "o": 1, "c": 0}, "rP": [-57.189, -54.547, 0], "t": 1500, "rZ": [-57.189, -54.547, 0]}
+  ]},
+  {"id": "panvove-dno-stoj", "nazov": "Panvové dno v stoji", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "pulz"}], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-96, -90], "rZ": [-92, -95], "t": 1500},
+   {"bok": [0.0, 0.52], "trup": 91, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-96, -90], "rZ": [-92, -95], "t": 1500}
+  ]},
+  {"id": "panvove-dno-kasel", "nazov": "Stiahnutie pred kašľom", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "pulz"}], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-96, -90], "rZ": [-92, -95], "t": 700, "drz": 600},
+   {"bok": [0.0, 0.52], "trup": 80, "hlava": 62, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-35.416, 103.024, 110], "rZ": [-92, -95], "t": 900, "drz": 500}
+  ]},
+  {"id": "dvihanie-bremena", "nazov": "Dvíhanie z drepu", "pohlad": "bok", "druh": "opakovanie", "rekvizity": [{"typ": "zem"}, {"typ": "taska"}, {"typ": "pulz"}], "pozy": [
+   {"bok": [0.0, 0.52], "trup": 90, "nP": {"ik": [0.02, 0.03], "o": 1}, "nZ": {"ik": [-0.02, 0.03], "o": 1}, "rP": [-93, -92, -90], "rZ": [-93, -92, -90], "t": 1500, "drz": 400},
+   {"bok": [-0.13, 0.26], "trup": 56, "hlava": 80, "nP": {"ik": [0.05, 0.03], "o": 1, "c": 0}, "nZ": {"ik": [0.02, 0.03], "o": 1, "c": 0}, "rP": [-73.853, -71.506, -90], "t": 1500, "drz": 400, "rZ": [-73.853, -71.506, -90]}
+  ]}
+ ]
+}

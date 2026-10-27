@@ -1,5 +1,5 @@
 {
- "verzia": 3,
+ "verzia": 4,
  "rebriky": [
   {
    "id": "rozohriatie",
@@ -14,6 +14,7 @@
      "uroven": 1,
      "nazov": "Chôdza na mieste s vysokými kolenami",
      "meranie": "vydrz",
+     "pohyb": "vysoke-kolena",
      "cielMin": 30,
      "cielMax": 60,
      "naradie": [
@@ -37,6 +38,7 @@
      "uroven": 2,
      "nazov": "Krúženie ramenami vpred a vzad",
      "meranie": "opakovania",
+     "pohyb": "kruzenie-ramien",
      "cielMin": 10,
      "cielMax": 15,
      "naradie": [
@@ -61,6 +63,7 @@
      "uroven": 3,
      "nazov": "Mačka – ťava v kľaku",
      "meranie": "opakovania",
+     "pohyb": "macka-tava",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -84,6 +87,7 @@
      "uroven": 4,
      "nazov": "Švihy nohou vpred a vzad",
      "meranie": "opakovania",
+     "pohyb": "svihy-nohou",
      "cielMin": 10,
      "cielMax": 12,
      "naradie": [
@@ -107,6 +111,7 @@
      "uroven": 5,
      "nazov": "Hlboký výpad s rotáciou trupu",
      "meranie": "opakovania",
+     "pohyb": "vypad-rotacia",
      "cielMin": 5,
      "cielMax": 8,
      "naradie": [
@@ -130,6 +135,7 @@
      "uroven": 6,
      "nazov": "Poskoky s roznožením a rozpažením",
      "meranie": "vydrz",
+     "pohyb": "panak",
      "cielMin": 30,
      "cielMax": 45,
      "naradie": [
@@ -165,6 +171,7 @@
      "uroven": 1,
      "nazov": "Podpor na rukách so zdvihom panvy",
      "meranie": "vydrz",
+     "pohyb": "podpor-zdvih-panvy",
      "cielMin": 20,
      "cielMax": 30,
      "naradie": [
@@ -193,6 +200,7 @@
      "uroven": 2,
      "nazov": "Podpor so zdvihom jednej nohy",
      "meranie": "vydrz",
+     "pohyb": "podpor-jedna-noha",
      "cielMin": 15,
      "cielMax": 20,
      "naradie": [
@@ -220,6 +228,7 @@
      "uroven": 3,
      "nazov": "Tuck L-sit na vyvýšených rukách",
      "meranie": "vydrz",
+     "pohyb": "tuck-lsit-vyvysene",
      "cielMin": 15,
      "cielMax": 20,
      "naradie": [
@@ -249,6 +258,7 @@
      "uroven": 4,
      "nazov": "Tuck L-sit na zemi",
      "meranie": "vydrz",
+     "pohyb": "tuck-lsit",
      "cielMin": 15,
      "cielMax": 20,
      "naradie": [
@@ -279,6 +289,7 @@
      "uroven": 5,
      "nazov": "Rozšírený tuck (stehná nad rovinu)",
      "meranie": "vydrz",
+     "pohyb": "tuck-lsit-rozsireny",
      "cielMin": 12,
      "cielMax": 15,
      "naradie": [
@@ -308,6 +319,7 @@
      "uroven": 6,
      "nazov": "L-sit s jednou nohou vystretou",
      "meranie": "vydrz",
+     "pohyb": "lsit-jedna-noha",
      "cielMin": 10,
      "cielMax": 15,
      "naradie": [
@@ -338,6 +350,7 @@
      "uroven": 7,
      "nazov": "Roznožný L-sit",
      "meranie": "vydrz",
+     "pohyb": "lsit",
      "cielMin": 12,
      "cielMax": 15,
      "naradie": [
@@ -368,6 +381,7 @@
      "uroven": 8,
      "nazov": "Plný L-sit na vyvýšených rukách",
      "meranie": "vydrz",
+     "pohyb": "lsit-vyvysene",
      "cielMin": 10,
      "cielMax": 15,
      "naradie": [
@@ -397,6 +411,7 @@
      "uroven": 9,
      "nazov": "Plný L-sit na zemi",
      "meranie": "vydrz",
+     "pohyb": "lsit",
      "cielMin": 15,
      "cielMax": 30,
      "naradie": [
@@ -436,6 +451,7 @@
      "uroven": 1,
      "nazov": "Stoj pri stene s rukami nad hlavou",
      "meranie": "vydrz",
+     "pohyb": "stena-ruky-hore",
      "cielMin": 20,
      "cielMax": 30,
      "naradie": [
@@ -466,6 +482,7 @@
      "uroven": 2,
      "nazov": "Predklon opory (planche lean)",
      "meranie": "vydrz",
+     "pohyb": "planche-lean",
      "cielMin": 15,
      "cielMax": 30,
      "naradie": [
@@ -496,6 +513,7 @@
      "uroven": 3,
      "nazov": "Psík hlavou dole (pike hold)",
      "meranie": "vydrz",
+     "pohyb": "pike-hold",
      "cielMin": 30,
      "cielMax": 60,
      "naradie": [
@@ -525,6 +543,7 @@
      "uroven": 4,
      "nazov": "Pike hold s nohami na stoličke",
      "meranie": "vydrz",
+     "pohyb": "pike-hold-stolicka",
      "cielMin": 20,
      "cielMax": 40,
      "naradie": [
@@ -554,6 +573,7 @@
      "uroven": 5,
      "nazov": "Chodenie po stene tvárou k stene",
      "meranie": "opakovania",
+     "pohyb": "chodenie-po-stene",
      "cielMin": 3,
      "cielMax": 6,
      "naradie": [
@@ -583,6 +603,7 @@
      "uroven": 6,
      "nazov": "Nácvik bezpečného úniku zo stojky",
      "meranie": "opakovania",
+     "pohyb": "unik-zo-stojky",
      "cielMin": 5,
      "cielMax": 10,
      "naradie": [
@@ -612,6 +633,7 @@
      "uroven": 7,
      "nazov": "Stojka chrbtom k stene",
      "meranie": "vydrz",
+     "pohyb": "stojka-chrbtom-k-stene",
      "cielMin": 20,
      "cielMax": 40,
      "naradie": [
@@ -642,6 +664,7 @@
      "uroven": 8,
      "nazov": "Stojka bruchom k stene",
      "meranie": "vydrz",
+     "pohyb": "stojka-bruchom-k-stene",
      "cielMin": 20,
      "cielMax": 40,
      "naradie": [
@@ -672,6 +695,7 @@
      "uroven": 9,
      "nazov": "Stojka bruchom k stene s odťahovaním pät",
      "meranie": "opakovania",
+     "pohyb": "stojka-odlepenie",
      "cielMin": 5,
      "cielMax": 10,
      "naradie": [
@@ -701,6 +725,7 @@
      "uroven": 10,
      "nazov": "Stojka bruchom k stene s odtiahnutím ruky",
      "meranie": "opakovania",
+     "pohyb": "stojka-jedna-ruka",
      "cielMin": 5,
      "cielMax": 10,
      "naradie": [
@@ -730,6 +755,7 @@
      "uroven": 11,
      "nazov": "Kop do stojky s dochytením o stenu",
      "meranie": "opakovania",
+     "pohyb": "kop-do-stojky",
      "cielMin": 5,
      "cielMax": 10,
      "naradie": [
@@ -759,6 +785,7 @@
      "uroven": 12,
      "nazov": "Voľná stojka",
      "meranie": "vydrz",
+     "pohyb": "stojka",
      "cielMin": 5,
      "cielMax": 30,
      "naradie": [
@@ -798,6 +825,7 @@
      "uroven": 1,
      "nazov": "Falošný úchop – vis",
      "meranie": "vydrz",
+     "pohyb": "falosny-uchop-vis",
      "cielMin": 10,
      "cielMax": 20,
      "naradie": [
@@ -829,6 +857,7 @@
      "uroven": 2,
      "nazov": "Falošný úchop – australský príťah",
      "meranie": "opakovania",
+     "pohyb": "australsky-pritah",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -862,6 +891,7 @@
      "uroven": 3,
      "nazov": "Falošný úchop – plný príťah",
      "meranie": "opakovania",
+     "pohyb": "pritah",
      "cielMin": 3,
      "cielMax": 6,
      "naradie": [
@@ -894,6 +924,7 @@
      "uroven": 4,
      "nazov": "Príťah hrudníkom k hrazde",
      "meranie": "opakovania",
+     "pohyb": "pritah-hrudnik",
      "cielMin": 3,
      "cielMax": 6,
      "naradie": [
@@ -926,6 +957,7 @@
      "uroven": 5,
      "nazov": "Prechod naprázdno na zemi",
      "meranie": "opakovania",
+     "pohyb": "muscleup-zem",
      "cielMin": 6,
      "cielMax": 10,
      "naradie": [
@@ -958,6 +990,7 @@
      "uroven": 6,
      "nazov": "Explozívny príťah k spodným rebrám",
      "meranie": "opakovania",
+     "pohyb": "pritah-k-pasu",
      "cielMin": 3,
      "cielMax": 5,
      "naradie": [
@@ -990,6 +1023,7 @@
      "uroven": 7,
      "nazov": "Podpor medzi stoličkami s preklopením",
      "meranie": "vydrz",
+     "pohyb": "podpor-stolicky",
      "cielMin": 15,
      "cielMax": 25,
      "naradie": [
@@ -1022,6 +1056,7 @@
      "uroven": 8,
      "nazov": "Príťah k pásu s výdržou hore",
      "meranie": "opakovania",
+     "pohyb": "pritah-k-pasu",
      "cielMin": 2,
      "cielMax": 4,
      "naradie": [
@@ -1053,6 +1088,7 @@
      "uroven": 9,
      "nazov": "Podpor nad hrazdou",
      "meranie": "vydrz",
+     "pohyb": "podpor-hrazda",
      "cielMin": 20,
      "cielMax": 30,
      "naradie": [
@@ -1085,6 +1121,7 @@
      "uroven": 10,
      "nazov": "Kliky v podpore na hrazde",
      "meranie": "opakovania",
+     "pohyb": "dip-hrazda",
      "cielMin": 5,
      "cielMax": 8,
      "naradie": [
@@ -1117,6 +1154,7 @@
      "uroven": 11,
      "nazov": "Negatívny muscle-up",
      "meranie": "opakovania",
+     "pohyb": "muscleup-negativ",
      "cielMin": 3,
      "cielMax": 5,
      "naradie": [
@@ -1149,6 +1187,7 @@
      "uroven": 12,
      "nazov": "Striktný muscle-up",
      "meranie": "opakovania",
+     "pohyb": "muscleup",
      "cielMin": 1,
      "cielMax": 3,
      "naradie": [
@@ -1191,6 +1230,7 @@
      "uroven": 1,
      "nazov": "Nájdi panvové dno v ľahu",
      "meranie": "opakovania",
+     "pohyb": "panvove-dno-lah",
      "cielMin": 5,
      "cielMax": 10,
      "naradie": [
@@ -1215,6 +1255,7 @@
      "uroven": 2,
      "nazov": "Pomalé stiahnutia v ľahu",
      "meranie": "opakovania",
+     "pohyb": "panvove-dno-lah",
      "cielMin": 8,
      "cielMax": 10,
      "naradie": [
@@ -1239,6 +1280,7 @@
      "uroven": 3,
      "nazov": "Rýchle stiahnutia",
      "meranie": "opakovania",
+     "pohyb": "panvove-dno-lah",
      "cielMin": 10,
      "cielMax": 20,
      "naradie": [
@@ -1263,6 +1305,7 @@
      "uroven": 4,
      "nazov": "Pomalé stiahnutia v sede",
      "meranie": "opakovania",
+     "pohyb": "panvove-dno-sed",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -1287,6 +1330,7 @@
      "uroven": 5,
      "nazov": "Pomalé stiahnutia v stoji",
      "meranie": "opakovania",
+     "pohyb": "panvove-dno-stoj",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -1311,6 +1355,7 @@
      "uroven": 6,
      "nazov": "Stiahnutie pred kašľom (Knack)",
      "meranie": "opakovania",
+     "pohyb": "panvove-dno-kasel",
      "cielMin": 5,
      "cielMax": 10,
      "naradie": [
@@ -1334,6 +1379,7 @@
      "uroven": 7,
      "nazov": "Sed – stoj so stiahnutím a výdychom",
      "meranie": "opakovania",
+     "pohyb": "sed-stoj-ruky-hrud",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -1360,6 +1406,7 @@
      "uroven": 8,
      "nazov": "Drep k stoličke so stiahnutím",
      "meranie": "opakovania",
+     "pohyb": "drep-k-stolicke",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -1386,6 +1433,7 @@
      "uroven": 9,
      "nazov": "Dvíhanie z podlahy (taška, potom dieťa)",
      "meranie": "opakovania",
+     "pohyb": "dvihanie-bremena",
      "cielMin": 5,
      "cielMax": 8,
      "naradie": [
@@ -1413,6 +1461,7 @@
      "uroven": 10,
      "nazov": "Chôdza s jemným stiahnutím",
      "meranie": "vydrz",
+     "pohyb": "chodza-pulz",
      "cielMin": 20,
      "cielMax": 60,
      "naradie": [
@@ -1447,6 +1496,7 @@
      "uroven": 1,
      "nazov": "Kliky o stenu",
      "meranie": "opakovania",
+     "pohyb": "klik-stena",
      "cielMin": 8,
      "cielMax": 15,
      "naradie": [
@@ -1475,6 +1525,7 @@
      "uroven": 2,
      "nazov": "Kliky o operadlo stoličky",
      "meranie": "opakovania",
+     "pohyb": "klik-operadlo",
      "cielMin": 8,
      "cielMax": 15,
      "naradie": [
@@ -1502,6 +1553,7 @@
      "uroven": 3,
      "nazov": "Kliky o sedadlo stoličky",
      "meranie": "opakovania",
+     "pohyb": "klik-sedadlo",
      "cielMin": 8,
      "cielMax": 15,
      "naradie": [
@@ -1529,6 +1581,7 @@
      "uroven": 4,
      "nazov": "Kliky na kolenách",
      "meranie": "opakovania",
+     "pohyb": "klik-kolena",
      "cielMin": 8,
      "cielMax": 15,
      "naradie": [
@@ -1556,6 +1609,7 @@
      "uroven": 5,
      "nazov": "Kliky na zemi",
      "meranie": "opakovania",
+     "pohyb": "klik",
      "cielMin": 5,
      "cielMax": 12,
      "naradie": [
@@ -1584,6 +1638,7 @@
      "uroven": 6,
      "nazov": "Kliky s nohami na stoličke",
      "meranie": "opakovania",
+     "pohyb": "klik-nohy-vyssie",
      "cielMin": 6,
      "cielMax": 12,
      "naradie": [
@@ -1611,6 +1666,7 @@
      "uroven": 7,
      "nazov": "Diamantové kliky",
      "meranie": "opakovania",
+     "pohyb": "klik-diamant",
      "cielMin": 5,
      "cielMax": 12,
      "naradie": [
@@ -1639,6 +1695,7 @@
      "uroven": 8,
      "nazov": "Hlboké kliky s dlaňami na dvoch stoličkách",
      "meranie": "opakovania",
+     "pohyb": "klik-hlboky",
      "cielMin": 5,
      "cielMax": 10,
      "naradie": [
@@ -1667,6 +1724,7 @@
      "uroven": 9,
      "nazov": "Lukostrelecké kliky",
      "meranie": "opakovania",
+     "pohyb": "klik-lukostrelecky",
      "cielMin": 4,
      "cielMax": 8,
      "naradie": [
@@ -1696,6 +1754,7 @@
      "uroven": 10,
      "nazov": "Negatívne jednoručné kliky",
      "meranie": "opakovania",
+     "pohyb": "klik-jednoruc-negativ",
      "cielMin": 3,
      "cielMax": 5,
      "naradie": [
@@ -1726,6 +1785,7 @@
      "uroven": 11,
      "nazov": "Jednoručné kliky s rukou na stoličke",
      "meranie": "opakovania",
+     "pohyb": "klik-jednoruc-stolicka",
      "cielMin": 3,
      "cielMax": 6,
      "naradie": [
@@ -1755,6 +1815,7 @@
      "uroven": 12,
      "nazov": "Jednoručný klik na zemi",
      "meranie": "opakovania",
+     "pohyb": "klik-jednoruc",
      "cielMin": 1,
      "cielMax": 5,
      "naradie": [
@@ -1795,6 +1856,7 @@
      "uroven": 1,
      "nazov": "Tlak nad hlavu v sede s oporou chrbta",
      "meranie": "opakovania",
+     "pohyb": "tlak-sed-operadlo",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -1825,6 +1887,7 @@
      "uroven": 2,
      "nazov": "Tlak nad hlavu v sede bez opory",
      "meranie": "opakovania",
+     "pohyb": "tlak-sed",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -1855,6 +1918,7 @@
      "uroven": 3,
      "nazov": "Tlak nad hlavu v stoji",
      "meranie": "opakovania",
+     "pohyb": "tlak-stoj",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -1885,6 +1949,7 @@
      "uroven": 4,
      "nazov": "Jednoručný tlak v stoji",
      "meranie": "opakovania",
+     "pohyb": "tlak-stoj-jednoruc",
      "cielMin": 6,
      "cielMax": 10,
      "naradie": [
@@ -1914,6 +1979,7 @@
      "uroven": 5,
      "nazov": "Tlak z pokľaku na jednom kolene",
      "meranie": "opakovania",
+     "pohyb": "tlak-poklak",
      "cielMin": 6,
      "cielMax": 10,
      "naradie": [
@@ -1945,6 +2011,7 @@
      "uroven": 6,
      "nazov": "Z-press v sede na zemi",
      "meranie": "opakovania",
+     "pohyb": "tlak-sed-zem",
      "cielMin": 5,
      "cielMax": 10,
      "naradie": [
@@ -1985,6 +2052,7 @@
      "uroven": 1,
      "nazov": "Kliky v predklone na zemi",
      "meranie": "opakovania",
+     "pohyb": "pike-klik",
      "cielMin": 5,
      "cielMax": 10,
      "naradie": [
@@ -2015,6 +2083,7 @@
      "uroven": 2,
      "nazov": "Pike kliky s nohami na schode",
      "meranie": "opakovania",
+     "pohyb": "pike-klik-schod",
      "cielMin": 5,
      "cielMax": 10,
      "naradie": [
@@ -2045,6 +2114,7 @@
      "uroven": 3,
      "nazov": "Pike kliky s nohami na stoličke",
      "meranie": "opakovania",
+     "pohyb": "pike-klik-stolicka",
      "cielMin": 5,
      "cielMax": 10,
      "naradie": [
@@ -2075,6 +2145,7 @@
      "uroven": 4,
      "nazov": "Pike kliky s dlaňami na knihách",
      "meranie": "opakovania",
+     "pohyb": "pike-klik-vyvysene",
      "cielMin": 4,
      "cielMax": 8,
      "naradie": [
@@ -2106,6 +2177,7 @@
      "uroven": 5,
      "nazov": "Kliky do stojky chrbtom k stene, čiastočný rozsah",
      "meranie": "opakovania",
+     "pohyb": "klik-stojka-ciastocny",
      "cielMin": 3,
      "cielMax": 6,
      "naradie": [
@@ -2137,6 +2209,7 @@
      "uroven": 6,
      "nazov": "Negatívne kliky do stojky pri stene",
      "meranie": "opakovania",
+     "pohyb": "klik-stojka-negativ",
      "cielMin": 3,
      "cielMax": 5,
      "naradie": [
@@ -2167,6 +2240,7 @@
      "uroven": 7,
      "nazov": "Kliky do stojky bruchom k stene",
      "meranie": "opakovania",
+     "pohyb": "klik-stojka-bruchom",
      "cielMin": 3,
      "cielMax": 6,
      "naradie": [
@@ -2208,6 +2282,7 @@
      "uroven": 1,
      "nazov": "Vzpor na bradlách",
      "meranie": "vydrz",
+     "pohyb": "vzpor-bradla",
      "cielMin": 15,
      "cielMax": 30,
      "naradie": [
@@ -2238,6 +2313,7 @@
      "uroven": 2,
      "nazov": "Dipy medzi stoličkami s nohami na zemi",
      "meranie": "opakovania",
+     "pohyb": "dip-stolicky",
      "cielMin": 8,
      "cielMax": 15,
      "naradie": [
@@ -2267,6 +2343,7 @@
      "uroven": 3,
      "nazov": "Negatívne dipy na bradlách",
      "meranie": "opakovania",
+     "pohyb": "dip-negativ",
      "cielMin": 4,
      "cielMax": 8,
      "naradie": [
@@ -2296,6 +2373,7 @@
      "uroven": 4,
      "nazov": "Dipy s dopomocou nohami",
      "meranie": "opakovania",
+     "pohyb": "dip-dopomoc",
      "cielMin": 6,
      "cielMax": 12,
      "naradie": [
@@ -2326,6 +2404,7 @@
      "uroven": 5,
      "nazov": "Dipy na bradlách",
      "meranie": "opakovania",
+     "pohyb": "dip",
      "cielMin": 5,
      "cielMax": 12,
      "naradie": [
@@ -2356,6 +2435,7 @@
      "uroven": 6,
      "nazov": "Dipy s pauzou dole",
      "meranie": "opakovania",
+     "pohyb": "dip-pauza",
      "cielMin": 5,
      "cielMax": 10,
      "naradie": [
@@ -2385,6 +2465,7 @@
      "uroven": 7,
      "nazov": "Dipy so záťažou",
      "meranie": "opakovania",
+     "pohyb": "dip-zataz",
      "cielMin": 5,
      "cielMax": 10,
      "naradie": [
@@ -2415,6 +2496,7 @@
      "uroven": 8,
      "nazov": "Vzpor na kruhoch",
      "meranie": "vydrz",
+     "pohyb": "vzpor-kruhy",
      "cielMin": 10,
      "cielMax": 30,
      "naradie": [
@@ -2445,6 +2527,7 @@
      "uroven": 9,
      "nazov": "Dipy na kruhoch",
      "meranie": "opakovania",
+     "pohyb": "dip-kruhy",
      "cielMin": 4,
      "cielMax": 10,
      "naradie": [
@@ -2484,6 +2567,7 @@
      "uroven": 1,
      "nazov": "Škapulárne príťahy",
      "meranie": "opakovania",
+     "pohyb": "skapularny-pritah",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -2513,6 +2597,7 @@
      "uroven": 2,
      "nazov": "Australské príťahy so strmým telom",
      "meranie": "opakovania",
+     "pohyb": "australsky-pritah-strmy",
      "cielMin": 8,
      "cielMax": 15,
      "naradie": [
@@ -2543,6 +2628,7 @@
      "uroven": 3,
      "nazov": "Australské príťahy s telom vodorovne",
      "meranie": "opakovania",
+     "pohyb": "australsky-pritah",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -2572,6 +2658,7 @@
      "uroven": 4,
      "nazov": "Australské príťahy s nohami na stoličke",
      "meranie": "opakovania",
+     "pohyb": "australsky-pritah-stolicka",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -2602,6 +2689,7 @@
      "uroven": 5,
      "nazov": "Negatívne príťahy",
      "meranie": "opakovania",
+     "pohyb": "negativny-pritah",
      "cielMin": 3,
      "cielMax": 5,
      "naradie": [
@@ -2632,6 +2720,7 @@
      "uroven": 6,
      "nazov": "Príťahy s pomocou nohy o stoličku",
      "meranie": "opakovania",
+     "pohyb": "pritah-dopomoc-stolicka",
      "cielMin": 5,
      "cielMax": 10,
      "naradie": [
@@ -2663,6 +2752,7 @@
      "uroven": 7,
      "nazov": "Príťahy podhmatom",
      "meranie": "opakovania",
+     "pohyb": "pritah",
      "cielMin": 3,
      "cielMax": 8,
      "naradie": [
@@ -2694,6 +2784,7 @@
      "uroven": 8,
      "nazov": "Príťahy nadhmatom",
      "meranie": "opakovania",
+     "pohyb": "pritah",
      "cielMin": 3,
      "cielMax": 8,
      "naradie": [
@@ -2724,6 +2815,7 @@
      "uroven": 9,
      "nazov": "Príťahy širokým nadhmatom",
      "meranie": "opakovania",
+     "pohyb": "pritah",
      "cielMin": 5,
      "cielMax": 10,
      "naradie": [
@@ -2754,6 +2846,7 @@
      "uroven": 10,
      "nazov": "Príťahy so záťažou",
      "meranie": "opakovania",
+     "pohyb": "pritah-zataz",
      "cielMin": 4,
      "cielMax": 8,
      "naradie": [
@@ -2786,6 +2879,7 @@
      "uroven": 11,
      "nazov": "Príťahy k hrudníku",
      "meranie": "opakovania",
+     "pohyb": "pritah-hrudnik",
      "cielMin": 3,
      "cielMax": 6,
      "naradie": [
@@ -2826,6 +2920,7 @@
      "uroven": 1,
      "nazov": "Veslovanie obojruč s hrudníkom o operadlo stoličky",
      "meranie": "opakovania",
+     "pohyb": "veslovanie-operadlo",
      "cielMin": 10,
      "cielMax": 15,
      "naradie": [
@@ -2854,6 +2949,7 @@
      "uroven": 2,
      "nazov": "Jednoručné veslovanie s oporou o stoličku",
      "meranie": "opakovania",
+     "pohyb": "veslovanie-jednoruc-stolicka",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -2883,6 +2979,7 @@
      "uroven": 3,
      "nazov": "Veslovanie obojruč v predklone bez opory",
      "meranie": "opakovania",
+     "pohyb": "veslovanie-predklon",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -2911,6 +3008,7 @@
      "uroven": 4,
      "nazov": "Jednoručné veslovanie v predklone bez opory",
      "meranie": "opakovania",
+     "pohyb": "veslovanie-predklon-jednoruc",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -2938,6 +3036,7 @@
      "uroven": 5,
      "nazov": "Veslovanie s lakťami od tela",
      "meranie": "opakovania",
+     "pohyb": "veslovanie-predklon",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -2975,6 +3074,7 @@
      "uroven": 1,
      "nazov": "Supermanka v ľahu na bruchu",
      "meranie": "opakovania",
+     "pohyb": "supermanka",
      "cielMin": 10,
      "cielMax": 15,
      "naradie": [
@@ -3001,6 +3101,7 @@
      "uroven": 2,
      "nazov": "Y-T-W v ľahu na bruchu",
      "meranie": "opakovania",
+     "pohyb": "ytw",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -3028,6 +3129,7 @@
      "uroven": 3,
      "nazov": "Rozpažovanie v ľahu na bruchu s jednoručkami",
      "meranie": "opakovania",
+     "pohyb": "rozpazovanie-predklon",
      "cielMin": 10,
      "cielMax": 15,
      "naradie": [
@@ -3055,6 +3157,7 @@
      "uroven": 4,
      "nazov": "Rozpažovanie v predklone v stoji",
      "meranie": "opakovania",
+     "pohyb": "rozpazovanie-predklon",
      "cielMin": 10,
      "cielMax": 15,
      "naradie": [
@@ -3081,6 +3184,7 @@
      "uroven": 5,
      "nazov": "Australský príťah širokým úchopom k hrudníku",
      "meranie": "opakovania",
+     "pohyb": "australsky-pritah",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -3117,6 +3221,7 @@
      "uroven": 1,
      "nazov": "Vis s čiastočným odľahčením",
      "meranie": "vydrz",
+     "pohyb": "vis-odlahceny",
      "cielMin": 20,
      "cielMax": 40,
      "naradie": [
@@ -3146,6 +3251,7 @@
      "uroven": 2,
      "nazov": "Mŕtvy vis obojruč",
      "meranie": "vydrz",
+     "pohyb": "vis",
      "cielMin": 10,
      "cielMax": 20,
      "naradie": [
@@ -3175,6 +3281,7 @@
      "uroven": 3,
      "nazov": "Dlhý mŕtvy vis",
      "meranie": "vydrz",
+     "pohyb": "vis",
      "cielMin": 30,
      "cielMax": 60,
      "naradie": [
@@ -3204,6 +3311,7 @@
      "uroven": 4,
      "nazov": "Aktívny vis so stiahnutými lopatkami",
      "meranie": "vydrz",
+     "pohyb": "vis-aktivny",
      "cielMin": 20,
      "cielMax": 40,
      "naradie": [
@@ -3233,6 +3341,7 @@
      "uroven": 5,
      "nazov": "Vis s prehmatávaním po hrazde",
      "meranie": "opakovania",
+     "pohyb": "vis-prehmatavanie",
      "cielMin": 6,
      "cielMax": 12,
      "naradie": [
@@ -3262,6 +3371,7 @@
      "uroven": 6,
      "nazov": "Vis na uteráku obojruč",
      "meranie": "vydrz",
+     "pohyb": "vis-uterak",
      "cielMin": 15,
      "cielMax": 30,
      "naradie": [
@@ -3291,6 +3401,7 @@
      "uroven": 7,
      "nazov": "Vis jednoruč s pomocou druhej ruky",
      "meranie": "vydrz",
+     "pohyb": "vis-jednoruc",
      "cielMin": 10,
      "cielMax": 20,
      "naradie": [
@@ -3330,6 +3441,7 @@
      "uroven": 1,
      "nazov": "Flexia zápästia s jednoručkou v sede",
      "meranie": "opakovania",
+     "pohyb": "zapastie-sed",
      "cielMin": 12,
      "cielMax": 20,
      "naradie": [
@@ -3356,6 +3468,7 @@
      "uroven": 2,
      "nazov": "Extenzia zápästia s jednoručkou v sede",
      "meranie": "opakovania",
+     "pohyb": "zapastie-sed",
      "cielMin": 12,
      "cielMax": 20,
      "naradie": [
@@ -3382,6 +3495,7 @@
      "uroven": 3,
      "nazov": "Zápästné kladivo hore",
      "meranie": "opakovania",
+     "pohyb": "zapastie-kladivo",
      "cielMin": 10,
      "cielMax": 15,
      "naradie": [
@@ -3407,6 +3521,7 @@
      "uroven": 4,
      "nazov": "Zápästné kladivo dole",
      "meranie": "opakovania",
+     "pohyb": "zapastie-kladivo",
      "cielMin": 10,
      "cielMax": 15,
      "naradie": [
@@ -3432,6 +3547,7 @@
      "uroven": 5,
      "nazov": "Rotácia kladiva",
      "meranie": "opakovania",
+     "pohyb": "zapastie-sed",
      "cielMin": 10,
      "cielMax": 15,
      "naradie": [
@@ -3457,6 +3573,7 @@
      "uroven": 6,
      "nazov": "Kladivové zdvihy",
      "meranie": "opakovania",
+     "pohyb": "biceps-zdvih",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -3484,6 +3601,7 @@
      "uroven": 7,
      "nazov": "Farmárska chôdza s dvoma jednoručkami",
      "meranie": "vzdialenost",
+     "pohyb": "farmar",
      "cielMin": 20,
      "cielMax": 40,
      "naradie": [
@@ -3520,6 +3638,7 @@
      "uroven": 1,
      "nazov": "Sed – stoj zo stoličky s pomocou rúk",
      "meranie": "opakovania",
+     "pohyb": "sed-stoj-ruky",
      "cielMin": 8,
      "cielMax": 15,
      "naradie": [
@@ -3546,6 +3665,7 @@
      "uroven": 2,
      "nazov": "Sed – stoj zo stoličky bez rúk",
      "meranie": "opakovania",
+     "pohyb": "sed-stoj-stolicka",
      "cielMin": 8,
      "cielMax": 15,
      "naradie": [
@@ -3572,6 +3692,7 @@
      "uroven": 3,
      "nazov": "Drep do paralely bez opory",
      "meranie": "opakovania",
+     "pohyb": "drep",
      "cielMin": 8,
      "cielMax": 15,
      "naradie": [
@@ -3599,6 +3720,7 @@
      "uroven": 4,
      "nazov": "Hlboký drep s pätami na zemi",
      "meranie": "opakovania",
+     "pohyb": "drep-hlboky",
      "cielMin": 8,
      "cielMax": 15,
      "naradie": [
@@ -3625,6 +3747,7 @@
      "uroven": 5,
      "nazov": "Výdrž v hlbokom drepe",
      "meranie": "vydrz",
+     "pohyb": "hlboky-drep-vydrz",
      "cielMin": 30,
      "cielMax": 60,
      "naradie": [
@@ -3651,6 +3774,7 @@
      "uroven": 6,
      "nazov": "Goblet drep s jednoručkou",
      "meranie": "opakovania",
+     "pohyb": "goblet-drep",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -3677,6 +3801,7 @@
      "uroven": 7,
      "nazov": "Bulharský drep so zadnou nohou na stoličke",
      "meranie": "opakovania",
+     "pohyb": "bulharsky-drep",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -3703,6 +3828,7 @@
      "uroven": 8,
      "nazov": "Bulharský drep s jednoručkami",
      "meranie": "opakovania",
+     "pohyb": "bulharsky-drep-jednorucky",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -3730,6 +3856,7 @@
      "uroven": 9,
      "nazov": "Drep na jednej nohe na stoličku",
      "meranie": "opakovania",
+     "pohyb": "pistol-stolicka",
      "cielMin": 5,
      "cielMax": 10,
      "naradie": [
@@ -3758,6 +3885,7 @@
      "uroven": 10,
      "nazov": "Pistol s pridržaním sa zárubne",
      "meranie": "opakovania",
+     "pohyb": "pistol-zarubna",
      "cielMin": 5,
      "cielMax": 8,
      "naradie": [
@@ -3786,6 +3914,7 @@
      "uroven": 11,
      "nazov": "Plný pistol",
      "meranie": "opakovania",
+     "pohyb": "pistol",
      "cielMin": 3,
      "cielMax": 8,
      "naradie": [
@@ -3825,6 +3954,7 @@
      "uroven": 1,
      "nazov": "Rozkročený drep s držaním sa stoličky",
      "meranie": "opakovania",
+     "pohyb": "rozkroceny-drep-stolicka",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -3851,6 +3981,7 @@
      "uroven": 2,
      "nazov": "Rozkročený drep bez opory",
      "meranie": "opakovania",
+     "pohyb": "rozkroceny-drep",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -3877,6 +4008,7 @@
      "uroven": 3,
      "nazov": "Výpad vzad striedavo",
      "meranie": "opakovania",
+     "pohyb": "vypad-vzad",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -3903,6 +4035,7 @@
      "uroven": 4,
      "nazov": "Výpad vpred",
      "meranie": "opakovania",
+     "pohyb": "vypad-vpred",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -3930,6 +4063,7 @@
      "uroven": 5,
      "nazov": "Výstupy na stoličku",
      "meranie": "opakovania",
+     "pohyb": "vystup-stolicka",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -3957,6 +4091,7 @@
      "uroven": 6,
      "nazov": "Výpady s jednoručkami",
      "meranie": "opakovania",
+     "pohyb": "vypad-jednorucky",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -3994,6 +4129,7 @@
      "uroven": 1,
      "nazov": "Bocian – stoj na jednej nohe",
      "meranie": "vydrz",
+     "pohyb": "bocian",
      "cielMin": 30,
      "cielMax": 45,
      "naradie": [
@@ -4020,6 +4156,7 @@
      "uroven": 2,
      "nazov": "Predklon v bokoch chrbtom k stene",
      "meranie": "opakovania",
+     "pohyb": "predklon-bokov-stena",
      "cielMin": 10,
      "cielMax": 15,
      "naradie": [
@@ -4047,6 +4184,7 @@
      "uroven": 3,
      "nazov": "Rumunský mŕtvy ťah obojnožne s jednoručkami",
      "meranie": "opakovania",
+     "pohyb": "rumunsky-mrtvy-tah",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -4074,6 +4212,7 @@
      "uroven": 4,
      "nazov": "Mŕtvy ťah na jednej nohe s oporou o stoličku",
      "meranie": "opakovania",
+     "pohyb": "mrtvy-tah-jednonoz-stolicka",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -4101,6 +4240,7 @@
      "uroven": 5,
      "nazov": "Mŕtvy ťah na jednej nohe bez opory",
      "meranie": "opakovania",
+     "pohyb": "mrtvy-tah-jednonoz",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -4129,6 +4269,7 @@
      "uroven": 6,
      "nazov": "Mŕtvy ťah na jednej nohe s jednoručkou",
      "meranie": "opakovania",
+     "pohyb": "mrtvy-tah-jednonoz-jednorucka",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -4166,6 +4307,7 @@
      "uroven": 1,
      "nazov": "Most v ľahu obojnožne",
      "meranie": "opakovania",
+     "pohyb": "most",
      "cielMin": 12,
      "cielMax": 20,
      "naradie": [
@@ -4192,6 +4334,7 @@
      "uroven": 2,
      "nazov": "Most s výdržou hore",
      "meranie": "vydrz",
+     "pohyb": "most-vydrz",
      "cielMin": 30,
      "cielMax": 45,
      "naradie": [
@@ -4218,6 +4361,7 @@
      "uroven": 3,
      "nazov": "Most na jednej nohe",
      "meranie": "opakovania",
+     "pohyb": "most-jednonoz",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -4244,6 +4388,7 @@
      "uroven": 4,
      "nazov": "Hip thrust s lopatkami o stoličku",
      "meranie": "opakovania",
+     "pohyb": "hip-thrust",
      "cielMin": 10,
      "cielMax": 15,
      "naradie": [
@@ -4271,6 +4416,7 @@
      "uroven": 5,
      "nazov": "Hip thrust s jednoručkou na panve",
      "meranie": "opakovania",
+     "pohyb": "hip-thrust-jednorucka",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -4308,6 +4454,7 @@
      "uroven": 1,
      "nazov": "Výpony obojnožne na zemi s pridržaním sa steny",
      "meranie": "opakovania",
+     "pohyb": "vypon-stena",
      "cielMin": 15,
      "cielMax": 25,
      "naradie": [
@@ -4334,6 +4481,7 @@
      "uroven": 2,
      "nazov": "Výpony obojnožne na schode",
      "meranie": "opakovania",
+     "pohyb": "vypon-schod",
      "cielMin": 12,
      "cielMax": 20,
      "naradie": [
@@ -4359,6 +4507,7 @@
      "uroven": 3,
      "nazov": "Výpony na schode s pauzou v natiahnutí",
      "meranie": "opakovania",
+     "pohyb": "vypon-schod",
      "cielMin": 10,
      "cielMax": 15,
      "naradie": [
@@ -4384,6 +4533,7 @@
      "uroven": 4,
      "nazov": "Výpony na jednej nohe na zemi",
      "meranie": "opakovania",
+     "pohyb": "vypon-jednonoz-stena",
      "cielMin": 12,
      "cielMax": 20,
      "naradie": [
@@ -4409,6 +4559,7 @@
      "uroven": 5,
      "nazov": "Výpony na jednej nohe na schode",
      "meranie": "opakovania",
+     "pohyb": "vypon-jednonoz-schod",
      "cielMin": 10,
      "cielMax": 15,
      "naradie": [
@@ -4434,6 +4585,7 @@
      "uroven": 6,
      "nazov": "Výpony na jednej nohe s jednoručkou",
      "meranie": "opakovania",
+     "pohyb": "vypon-jednonoz-jednorucka",
      "cielMin": 8,
      "cielMax": 15,
      "naradie": [
@@ -4470,6 +4622,7 @@
      "uroven": 1,
      "nazov": "Poskoky na mieste na špičkách",
      "meranie": "vydrz",
+     "pohyb": "poskok",
      "cielMin": 20,
      "cielMax": 40,
      "naradie": [
@@ -4498,6 +4651,7 @@
      "uroven": 2,
      "nazov": "Poskoky vpred a vzad cez čiaru",
      "meranie": "vydrz",
+     "pohyb": "poskok-ciara",
      "cielMin": 20,
      "cielMax": 40,
      "naradie": [
@@ -4526,6 +4680,7 @@
      "uroven": 3,
      "nazov": "Poskoky na jednej nohe na mieste",
      "meranie": "opakovania",
+     "pohyb": "poskok-jednonoz",
      "cielMin": 15,
      "cielMax": 25,
      "naradie": [
@@ -4554,6 +4709,7 @@
      "uroven": 4,
      "nazov": "Skoky na jednej nohe vpred",
      "meranie": "vzdialenost",
+     "pohyb": "skok-jednonoz-vpred",
      "cielMin": 10,
      "cielMax": 20,
      "naradie": [
@@ -4582,6 +4738,7 @@
      "uroven": 5,
      "nazov": "Výskoky na schod z jednej nohy",
      "meranie": "opakovania",
+     "pohyb": "vyskok-schod",
      "cielMin": 6,
      "cielMax": 10,
      "naradie": [
@@ -4621,6 +4778,7 @@
      "uroven": 1,
      "nazov": "Doska s rukami na stoličke",
      "meranie": "vydrz",
+     "pohyb": "doska-stolicka",
      "cielMin": 30,
      "cielMax": 45,
      "naradie": [
@@ -4647,6 +4805,7 @@
      "uroven": 2,
      "nazov": "Doska na kolenách na predlaktiach",
      "meranie": "vydrz",
+     "pohyb": "doska-kolena",
      "cielMin": 30,
      "cielMax": 45,
      "naradie": [
@@ -4673,6 +4832,7 @@
      "uroven": 3,
      "nazov": "Doska na predlaktiach",
      "meranie": "vydrz",
+     "pohyb": "doska",
      "cielMin": 45,
      "cielMax": 60,
      "naradie": [
@@ -4700,6 +4860,7 @@
      "uroven": 4,
      "nazov": "Doska s dotykom ramien",
      "meranie": "opakovania",
+     "pohyb": "doska-dotyk-ramien",
      "cielMin": 10,
      "cielMax": 20,
      "naradie": [
@@ -4726,6 +4887,7 @@
      "uroven": 5,
      "nazov": "Bočná doska na kolenách",
      "meranie": "vydrz",
+     "pohyb": "bocna-doska-kolena",
      "cielMin": 30,
      "cielMax": 45,
      "naradie": [
@@ -4752,6 +4914,7 @@
      "uroven": 6,
      "nazov": "Bočná doska na chodidlách",
      "meranie": "vydrz",
+     "pohyb": "bocna-doska",
      "cielMin": 30,
      "cielMax": 60,
      "naradie": [
@@ -4788,6 +4951,7 @@
      "uroven": 1,
      "nazov": "Mŕtvy chrobák",
      "meranie": "opakovania",
+     "pohyb": "mrtvy-chrobak",
      "cielMin": 10,
      "cielMax": 16,
      "naradie": [
@@ -4813,6 +4977,7 @@
      "uroven": 2,
      "nazov": "Tuck hollow hold",
      "meranie": "vydrz",
+     "pohyb": "hollow-tuck",
      "cielMin": 20,
      "cielMax": 30,
      "naradie": [
@@ -4838,6 +5003,7 @@
      "uroven": 3,
      "nazov": "Hollow hold s jednou nohou vystretou",
      "meranie": "vydrz",
+     "pohyb": "hollow-jedna-noha",
      "cielMin": 20,
      "cielMax": 30,
      "naradie": [
@@ -4863,6 +5029,7 @@
      "uroven": 4,
      "nazov": "Hollow hold s vystretými nohami",
      "meranie": "vydrz",
+     "pohyb": "hollow-hold",
      "cielMin": 20,
      "cielMax": 30,
      "naradie": [
@@ -4888,6 +5055,7 @@
      "uroven": 5,
      "nazov": "Hollow hold s rukami nad hlavou",
      "meranie": "vydrz",
+     "pohyb": "hollow-ruky-hore",
      "cielMin": 20,
      "cielMax": 40,
      "naradie": [
@@ -4915,6 +5083,7 @@
      "uroven": 6,
      "nazov": "Hollow rocks",
      "meranie": "vydrz",
+     "pohyb": "hollow-rocks",
      "cielMin": 20,
      "cielMax": 40,
      "naradie": [
@@ -4952,6 +5121,7 @@
      "uroven": 1,
      "nazov": "Vis a zdvih kolien do 45°",
      "meranie": "opakovania",
+     "pohyb": "vis-kolena-45",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -4981,6 +5151,7 @@
      "uroven": 2,
      "nazov": "Vis a kolená k hrudníku",
      "meranie": "opakovania",
+     "pohyb": "vis-kolena-hrud",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -5010,6 +5181,7 @@
      "uroven": 3,
      "nazov": "Vis a kolená k hrudníku s pauzou",
      "meranie": "opakovania",
+     "pohyb": "vis-kolena-hrud",
      "cielMin": 6,
      "cielMax": 10,
      "naradie": [
@@ -5039,6 +5211,7 @@
      "uroven": 4,
      "nazov": "Vis a zdvih vystretých nôh do 90°",
      "meranie": "opakovania",
+     "pohyb": "vis-nohy-90",
      "cielMin": 5,
      "cielMax": 10,
      "naradie": [
@@ -5068,6 +5241,7 @@
      "uroven": 5,
      "nazov": "Vis s nohami v 90°",
      "meranie": "vydrz",
+     "pohyb": "vis-l",
      "cielMin": 10,
      "cielMax": 20,
      "naradie": [
@@ -5097,6 +5271,7 @@
      "uroven": 6,
      "nazov": "Nohy k hrazde",
      "meranie": "opakovania",
+     "pohyb": "nohy-k-hrazde",
      "cielMin": 3,
      "cielMax": 8,
      "naradie": [
@@ -5136,6 +5311,7 @@
      "uroven": 1,
      "nazov": "Kĺzanie predlaktí po stene",
      "meranie": "opakovania",
+     "pohyb": "klzanie-po-stene",
      "cielMin": 10,
      "cielMax": 15,
      "naradie": [
@@ -5160,6 +5336,7 @@
      "uroven": 2,
      "nazov": "Stoj pri stene s rukami nad hlavou",
      "meranie": "vydrz",
+     "pohyb": "stena-ruky-hore",
      "cielMin": 20,
      "cielMax": 30,
      "naradie": [
@@ -5183,6 +5360,7 @@
      "uroven": 3,
      "nazov": "Strečing prsných svalov o zárubňu",
      "meranie": "vydrz",
+     "pohyb": "strecing-zarubna",
      "cielMin": 30,
      "cielMax": 45,
      "naradie": [
@@ -5206,6 +5384,7 @@
      "uroven": 4,
      "nazov": "Strečing chrbta s rukami o stoličku",
      "meranie": "vydrz",
+     "pohyb": "strecing-chrbta-stolicka",
      "cielMin": 45,
      "cielMax": 60,
      "naradie": [
@@ -5229,6 +5408,7 @@
      "uroven": 5,
      "nazov": "Aktívny vis na hrazde s prepnutými ramenami",
      "meranie": "vydrz",
+     "pohyb": "vis",
      "cielMin": 20,
      "cielMax": 40,
      "naradie": [
@@ -5264,6 +5444,7 @@
      "uroven": 1,
      "nazov": "Predklon v sede s pokrčenými kolenami",
      "meranie": "vydrz",
+     "pohyb": "predklon-sed-pokrcene",
      "cielMin": 45,
      "cielMax": 60,
      "naradie": [
@@ -5287,6 +5468,7 @@
      "uroven": 2,
      "nazov": "Predklon v sede s vystretými kolenami",
      "meranie": "vydrz",
+     "pohyb": "predklon-sed",
      "cielMin": 45,
      "cielMax": 60,
      "naradie": [
@@ -5310,6 +5492,7 @@
      "uroven": 3,
      "nazov": "Striedavé zdvihy vystretých nôh v ľahu",
      "meranie": "opakovania",
+     "pohyb": "zdvihy-nohy-lah",
      "cielMin": 10,
      "cielMax": 16,
      "naradie": [
@@ -5333,6 +5516,7 @@
      "uroven": 4,
      "nazov": "Aktívna kompresia v sede",
      "meranie": "opakovania",
+     "pohyb": "kompresia-sed",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -5356,6 +5540,7 @@
      "uroven": 5,
      "nazov": "Kompresia s ťahom rúk pod stehnami",
      "meranie": "opakovania",
+     "pohyb": "kompresia-tah",
      "cielMin": 8,
      "cielMax": 10,
      "naradie": [
@@ -5389,6 +5574,7 @@
      "uroven": 1,
      "nazov": "Koleno k stene",
      "meranie": "opakovania",
+     "pohyb": "koleno-k-stene",
      "cielMin": 10,
      "cielMax": 15,
      "naradie": [
@@ -5413,6 +5599,7 @@
      "uroven": 2,
      "nazov": "Výdrž v hlbokom drepe s pätami na schode",
      "meranie": "vydrz",
+     "pohyb": "drep-vydrz-schod",
      "cielMin": 45,
      "cielMax": 60,
      "naradie": [
@@ -5436,6 +5623,7 @@
      "uroven": 3,
      "nazov": "Hlboký drep s pridržaním sa stoličky",
      "meranie": "vydrz",
+     "pohyb": "drep-vydrz-stolicka",
      "cielMin": 45,
      "cielMax": 60,
      "naradie": [
@@ -5459,6 +5647,7 @@
      "uroven": 4,
      "nazov": "Hlboký drep bez opory",
      "meranie": "vydrz",
+     "pohyb": "hlboky-drep-vydrz",
      "cielMin": 45,
      "cielMax": 60,
      "naradie": [
@@ -5482,6 +5671,7 @@
      "uroven": 5,
      "nazov": "Hlboký drep s prenášaním váhy a rotáciami",
      "meranie": "opakovania",
+     "pohyb": "hlboky-drep-presuny",
      "cielMin": 10,
      "cielMax": 15,
      "naradie": [
@@ -5515,6 +5705,7 @@
      "uroven": 1,
      "nazov": "Krúženie a natriasanie zápästí",
      "meranie": "opakovania",
+     "pohyb": "kruzenie-zapasti",
      "cielMin": 15,
      "cielMax": 20,
      "naradie": [
@@ -5538,6 +5729,7 @@
      "uroven": 2,
      "nazov": "Opora v kľaku s prstami vpred",
      "meranie": "opakovania",
+     "pohyb": "opora-klak-hojdanie",
      "cielMin": 10,
      "cielMax": 15,
      "naradie": [
@@ -5561,6 +5753,7 @@
      "uroven": 3,
      "nazov": "Opora v kľaku s prstami vzad",
      "meranie": "opakovania",
+     "pohyb": "opora-klak-vzad",
      "cielMin": 10,
      "cielMax": 15,
      "naradie": [
@@ -5584,6 +5777,7 @@
      "uroven": 4,
      "nazov": "Opora na chrbtoch dlaní",
      "meranie": "vydrz",
+     "pohyb": "opora-klak-vydrz",
      "cielMin": 20,
      "cielMax": 30,
      "naradie": [
@@ -5607,6 +5801,7 @@
      "uroven": 5,
      "nazov": "Opora na končekoch prstov",
      "meranie": "vydrz",
+     "pohyb": "opora-klak-vydrz",
      "cielMin": 20,
      "cielMax": 30,
      "naradie": [
@@ -5640,6 +5835,7 @@
      "uroven": 1,
      "nazov": "Medvedia chôdza",
      "meranie": "vzdialenost",
+     "pohyb": "medvedia-chodza",
      "cielMin": 5,
      "cielMax": 10,
      "naradie": [
@@ -5662,6 +5858,7 @@
      "uroven": 2,
      "nazov": "Krabia chôdza",
      "meranie": "vzdialenost",
+     "pohyb": "krabia-chodza",
      "cielMin": 5,
      "cielMax": 10,
      "naradie": [
@@ -5685,6 +5882,7 @@
      "uroven": 3,
      "nazov": "Hadie plazenie",
      "meranie": "vzdialenost",
+     "pohyb": "hadie-plazenie",
      "cielMin": 4,
      "cielMax": 8,
      "naradie": [
@@ -5707,6 +5905,7 @@
      "uroven": 4,
      "nazov": "Kačacia chôdza",
      "meranie": "vzdialenost",
+     "pohyb": "kacacia-chodza",
      "cielMin": 4,
      "cielMax": 8,
      "naradie": [
@@ -5728,6 +5927,7 @@
      "uroven": 5,
      "nazov": "Húsenicová chôdza",
      "meranie": "vzdialenost",
+     "pohyb": "husenica",
      "cielMin": 4,
      "cielMax": 8,
      "naradie": [
@@ -5750,6 +5950,7 @@
      "uroven": 6,
      "nazov": "Krokodílie plazenie",
      "meranie": "vzdialenost",
+     "pohyb": "krokodil",
      "cielMin": 3,
      "cielMax": 6,
      "naradie": [
@@ -5773,6 +5974,7 @@
      "uroven": 7,
      "nazov": "Tučniačia chôdza",
      "meranie": "vzdialenost",
+     "pohyb": "tucniak",
      "cielMin": 5,
      "cielMax": 10,
      "naradie": [
@@ -5794,6 +5996,7 @@
      "uroven": 8,
      "nazov": "Sloní chôdza",
      "meranie": "vzdialenost",
+     "pohyb": "slon",
      "cielMin": 5,
      "cielMax": 10,
      "naradie": [
@@ -5815,6 +6018,7 @@
      "uroven": 9,
      "nazov": "Pavúčia chôdza",
      "meranie": "vzdialenost",
+     "pohyb": "pavucia-chodza",
      "cielMin": 4,
      "cielMax": 8,
      "naradie": [
@@ -5838,6 +6042,7 @@
      "uroven": 10,
      "nazov": "Rakova chôdza vzad",
      "meranie": "vzdialenost",
+     "pohyb": "rak",
      "cielMin": 4,
      "cielMax": 8,
      "naradie": [
@@ -5860,6 +6065,7 @@
      "uroven": 11,
      "nazov": "Žirafia chôdza po špičkách",
      "meranie": "vzdialenost",
+     "pohyb": "zirafa",
      "cielMin": 6,
      "cielMax": 12,
      "naradie": [
@@ -5891,6 +6097,7 @@
      "uroven": 1,
      "nazov": "Žabie skoky",
      "meranie": "opakovania",
+     "pohyb": "zabie-skoky",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -5913,6 +6120,7 @@
      "uroven": 2,
      "nazov": "Zajačie skoky",
      "meranie": "opakovania",
+     "pohyb": "zajacie-skoky",
      "cielMin": 10,
      "cielMax": 15,
      "naradie": [
@@ -5935,6 +6143,7 @@
      "uroven": 3,
      "nazov": "Klokanie skoky",
      "meranie": "opakovania",
+     "pohyb": "klokan",
      "cielMin": 10,
      "cielMax": 15,
      "naradie": [
@@ -5957,6 +6166,7 @@
      "uroven": 4,
      "nazov": "Kobylkine skoky na jednej nohe",
      "meranie": "opakovania",
+     "pohyb": "skok-jednonoz-vpred",
      "cielMin": 6,
      "cielMax": 10,
      "naradie": [
@@ -5979,6 +6189,7 @@
      "uroven": 5,
      "nazov": "Delfíní výskok",
      "meranie": "opakovania",
+     "pohyb": "delfin",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -6001,6 +6212,7 @@
      "uroven": 6,
      "nazov": "Vrabčie poskoky cez čiaru",
      "meranie": "opakovania",
+     "pohyb": "poskok-ciara",
      "cielMin": 10,
      "cielMax": 20,
      "naradie": [
@@ -6032,6 +6244,7 @@
      "uroven": 1,
      "nazov": "Bocian – stoj na jednej nohe",
      "meranie": "opakovania",
+     "pohyb": "bocian",
      "cielMin": 4,
      "cielMax": 6,
      "naradie": [
@@ -6053,6 +6266,7 @@
      "uroven": 2,
      "nazov": "Plameniak so zavretými očami",
      "meranie": "opakovania",
+     "pohyb": "plameniak",
      "cielMin": 4,
      "cielMax": 6,
      "naradie": [
@@ -6074,6 +6288,7 @@
      "uroven": 3,
      "nazov": "Korytnačka – klbko",
      "meranie": "opakovania",
+     "pohyb": "klbko",
      "cielMin": 4,
      "cielMax": 6,
      "naradie": [
@@ -6093,6 +6308,7 @@
      "uroven": 4,
      "nazov": "Mačací chrbát",
      "meranie": "opakovania",
+     "pohyb": "macka-tava",
      "cielMin": 8,
      "cielMax": 12,
      "naradie": [
@@ -6112,6 +6328,7 @@
      "uroven": 5,
      "nazov": "Psík hlavou dole",
      "meranie": "opakovania",
+     "pohyb": "psik",
      "cielMin": 4,
      "cielMax": 6,
      "naradie": [
@@ -6131,6 +6348,7 @@
      "uroven": 6,
      "nazov": "Motýlí sed",
      "meranie": "opakovania",
+     "pohyb": "motyli-sed",
      "cielMin": 6,
      "cielMax": 10,
      "naradie": [
@@ -6150,6 +6368,7 @@
      "uroven": 7,
      "nazov": "Kobrí vzpor",
      "meranie": "opakovania",
+     "pohyb": "kobra",
      "cielMin": 6,
      "cielMax": 10,
      "naradie": [
@@ -6181,6 +6400,7 @@
      "uroven": 1,
      "nazov": "Opičí vis",
      "meranie": "opakovania",
+     "pohyb": "vis",
      "cielMin": 3,
      "cielMax": 6,
      "naradie": [
@@ -6203,6 +6423,7 @@
      "uroven": 2,
      "nazov": "Lenochodí vis s pokrčenými rukami",
      "meranie": "opakovania",
+     "pohyb": "vis-skrcene-ruky",
      "cielMin": 3,
      "cielMax": 6,
      "naradie": [
