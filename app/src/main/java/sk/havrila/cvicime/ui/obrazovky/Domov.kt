@@ -15,6 +15,13 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material3.Button
+import androidx.compose.material3.Switch
+import androidx.compose.material3.FilterChip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.foundation.clickable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -103,7 +110,12 @@ import kotlinx.coroutines.launch
 import sk.havrila.cvicime.data.Repozitar
 import sk.havrila.cvicime.data.denik.CielEntity
 import sk.havrila.cvicime.data.denik.DietaEntity
+import sk.havrila.cvicime.data.denik.TreningEntity
 import sk.havrila.cvicime.data.denik.UcastnikEntity
+import sk.havrila.cvicime.domain.DlzkaPauz
+import sk.havrila.cvicime.domain.NastavenieTreningu
+import sk.havrila.cvicime.domain.PONUKA_PRACE_S
+import sk.havrila.cvicime.domain.StylTreningu
 import sk.havrila.cvicime.data.denik.ProfilEntity
 import sk.havrila.cvicime.data.denik.SuhrnTreningov
 import sk.havrila.cvicime.data.model.Blok
@@ -180,6 +192,9 @@ class DomovModel(app: Application) : AndroidViewModel(app) {
     /** Čí plán sa ukazuje a spustí: 0 = tvoj, inak dospelého (keď ty dnes necvičíš). */
     private val _hlavny = MutableStateFlow(0L)
 
+    private val _nastavenie = MutableStateFlow(repo.prefs.nastavenieTreningu)
+    val nastavenie = _nastavenie.asStateFlow()
+
     private val _bielkoviny = MutableStateFlow(false)
     val bielkoviny = _bielkoviny.asStateFlow()
 
@@ -230,6 +245,13 @@ class DomovModel(app: Application) : AndroidViewModel(app) {
             repo.ucastniciTok().collectLatest { _dospeli.value = it }
         }
         viewModelScope.launch {
+            val id = repo.prefs.beziaciTreningId
+            if (id > 0) {
+                val t = repo.denik.trening(id)
+                if (t != null && !t.dokonceny) _nedokonceny.value = t else repo.prefs.beziaciTreningId = -1
+            }
+        }
+        viewModelScope.launch {
             _bielkoviny.value = repo.bielkovinyDnes()
             // Otázka na prekážku: po 4+ dňoch pauzy, najviac raz denne.
             val dni = repo.dniOdTreningu()
@@ -252,7 +274,7 @@ class DomovModel(app: Application) : AndroidViewModel(app) {
             }
         }
         viewModelScope.launch {
-            combine(repo.profilTok(), repo.cieleTok(), _minuty, _hlavny) { p, c, m, h -> Styri(p, c, m, h) }
+            combine(repo.profilTok(), repo.cieleTok(), _minuty, _hlavny, _nastavenie) { p, c, m, h, _ -> Styri(p, c, m, h) }
                 .collectLatest { (p, c, m, h) ->
                     val profil = p ?: repo.profil()
                     _profil.value = profil
@@ -265,6 +287,30 @@ class DomovModel(app: Application) : AndroidViewModel(app) {
                         .getOrNull()
                     if (_plan.value != null) _chyba.value = null
                 }
+        }
+    }
+
+    /** „Ako dnes" - zmena sa hneď prejaví v pláne (a v prehrávači, ktorý číta to isté nastavenie). */
+    fun nastav(n: NastavenieTreningu) {
+        repo.prefs.nastavenieTreningu = n
+        _nastavenie.value = n
+    }
+
+    /** Tréning, ktorý sa neukončil (appku zavrel systém) - séria sú v denníku, treba ho uzavrieť. */
+    private val _nedokonceny = MutableStateFlow<TreningEntity?>(null)
+    val nedokonceny = _nedokonceny.asStateFlow()
+
+    fun uzavriNedokonceny(ulozit: Boolean) {
+        val t = _nedokonceny.value ?: return
+        _nedokonceny.value = null
+        viewModelScope.launch {
+            if (ulozit) {
+                // Rovnaké uzavretie ako z prehrávača - vrátane vyhodnotenia postupov.
+                repo.ukonciTrening(t.id, pocitPo = null)
+            } else {
+                repo.denik.zmazTrening(t.id)
+            }
+            repo.prefs.beziaciTreningId = -1
         }
     }
 
@@ -300,7 +346,7 @@ class DomovModel(app: Application) : AndroidViewModel(app) {
 private data class Styri<A, B, C, D>(val a: A, val b: B, val c: C, val d: D)
 
 /** Ponúkané dĺžky tréningu v minútach. */
-private val DLZKY = listOf(15, 30, 45, 60)
+private val DLZKY = listOf(10, 15, 20, 30, 45, 60)
 
 @Composable
 fun DomovObrazovka(
@@ -325,6 +371,8 @@ fun DomovObrazovka(
     val zrucnosti by model.zrucnosti.collectAsStateWithLifecycle()
 
     val dospeli by model.dospeli.collectAsStateWithLifecycle()
+    val nastavenie by model.nastavenie.collectAsStateWithLifecycle()
+    val nedokonceny by model.nedokonceny.collectAsStateWithLifecycle()
 
     // Kto dnes cvičí: ty (vypnuteľný), najviac jeden ďalší dospelý a najviac jedno dieťa
     // (deti sa nestriedajú o displej, prehrávač vedie dve dospelé stopy).
@@ -358,6 +406,10 @@ fun DomovObrazovka(
                 text = "V appke je 0 cvikov, takže sa nedá poskladať nič. Je to chyba appky, " +
                     "nie tvoja — pomôže preinštalovanie, inak ju treba nahlásiť.",
             )
+        }
+
+        nedokonceny?.let { t ->
+            NedokoncenyKarta(t, naUloz = { model.uzavriNedokonceny(true) }, naZahod = { model.uzavriNedokonceny(false) })
         }
 
         // Otázka na prekážku po výpadku. Nie „prečo si zlyhal", ale „čo prekážalo" -
@@ -408,6 +460,8 @@ fun DomovObrazovka(
                     chyba = chyba,
                     minuty = minuty,
                     naMinuty = model::nastavCas,
+                    nastavenie = nastavenie,
+                    naNastavenie = model::nastav,
                     kto = KtoCvici(
                         ja = ja,
                         dospeli = dospeli,
@@ -496,6 +550,8 @@ private fun DnesnyTrening(
     chyba: String?,
     minuty: Int,
     naMinuty: (Int) -> Unit,
+    nastavenie: NastavenieTreningu,
+    naNastavenie: (NastavenieTreningu) -> Unit,
     kto: KtoCvici,
     naJa: () -> Unit,
     naDospeleho: (Long) -> Unit,
@@ -553,6 +609,15 @@ private fun DnesnyTrening(
 
         Spacer(Modifier.height(20.dp))
         PrepinacDlzky(moznosti = DLZKY, vybrana = minuty, naVyber = naMinuty)
+        Text(
+            "minút",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(8.dp))
+        AkoDnes(nastavenie, naNastavenie)
 
         // Kto dnes cvičí - každý čip sa zapína a vypína. Deti cvičia v pauzách dospelých,
         // druhý dospelý svoj vlastný plán popri tebe (rovnaký blok, iné cviky a stupne).
@@ -738,18 +803,146 @@ private fun PrepinacDlzky(moznosti: List<Int>, vybrana: Int, naVyber: (Int) -> U
                         ),
                     contentAlignment = Alignment.Center,
                 ) {
+                    // Šesť dĺžok sa vedľa seba zmestí len bez slova „min" pri každej - je raz pod prepínačom.
                     Text(
-                        buildAnnotatedString {
-                            withStyle(SpanStyle(fontFamily = Grotesk, fontWeight = FontWeight.Bold, fontSize = 19.sp)) {
-                                append("$m")
-                            }
-                            append(" min")
-                        },
-                        style = MaterialTheme.typography.labelMedium,
+                        "$m",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontFamily = Grotesk,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 19.sp,
+                        ),
                         color = farbaTextu,
                     )
                 }
             }
+        }
+    }
+}
+
+// ------------------------------------------------------------------ ako dnes
+
+/**
+ * „Ako dnes": štýl, meranie a pauzy na dnešný tréning. Zbalené ukazuje len zhrnutie,
+ * aby Domov ostal pokojný; voľba sa pamätá.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun AkoDnes(n: NastavenieTreningu, naZmenu: (NastavenieTreningu) -> Unit) {
+    var otvorene by rememberSaveable { mutableStateOf(false) }
+    val haptika = rememberHaptika()
+    val otocenie by animateFloatAsState(if (otvorene) 180f else 0f, label = "akoDnesSipka")
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.medium)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .animateContentSize(),
+    ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .clickable { haptika.klik(); otvorene = !otvorene }
+                .heightIn(min = 56.dp)
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text("Ako dnes", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    buildList {
+                        add(n.styl.nazov)
+                        if (n.vsetkoNaCas || n.styl == StylTreningu.KRUH) add("na čas ${n.pracaS} s")
+                        if (n.pauzy != DlzkaPauz.AUTOMATICKY) add("pauzy ${n.pauzy.nazov.lowercase()}")
+                    }.joinToString(" · "),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Icon(
+                Icons.Filled.ExpandMore,
+                contentDescription = if (otvorene) "Zbaliť" else "Zmeniť, ako dnes cvičiť",
+                modifier = Modifier.rotate(otocenie),
+            )
+        }
+        if (otvorene) {
+            Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Štýl", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    StylTreningu.entries.forEach { st ->
+                        FilterChip(
+                            selected = n.styl == st,
+                            onClick = { haptika.tik(); naZmenu(n.copy(styl = st)) },
+                            label = { Text(st.nazov) },
+                        )
+                    }
+                }
+                Text(n.styl.popis, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+                if (n.styl != StylTreningu.KRUH) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .toggleable(value = n.vsetkoNaCas, role = Role.Switch) {
+                                haptika.klik(); naZmenu(n.copy(vsetkoNaCas = it))
+                            }
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Všetko na čas", style = MaterialTheme.typography.bodyLarge)
+                            Text(
+                                "Aj cviky na opakovania idú na odpočet. Koľko ich bolo, zapíšeš po sérii.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Switch(checked = n.vsetkoNaCas, onCheckedChange = null)
+                    }
+                }
+                if (n.vsetkoNaCas || n.styl == StylTreningu.KRUH) {
+                    Text("Práca", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        PONUKA_PRACE_S.forEach { sek ->
+                            FilterChip(
+                                selected = n.pracaS == sek,
+                                onClick = { haptika.tik(); naZmenu(n.copy(pracaS = sek)) },
+                                label = { Text("$sek s") },
+                            )
+                        }
+                    }
+                }
+                Text("Pauzy", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DlzkaPauz.entries.forEach { d ->
+                        FilterChip(
+                            selected = n.pauzy == d,
+                            onClick = { haptika.tik(); naZmenu(n.copy(pauzy = d)) },
+                            label = { Text(d.nazov) },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Tréning prerušený systémom (zabitý proces, vybitý telefón): séria sú uložené, treba ho uzavrieť. */
+@Composable
+private fun NedokoncenyKarta(t: TreningEntity, naUloz: () -> Unit, naZahod: () -> Unit) {
+    val cas = "%02d:%02d".format(t.minutyDna / 60, t.minutyDna % 60)
+    TonovanaKarta(farba = MaterialTheme.colorScheme.primary) {
+        Text("Nedokončený tréning", style = stylNadpisuKarty())
+        Spacer(Modifier.height(6.dp))
+        Text(
+            "Tréning z $cas sa neukončil — appku zrejme zavrel systém. Odcvičené série sú uložené. " +
+                "Uzavriem ho a vyhodnotím postupy, alebo ho zahodím?",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(12.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = naUloz, modifier = Modifier.heightIn(min = 48.dp)) { Text("Uložiť a uzavrieť") }
+            TextButton(onClick = naZahod, modifier = Modifier.heightIn(min = 48.dp)) { Text("Zahodiť") }
         }
     }
 }

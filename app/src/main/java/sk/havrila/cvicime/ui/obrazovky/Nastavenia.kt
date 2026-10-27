@@ -68,6 +68,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -101,6 +102,7 @@ import sk.havrila.cvicime.data.denik.UcastnikEntity
 import sk.havrila.cvicime.data.model.Blok
 import sk.havrila.cvicime.data.model.Naradie
 import sk.havrila.cvicime.data.model.Obmedzenie
+import sk.havrila.cvicime.trening.RezimZvuku
 import sk.havrila.cvicime.ui.komponenty.Inicialka
 import sk.havrila.cvicime.ui.komponenty.NadpisSekcie
 import sk.havrila.cvicime.ui.komponenty.TonovanaKarta
@@ -165,10 +167,17 @@ class NastaveniaModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { repo.ulozUcastnika(ucastnik) }
     }
 
-    fun pridajDieta(meno: String, vek: Int) {
-        viewModelScope.launch {
-            repo.ulozDieta(DietaEntity(meno = meno, vek = vek, farba = 0))
-        }
+    /** Nové aj upravené dieťa (oprava preklepu v mene, vek, farba). */
+    fun ulozDieta(dieta: DietaEntity) {
+        viewModelScope.launch { repo.ulozDieta(dieta) }
+    }
+
+    /**
+     * Odstránenie je mäkké: dieťa zmizne z výberu, ale jeho zvieratá a účasť na tréningoch
+     * v denníku ostanú (história sa nemaže).
+     */
+    fun odstranDieta(dieta: DietaEntity) {
+        viewModelScope.launch { repo.ulozDieta(dieta.copy(aktivne = false)) }
     }
 
     fun ulozKotvu(kontext: android.content.Context, text: String, minuty: Int) {
@@ -228,12 +237,13 @@ fun NastaveniaObrazovka(
 
     var vibracie by remember { mutableStateOf(model.prefs.vibracieZapnute) }
     var obrazovka by remember { mutableStateOf(model.prefs.obrazovkaStaleZapnuta) }
-    var hlas by remember { mutableStateOf(model.prefs.hlasZapnuty) }
+    var hlas by remember { mutableStateOf(model.prefs.rezimZvuku == RezimZvuku.HLAS) }
     var hladam by remember { mutableStateOf(false) }
     var stavAktualizacie by remember { mutableStateOf<String?>(null) }
-    var dialogDieta by remember { mutableStateOf(false) }
-    // null = dialóg zavretý; NOVY_DOSPELY = pridanie, inak úprava existujúceho
-    var dialogDospely by remember { mutableStateOf<UcastnikEntity?>(null) }
+    // null = zavretý, 0 = nové dieťa, inak id upravovaného (Long sa pri otočení zachová)
+    var dialogDieta by rememberSaveable { mutableStateOf<Long?>(null) }
+    // null = dialóg zavretý; 0 = pridanie, inak id upravovaného dospelého
+    var dialogDospely by rememberSaveable { mutableStateOf<Long?>(null) }
     var exportujem by remember { mutableStateOf(false) }
     var stavExportu by remember { mutableStateOf<String?>(null) }
     var stavTestu by remember { mutableStateOf<String?>(null) }
@@ -318,11 +328,13 @@ fun NastaveniaObrazovka(
                 ikona = Icons.Outlined.RecordVoiceOver,
                 farba = farbaPrehravac,
                 titul = "Hlas a pípanie",
-                popis = "Ohlási cvik a pípa pri odpočte",
+                popis = "Ohlási cvik a pípa pri odpočte. Hudbu z inej appky na chvíľu stíši. " +
+                    "V prehrávači sa dá prepnúť tlačidlom reproduktora.",
                 hodnota = hlas,
             ) {
                 hlas = it
                 model.prefs.hlasZapnuty = it
+                model.prefs.rezimZvuku = if (it) RezimZvuku.HLAS else RezimZvuku.PIPANIE
             }
             Oddelovac()
             RiadokPrepinaca(
@@ -356,7 +368,7 @@ fun NastaveniaObrazovka(
                 "v tvojich pauzách a zbierajú zvieratá. Kto dnes cvičí, vyberieš na obrazovke Dnes.",
         ) {
             dospeli.forEach { u ->
-                RiadokDospeleho(u) { dialogDospely = u }
+                RiadokDospeleho(u) { dialogDospely = u.id }
                 Oddelovac()
             }
             RiadokNastavenia(
@@ -364,12 +376,12 @@ fun NastaveniaObrazovka(
                 farba = farbaRodina,
                 titul = "Pridať dospelého",
                 popis = if (dospeli.isEmpty()) "Partner či partnerka — každý so svojím plánom" else null,
-                onClick = { dialogDospely = NOVY_DOSPELY },
+                onClick = { dialogDospely = 0L },
             )
             Oddelovac()
             val poradieFarieb = deti.sortedBy { it.id }.mapIndexed { i, d -> d.id to i }.toMap()
             deti.forEach { d ->
-                RiadokDietata(d, farbaDietataNastavenia(d, poradieFarieb[d.id] ?: 0))
+                RiadokDietata(d, farbaDietataNastavenia(d, poradieFarieb[d.id] ?: 0)) { dialogDieta = d.id }
                 Oddelovac()
             }
             RiadokNastavenia(
@@ -377,7 +389,7 @@ fun NastaveniaObrazovka(
                 farba = farbaRodina,
                 titul = "Pridať dieťa",
                 popis = if (deti.isEmpty()) "Zatiaľ žiadne" else null,
-                onClick = { dialogDieta = true },
+                onClick = { dialogDieta = 0L },
             )
             Oddelovac()
             RiadokNastavenia(
@@ -562,18 +574,22 @@ fun NastaveniaObrazovka(
         Spacer(Modifier.height(32.dp))
     }
 
-    dialogDospely?.let { u ->
+    dialogDospely?.let { id ->
         DialogDospeleho(
-            povodny = u.takeIf { it.id != 0L },
+            povodny = dospeli.firstOrNull { it.id == id },
             pocetDospelych = dospeli.size,
             zavri = { dialogDospely = null },
             uloz = { model.ulozDospeleho(it) },
         )
     }
-    if (dialogDieta) {
+    dialogDieta?.let { id ->
+        val povodne = deti.firstOrNull { it.id == id }
         DialogDieta(
-            zavri = { dialogDieta = false },
-            uloz = { meno, vek -> model.pridajDieta(meno, vek) },
+            povodne = povodne,
+            predvolenaFarba = PALETA_DETI_NASTAVENIA[deti.size % PALETA_DETI_NASTAVENIA.size],
+            zavri = { dialogDieta = null },
+            uloz = { model.ulozDieta(it) },
+            odstran = povodne?.let { d -> { model.odstranDieta(d) } },
         )
     }
     if (dialogCas) {
@@ -690,10 +706,12 @@ private fun RiadokPrepinaca(
 }
 
 @Composable
-private fun RiadokDietata(dieta: DietaEntity, farba: Color) {
+private fun RiadokDietata(dieta: DietaEntity, farba: Color, naUpravu: () -> Unit) {
+    val haptika = rememberHaptika()
     Row(
         Modifier
             .fillMaxWidth()
+            .clickable { haptika.klik(); naUpravu() }
             .heightIn(min = 64.dp)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -720,6 +738,7 @@ private fun RiadokDietata(dieta: DietaEntity, farba: Color) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+        Sipka()
     }
 }
 
@@ -754,9 +773,6 @@ private fun RiadokDospeleho(u: UcastnikEntity, naUpravu: () -> Unit) {
     }
 }
 
-/** Značka pre „nový dospelý" v stave dialógu (id 0 = ešte neuložený). */
-private val NOVY_DOSPELY = UcastnikEntity(meno = "", farba = 0)
-
 /** Farby dospelých - odlišné od detskej palety, aby sa na čipoch nemýlili. */
 private val PALETA_DOSPELYCH = listOf(
     Color(0xFFD0643B), // tehlová
@@ -778,12 +794,12 @@ private fun DialogDospeleho(
     zavri: () -> Unit,
     uloz: (UcastnikEntity) -> Unit,
 ) {
-    var meno by remember { mutableStateOf(povodny?.meno.orEmpty()) }
-    var farba by remember {
+    var meno by rememberSaveable { mutableStateOf(povodny?.meno.orEmpty()) }
+    var farba by rememberSaveable {
         mutableStateOf(povodny?.farba ?: PALETA_DOSPELYCH[pocetDospelych % PALETA_DOSPELYCH.size].toArgb())
     }
     var obmedzenia by remember { mutableStateOf(Obmedzenie.zCsv(povodny?.obmedzenia.orEmpty())) }
-    var aktivny by remember { mutableStateOf(povodny?.aktivny ?: true) }
+    var aktivny by rememberSaveable { mutableStateOf(povodny?.aktivny ?: true) }
     var info by remember { mutableStateOf<Obmedzenie?>(null) }
     val haptika = rememberHaptika()
 
@@ -928,19 +944,49 @@ private fun Oddelovac() {
     )
 }
 
+/** Pridanie aj úprava dieťaťa: meno, vek, farba a pri úprave odstránenie (s potvrdením). */
 @Composable
-private fun DialogDieta(zavri: () -> Unit, uloz: (String, Int) -> Unit) {
-    var meno by remember { mutableStateOf("") }
-    var vek by remember { mutableStateOf("") }
+private fun DialogDieta(
+    povodne: DietaEntity?,
+    predvolenaFarba: Color,
+    zavri: () -> Unit,
+    uloz: (DietaEntity) -> Unit,
+    odstran: (() -> Unit)?,
+) {
+    // rememberSaveable - rozpísané meno prežije otočenie displeja
+    var meno by rememberSaveable { mutableStateOf(povodne?.meno.orEmpty()) }
+    var vek by rememberSaveable { mutableStateOf(povodne?.vek?.toString().orEmpty()) }
+    var farba by rememberSaveable { mutableStateOf(povodne?.farba?.takeIf { it != 0 } ?: predvolenaFarba.toArgb()) }
+    var potvrdOdstranenie by rememberSaveable { mutableStateOf(false) }
+    val haptika = rememberHaptika()
     val platne = meno.isNotBlank() && vek.toIntOrNull() != null
+
+    if (potvrdOdstranenie && odstran != null && povodne != null) {
+        AlertDialog(
+            onDismissRequest = { potvrdOdstranenie = false },
+            title = { Text("Odstrániť ${povodne.meno}?") },
+            text = {
+                Text("Zmizne z výberu pri tréningu. Objavené zvieratá a história cvičenia ostanú v denníku.")
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    odstran()
+                    zavri()
+                }) { Text("Odstrániť") }
+            },
+            dismissButton = { TextButton(onClick = { potvrdOdstranenie = false }) { Text("Nechať") } },
+        )
+        return
+    }
+
     AlertDialog(
         onDismissRequest = zavri,
-        title = { Text("Nové dieťa") },
+        title = { Text(if (povodne == null) "Nové dieťa" else "Upraviť: ${povodne.meno}") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = meno,
-                    onValueChange = { meno = it },
+                    onValueChange = { meno = it.take(24) },
                     label = { Text("Meno") },
                     singleLine = true,
                 )
@@ -953,6 +999,28 @@ private fun DialogDieta(zavri: () -> Unit, uloz: (String, Int) -> Unit) {
                         keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
                     ),
                 )
+                Text("Farba", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    PALETA_DETI_NASTAVENIA.forEach { f ->
+                        val vybrana = f.toArgb() == farba
+                        Box(
+                            Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(f)
+                                .border(3.dp, if (vybrana) MaterialTheme.colorScheme.onSurface else Color.Transparent, CircleShape)
+                                .selectable(selected = vybrana, role = Role.RadioButton) {
+                                    haptika.klik()
+                                    farba = f.toArgb()
+                                },
+                        )
+                    }
+                }
+                if (odstran != null) {
+                    TextButton(onClick = { potvrdOdstranenie = true }) {
+                        Text("Odstrániť dieťa", color = MaterialTheme.colorScheme.error)
+                    }
+                }
             }
         },
         confirmButton = {
@@ -961,11 +1029,14 @@ private fun DialogDieta(zavri: () -> Unit, uloz: (String, Int) -> Unit) {
                 onClick = {
                     val v = vek.toIntOrNull()
                     if (meno.isNotBlank() && v != null) {
-                        uloz(meno.trim(), v)
+                        uloz(
+                            (povodne ?: DietaEntity(meno = "", vek = 0, farba = 0))
+                                .copy(meno = meno.trim(), vek = v, farba = farba)
+                        )
                         zavri()
                     }
                 },
-            ) { Text("Pridať") }
+            ) { Text(if (povodne == null) "Pridať" else "Uložiť") }
         },
         dismissButton = {
             TextButton(onClick = zavri) { Text("Zrušiť") }
