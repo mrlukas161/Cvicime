@@ -1503,7 +1503,7 @@ private fun RolovatelnyStred(modifier: Modifier = Modifier, obsah: @Composable C
 
 /** Postavička v tónovanom kruhu vo farbe bloku - vizuálna kotva obrazovky. */
 @Composable
-private fun KruhPostavicky(rebrikId: String, farba: Color, velkost: Dp) {
+private fun KruhPostavicky(rebrikId: String, farba: Color, velkost: Dp, pohyb: String? = null) {
     Box(
         modifier = Modifier
             .size(velkost)
@@ -1513,6 +1513,7 @@ private fun KruhPostavicky(rebrikId: String, farba: Color, velkost: Dp) {
     ) {
         Postavicka(
             rebrikId = rebrikId,
+            pohyb = pohyb,
             modifier = Modifier.size(velkost * 0.8f),
             farba = MaterialTheme.colorScheme.onSurface,
             farbaAkcent = farba,
@@ -1600,7 +1601,7 @@ private fun CvicenieOpakovania(krok: KrokTreningu, partner: PartnerStopa?, naHot
     val naLezato = LocalNaLezato.current
     Rozlozenie(
         lavy = {
-            KruhPostavicky(krok.polozka.rebrikId, farba, if (naLezato) 150.dp else 128.dp)
+            KruhPostavicky(krok.polozka.rebrikId, farba, if (naLezato) 150.dp else 128.dp, pohyb = krok.polozka.cvik.pohyb)
             Spacer(Modifier.height(if (naLezato) 8.dp else 16.dp))
             if (!naLezato) HlavaCviku(krok, farba)
             Spacer(Modifier.height(4.dp))
@@ -1646,7 +1647,7 @@ private fun CvicenieVydrz(krok: KrokTreningu, o: PrehravacObraz) {
             lavy = {
                 if (!naLezato) {
                     if (!nizka) {
-                        KruhPostavicky(krok.polozka.rebrikId, farba, 84.dp)
+                        KruhPostavicky(krok.polozka.rebrikId, farba, 84.dp, pohyb = krok.polozka.cvik.pohyb)
                         Spacer(Modifier.height(12.dp))
                     }
                     HlavaCviku(krok, farba)
@@ -1663,7 +1664,7 @@ private fun CvicenieVydrz(krok: KrokTreningu, o: PrehravacObraz) {
             },
             pravy = {
                 if (naLezato) {
-                    KruhPostavicky(krok.polozka.rebrikId, farba, 96.dp)
+                    KruhPostavicky(krok.polozka.rebrikId, farba, 96.dp, pohyb = krok.polozka.cvik.pohyb)
                     Spacer(Modifier.height(10.dp))
                     HlavaCviku(krok, farba)
                 }
@@ -1926,7 +1927,7 @@ private fun PredstavenieCviku(krok: KrokTreningu, partner: PartnerStopa?) {
     val chyba = remember(cvik.chyby) { cvik.chyby.split("|").map { it.trim() }.firstOrNull { it.isNotBlank() } }
     TonovanaKarta(farba = farba, vnutorneOdsadenie = 16.dp) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            KruhPostavicky(krok.polozka.rebrikId, farba, 104.dp)
+            KruhPostavicky(krok.polozka.rebrikId, farba, 104.dp, pohyb = krok.polozka.cvik.pohyb)
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
                 Text(
@@ -2284,6 +2285,7 @@ private fun DetskyPruhKompaktny(d: DetskyStav, model: PrehravacModel) {
                         if (cvik != null) {
                             Postavicka(
                                 rebrikId = cvik.rebrikId,
+                                pohyb = cvik.pohyb,
                                 modifier = Modifier.size(48.dp),
                                 farba = MaterialTheme.colorScheme.onSurface,
                                 farbaAkcent = farba,
@@ -2483,6 +2485,7 @@ private fun DetskeCvicenie(s: DetskyStav, farba: Color, model: PrehravacModel) {
             Spacer(Modifier.width(8.dp))
             Postavicka(
                 rebrikId = cvik.rebrikId,
+                pohyb = cvik.pohyb,
                 modifier = Modifier.size(88.dp),
                 farba = MaterialTheme.colorScheme.onSurface,
                 farbaAkcent = farba,
