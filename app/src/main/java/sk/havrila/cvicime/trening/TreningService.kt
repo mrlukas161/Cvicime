@@ -15,7 +15,8 @@ import sk.havrila.cvicime.MainActivity
 import sk.havrila.cvicime.R
 
 /**
- * Drží tréning nažive, kým je používateľ v prehrávači.
+ * Drží tréning nažive, kým je používateľ v prehrávači. Spúšťa a zastavuje ju ViewModel
+ * prehrávača (nie obrazovka) - otočenie displeja ju teda nepreruší.
  *
  * Nepočíta odpočet - ten beží v prehrávači a je viazaný na [android.os.SystemClock.elapsedRealtime],
  * takže neuteká. Úlohou služby je len zabrániť tomu, aby systém appku uspal alebo zabil
@@ -31,7 +32,8 @@ class TreningService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             AKCIA_STOP -> {
-                zastav()
+                // Len toto konkrétne spustenie - ak medzitým prišiel nový štart, služba žije ďalej.
+                zastav(startId)
                 return START_NOT_STICKY
             }
         }
@@ -89,11 +91,12 @@ class TreningService : Service() {
         }
     }
 
-    private fun zastav() {
+    private fun zastav(startId: Int) {
+        // stopSelfResult vráti false, keď po STOP prišiel ešte nový štart - vtedy sa nič neruší.
+        if (!stopSelfResult(startId)) return
         wakeLock?.let { if (it.isHeld) it.release() }
         wakeLock = null
         stopForeground(STOP_FOREGROUND_REMOVE)
-        stopSelf()
     }
 
     override fun onDestroy() {

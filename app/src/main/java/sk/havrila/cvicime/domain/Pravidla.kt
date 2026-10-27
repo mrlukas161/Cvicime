@@ -9,8 +9,24 @@ import sk.havrila.cvicime.data.katalog.CvikEntity
  */
 object Pravidla {
 
-    /** Pauza medzi sériami v sekundách podľa typu bloku. */
-    const val PAUZA_SILA_S = 120
+    /**
+     * Pauza medzi sériami v sekundách podľa typu bloku.
+     * Sila 90 s: nad ~90 s sa podľa meta-analýzy (Singer 2024) pre rast svalu nič merateľné
+     * nepridá; ťažké stupne (cieľ do 5 opakovaní) majú dlhšiu, lebo maximálna sila z nej ešte ťaží (Grgic 2018).
+     */
+    const val PAUZA_SILA_S = 90
+    const val PAUZA_SILA_TAZKA_S = 150
+
+    /** Páry (supersety): krátky prechod medzi cvikmi páru, pauza až po celom páre (Zhang 2025). */
+    const val PRECHOD_PAR_S = 20
+    const val PAUZA_PAR_S = 75
+
+    /** Intenzívny kruh: prechod medzi stanovišťami a pauza po kole. */
+    const val PRECHOD_KRUH_S = 15
+    const val PAUZA_KOLO_S = 90
+
+    /** Krátke „priprav sa" pred cvikom bez pauzy (rozohriatie, prvý cvik) - stihne sa predstaviť. */
+    const val PRIPRAV_SA_S = 8
     const val PAUZA_SKILL_S = 60
     const val PAUZA_KONDICIA_S = 20
     const val PAUZA_MOBILITA_S = 15

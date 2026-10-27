@@ -133,7 +133,7 @@ interface DenikDao {
         WHERE s.epoch_den >= :odDna AND s.epoch_den <= :doDna
           AND s.skutocna_hodnota IS NOT NULL
           AND s.preskocena = 0
-          AND s.blok IN ('sila', 'kondicia')
+          AND s.blok IN ('sila', 'kondicia', 'kruh')
           AND s.ucastnik_id = :ucastnikId
         GROUP BY sp.partia
         """

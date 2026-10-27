@@ -179,6 +179,8 @@ class Repozitar(context: Context) {
                 rebriky = rebriky,
                 cvikyPodlaRebrika = cvikyPodlaRebrika,
                 vylucitZnacky = obmedzenia.flatMap { it.vylucujeZnacky }.toSet(),
+                // „Ako dnes" je spoločné pre všetkých, čo dnes cvičia - rovnaký štýl, každý svoj plán.
+                nastavenie = prefs.nastavenieTreningu,
             )
         )
     }

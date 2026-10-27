@@ -1,6 +1,10 @@
 package sk.havrila.cvicime.data
 
 import android.content.Context
+import sk.havrila.cvicime.domain.DlzkaPauz
+import sk.havrila.cvicime.domain.NastavenieTreningu
+import sk.havrila.cvicime.domain.StylTreningu
+import sk.havrila.cvicime.trening.RezimZvuku
 
 /** Drobné nastavenia, ktoré nemá zmysel držať v databáze. */
 class Prefs(context: Context) {
@@ -19,6 +23,37 @@ class Prefs(context: Context) {
     var hlasZapnuty: Boolean
         get() = p.getBoolean("hlas_zapnuty", true)
         set(v) = p.edit().putBoolean("hlas_zapnuty", v).apply()
+
+    /** Zvuk prehrávača (tlačidlo reproduktora). Kým nie je zvolený, odvodí sa zo starého prepínača hlasu. */
+    var rezimZvuku: RezimZvuku
+        get() = RezimZvuku.z(p.getString("rezim_zvuku", null))
+            ?: if (hlasZapnuty) RezimZvuku.HLAS else RezimZvuku.PIPANIE
+        set(v) = p.edit().putString("rezim_zvuku", v.kluc).apply()
+
+    /** Prehrávač s väčším písmom a číslami na zrkadlenie na TV. */
+    var tvRezim: Boolean
+        get() = p.getBoolean("tv_rezim", false)
+        set(v) = p.edit().putBoolean("tv_rezim", v).apply()
+
+    /** Počas tréningu držať obrazovku na ležato (telefón leží, obraz ide na TV). */
+    var zamknutNaLezato: Boolean
+        get() = p.getBoolean("zamknut_na_lezato", false)
+        set(v) = p.edit().putBoolean("zamknut_na_lezato", v).apply()
+
+    /** „Ako dnes" - pamätá sa posledná voľba. */
+    var nastavenieTreningu: NastavenieTreningu
+        get() = NastavenieTreningu(
+            styl = StylTreningu.z(p.getString("styl_treningu", null)),
+            vsetkoNaCas = p.getBoolean("vsetko_na_cas", false),
+            pracaS = p.getInt("praca_s", 40),
+            pauzy = DlzkaPauz.z(p.getString("dlzka_pauz", null)),
+        )
+        set(v) = p.edit()
+            .putString("styl_treningu", v.styl.kluc)
+            .putBoolean("vsetko_na_cas", v.vsetkoNaCas)
+            .putInt("praca_s", v.pracaS)
+            .putString("dlzka_pauz", v.pauzy.kluc)
+            .apply()
 
     var vibracieZapnute: Boolean
         get() = p.getBoolean("vibracie_zapnute", true)

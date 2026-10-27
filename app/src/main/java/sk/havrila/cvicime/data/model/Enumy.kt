@@ -68,6 +68,8 @@ enum class Blok(val kluc: String, val nazov: String, val poradie: Int) {
     SKILL("skill", "Zručnosť", 2),
     SILA("sila", "Sila", 3),
     KONDICIA("kondicia", "Kondičný kruh", 4),
+    /** Intenzívny kruh (štýl KRUH) - nahrádza silu aj kondíciu; do postupov v rebríkoch sa neráta. */
+    KRUH("kruh", "Intenzívny kruh", 4),
     MOBILITA("mobilita", "Mobilita", 5);
 
     companion object {

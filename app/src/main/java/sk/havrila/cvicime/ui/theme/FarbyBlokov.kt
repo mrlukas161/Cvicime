@@ -16,6 +16,7 @@ object FarbyBlokov {
         Blok.SKILL to Color(0xFFE0703C),       // plameň - hlavná farba appky, cieľové zručnosti
         Blok.SILA to Color(0xFF2E7D6E),        // hlboká zelenomodrá - ťažká práca
         Blok.KONDICIA to Color(0xFFC2554A),    // tehlová - kolotoč
+        Blok.KRUH to Color(0xFFB8405E),        // malinová - vysoký tep
         Blok.MOBILITA to Color(0xFF6E9B5A),    // listová - uvoľnenie
     )
 

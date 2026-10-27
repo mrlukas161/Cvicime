@@ -16,3 +16,4 @@ captures/
 *.keystore
 keystore.properties
 *.jks.base64
+.claude/worktrees/

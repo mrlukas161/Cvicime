@@ -83,6 +83,7 @@ class GeneratorTest {
         objem: Map<Partia, Double> = emptyMap(),
         poslednaZataz: Map<Partia, Long> = emptyMap(),
         deload: Boolean = false,
+        nastavenie: NastavenieTreningu = NastavenieTreningu(),
     ) = VstupGeneratora(
         dostupneMinuty = minuty,
         naradie = naradie,
@@ -96,6 +97,7 @@ class GeneratorTest {
         deload = deload,
         rebriky = rebriky,
         cvikyPodlaRebrika = cviky,
+        nastavenie = nastavenie,
     )
 
     @Test
@@ -119,7 +121,7 @@ class GeneratorTest {
     }
 
     @Test
-    fun `silovy blok ma pauzu 120 sekund`() {
+    fun `silovy blok ma v klasike pauzu 90 sekund`() {
         val sila = Generator.zostav(vstup()).bloky.first { it.blok == Blok.SILA }
         assertTrue(sila.polozky.all { it.pauzaS == Pravidla.PAUZA_SILA_S })
     }
@@ -304,5 +306,96 @@ class GeneratorTest {
         val vsetky = Generator.zostav(vstup(minuty = 45).copy(cvikyPodlaRebrika = sZnackami))
             .bloky.flatMap { it.polozky }.map { it.cvik.id }
         assertTrue(vsetky.contains("drep-1"))
+    }
+
+    // ---------------------------------------------------------------- 0.8: štýly a rozvrh
+
+    @Test
+    fun `plan je pre rovnaky den a vstup vzdy rovnaky`() {
+        // Domov ukazuje plán a prehrávač si ho skladá znova - musia sa zhodovať.
+        val a = Generator.zostav(vstup(minuty = 45))
+        val b = Generator.zostav(vstup(minuty = 45))
+        assertEquals(a.vsetkyPolozky.map { it.second.cvik.id }, b.vsetkyPolozky.map { it.second.cvik.id })
+    }
+
+    @Test
+    fun `pary nikdy nespoja dva cviky na tu istu hlavnu partiu`() {
+        val plan = Generator.zostav(vstup(minuty = 45, nastavenie = NastavenieTreningu(styl = StylTreningu.PARY)))
+        val sila = plan.bloky.first { it.blok == Blok.SILA }.polozky
+        val pary = sila.filter { it.par != null }.groupBy { it.par }
+        assertTrue("žiadny pár", pary.isNotEmpty())
+        for ((_, clenovia) in pary) {
+            assertEquals(2, clenovia.size)
+            val hlavne = clenovia.map { p ->
+                p.cvik.partie.split(",").filter { it.endsWith(":1.0") }.map { it.substringBefore(":") }.toSet()
+            }
+            assertTrue("pár ${clenovia.map { it.cvik.id }} zdieľa partiu", hlavne[0].intersect(hlavne[1]).isEmpty())
+        }
+    }
+
+    @Test
+    fun `pary sa v rozvrhu striedaju a pauza je az po druhom cviku`() {
+        val plan = Generator.zostav(vstup(minuty = 45, nastavenie = NastavenieTreningu(styl = StylTreningu.PARY)))
+        val sila = plan.bloky.first { it.blok == Blok.SILA }
+        val kroky = Rozvrh.kroky(sila)
+        val par = sila.polozky.first { it.par != null }.par
+        val krokyParu = kroky.filter { it.polozka.par == par }
+        val prve = krokyParu[0].polozka.cvik.id
+        val druhe = krokyParu[1].polozka.cvik.id
+        assertTrue(prve != druhe)
+        assertEquals(prve, krokyParu[2].polozka.cvik.id)
+        assertEquals(Pravidla.PRECHOD_PAR_S, krokyParu[0].pauzaPoS)
+        assertEquals(Pravidla.PAUZA_PAR_S, krokyParu[1].pauzaPoS)
+    }
+
+    @Test
+    fun `pary su kratsie nez klasika pri rovnakom pocte cvikov`() {
+        val polozky = listOf(
+            PlanPolozka(cviky.getValue("kliky")[0], "kliky", "kliky", 3, 10, 90, 1),
+            PlanPolozka(cviky.getValue("pritahy")[0], "pritahy", "pritahy", 3, 10, 90, 1),
+        )
+        val klasika = PlanTreningu(listOf(PlanBloku(Blok.SILA, polozky)), 0, emptyList(), false)
+        val pary = PlanTreningu(
+            listOf(PlanBloku(Blok.SILA, Generator.sparuj(polozky, mutableListOf()))), 0, emptyList(), false,
+        )
+        assertTrue(Rozvrh.odhadMinut(Rozvrh.kroky(pary)) < Rozvrh.odhadMinut(Rozvrh.kroky(klasika)))
+    }
+
+    @Test
+    fun `kruh neobsahuje zrucnost ani silovy blok a ide na cas`() {
+        val plan = Generator.zostav(vstup(minuty = 30, nastavenie = NastavenieTreningu(styl = StylTreningu.KRUH)))
+        val kruh = plan.bloky.first { it.blok == Blok.KRUH }
+        assertFalse(plan.bloky.any { it.blok == Blok.SILA || it.blok == Blok.KONDICIA })
+        assertTrue(kruh.polozky.none { it.rebrikId in setOf("lsit", "stojka") })
+        assertTrue(kruh.polozky.all { it.naCasS != null || it.cvik.meranie == "vydrz" })
+        // každé kolo končí dlhšou pauzou, inak len prechod
+        val kroky = Rozvrh.kroky(kruh)
+        val vKole = kruh.polozky.size
+        assertEquals(Pravidla.PRECHOD_KRUH_S, kroky.first().pauzaPoS)
+        assertEquals(Pravidla.PAUZA_KOLO_S, kroky[vKole - 1].pauzaPoS)
+    }
+
+    @Test
+    fun `vsetko na cas prevedie opakovania na odpocet ale vydrz necha`() {
+        val plan = Generator.zostav(
+            vstup(minuty = 30, nastavenie = NastavenieTreningu(vsetkoNaCas = true, pracaS = 40)),
+        )
+        val polozky = plan.vsetkyPolozky.map { it.second }
+        assertTrue(polozky.filter { it.cvik.meranie == "opakovania" }.all { it.naCasS == 40 })
+        assertTrue(polozky.filter { it.cvik.meranie == "vydrz" }.all { it.naCasS == null })
+    }
+
+    @Test
+    fun `kratsie pauzy skratia pauzu sily`() {
+        val plan = Generator.zostav(vstup(nastavenie = NastavenieTreningu(pauzy = DlzkaPauz.KRATSIE)))
+        val sila = plan.bloky.first { it.blok == Blok.SILA }
+        assertTrue(sila.polozky.all { it.pauzaS < Pravidla.PAUZA_SILA_S })
+    }
+
+    @Test
+    fun `desat minut je tiez trening`() {
+        val plan = Generator.zostav(vstup(minuty = 10))
+        assertTrue(plan.bloky.isNotEmpty())
+        assertTrue("odhad ${plan.odhadMinut}", plan.odhadMinut in 1..20)
     }
 }
