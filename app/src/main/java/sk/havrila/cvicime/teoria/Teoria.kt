@@ -70,17 +70,23 @@ object Teoria {
         Clanok(
             id = "pauzy",
             emoji = "⏱️",
-            titulok = "Prečo sú pauzy 2 minúty",
+            titulok = "Pauzy, páry a kruh",
             zaklad = ZMIESANE,
-            perex = "Krátka pauza znie tvrdšie — ale znamená menší prírastok.",
+            perex = "90 sekúnd stačí. A kým jeden sval oddychuje, druhý môže pracovať.",
             telo = "Do ~60 sekúnd je dôkaz jasný: príliš krátke pauzy zmenšujú výkon v ďalšej sérii " +
-                "natoľko, že klesá celkový objem práce, a s ním aj rast. Nad 90 sekúnd sa dôkazy " +
-                "prekrývajú — 2 minúty sú pragmatická voľba, nie dokázané optimum.\n\n" +
-                "Kolotočové appky ťa ženú v 30-sekundovom cykle, lebo z toho máš pocit smrti — a pocit " +
-                "sa predáva. Rast ale vzniká z ťažkých sérií, nie z udýchania. Preto má silový blok " +
-                "v tejto appke pauzy 2 minúty a kolotoč s krátkymi pauzami existuje len ako voliteľný " +
-                "kondičný blok na konci.\n\n" +
-                "Ak pauzu preskočíš, appka to dovolí — ale zaráta, že ďalšia séria bude slabšia.",
+                "natoľko, že klesá celkový objem práce, a s ním aj rast. Nad ~90 sekúnd sa pre rast " +
+                "svalu podľa meta-analýzy (Singer 2024) nič merateľné nepridá — dlhšia pauza pomáha " +
+                "hlavne maximálnej sile trénovaných ľudí (Grgic 2018). Preto má Klasika pauzu 90 s " +
+                "a len najťažšie stupne 2,5 minúty. Kratšiu pauzu sa dá dohnať jednou sériou navyše " +
+                "(Longo 2022).\n\n" +
+                "Páry (supersety): dva cviky na iné svaly, napríklad dipy a príťahy, sa striedajú " +
+                "a pauza je až po oboch. Meta-analýza 19 štúdií (Zhang 2025) našla rovnakú silu aj " +
+                "svaly ako pri klasike, len za kratší čas. Nefunguje to pri dvoch cvikoch na ten istý " +
+                "sval (dipy + kliky) — tam objem klesá.\n\n" +
+                "Intenzívny kruh bez pauzy zdvihne kondíciu (VO₂max ~+6 %) a trochu aj silu, najmä " +
+                "začiatočníkom (Ramos-Campo 2021). Na maximálnu silu, svaly a zručnosti ako stojka " +
+                "či L-sit je ale slabší — zručnosti sa učia na čerstvo, nikdy v kruhu. Rozumné je " +
+                "najviac 2–3× do týždňa.",
         ),
         Clanok(
             id = "variacie",

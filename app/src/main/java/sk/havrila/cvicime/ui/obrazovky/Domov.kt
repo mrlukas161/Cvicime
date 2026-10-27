@@ -1199,9 +1199,14 @@ private fun RiadokBloku(blok: PlanBloku, posledny: Boolean) {
 }
 
 /** "3 × 8", "3 × 30 s", "2 × 20 m" - série × cieľ jednej série. */
-private fun davka(p: PlanPolozka): String = when (p.cvik.meranie) {
-    "vydrz", "vzdialenost" -> "${p.serie} × ${formatujHodnotu(p.ciel, p.cvik.meranie)}"
-    else -> "${p.serie} × ${p.ciel}"
+private fun davka(p: PlanPolozka): String {
+    val zaklad = when {
+        p.naCasS != null -> "${p.serie} × ${p.naCasS} s"
+        p.cvik.meranie == "vydrz" || p.cvik.meranie == "vzdialenost" -> "${p.serie} × ${formatujHodnotu(p.ciel, p.cvik.meranie)}"
+        else -> "${p.serie} × ${p.ciel}"
+    }
+    // Pár (superset) sa v pláne označí písmenom - A1/A2, B1/B2 …
+    return if (p.par != null) "$zaklad · pár ${'A' + (p.par - 1)}" else zaklad
 }
 
 // ------------------------------------------------------------------ menšie karty
