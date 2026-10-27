@@ -33,12 +33,14 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.SportsGymnastics
 import androidx.compose.material.icons.outlined.TrackChanges
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
@@ -69,6 +71,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -104,6 +107,7 @@ import sk.havrila.cvicime.ui.komponenty.Pozy
 import sk.havrila.cvicime.ui.komponenty.PrazdnyStav
 import sk.havrila.cvicime.ui.komponenty.TonovanaKarta
 import sk.havrila.cvicime.ui.komponenty.formatujHodnotu
+import sk.havrila.cvicime.ui.komponenty.pohyb.Pohyby
 import sk.havrila.cvicime.ui.komponenty.rememberHaptika
 import sk.havrila.cvicime.ui.komponenty.sklonuj
 import sk.havrila.cvicime.ui.theme.FarbyBlokov
@@ -195,6 +199,13 @@ fun KniznicaObrazovka(naRebrik: (String) -> Unit, model: KniznicaModel = viewMod
 
     var hladanie by rememberSaveable { mutableStateOf("") }
     var vybranaSkupina by rememberSaveable { mutableStateOf<String?>(null) }
+    var galeria by rememberSaveable { mutableStateOf(false) }
+
+    // Galéria pohybov má vlastný stav namiesto navigačnej cesty.
+    if (galeria) {
+        GaleriaPohybov(cviky = cviky, rebriky = rebriky, spat = { galeria = false })
+        return
+    }
 
     // Skupiny v poradí, v akom idú rebríky v katalógu (rozohriatie, zručnosti, tlak, ťah…).
     val skupiny = remember(rebriky) { rebriky.map { it.skupina }.distinct() }
@@ -241,6 +252,7 @@ fun KniznicaObrazovka(naRebrik: (String) -> Unit, model: KniznicaModel = viewMod
             pocetStupnov = stupne.size,
             zamknutyAktualny = aktualny != null && chybajuceNaradie(aktualny, naradie).isNotEmpty(),
             zhoda = zhoda,
+            pohyb = aktualny?.pohyb,
             onClick = { naRebrik(r.id) },
             modifier = modifier,
         )
@@ -260,6 +272,31 @@ fun KniznicaObrazovka(naRebrik: (String) -> Unit, model: KniznicaModel = viewMod
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                Spacer(Modifier.height(12.dp))
+                TonovanaKarta(onClick = { galeria = true }, vnutorneOdsadenie = 14.dp) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Outlined.SportsGymnastics,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp),
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("Galéria pohybov", style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                "Všetky animácie cvikov na jednom mieste",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Icon(
+                            Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             }
         }
         item(key = "hladanie") {
@@ -426,6 +463,7 @@ private fun KartaRebrika(
     zhoda: CvikEntity?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    pohyb: String? = null,
 ) {
     val skupina = Skupina.z(rebrik.skupina)
     val zakladna = farbaSkupiny(skupina)
@@ -434,7 +472,7 @@ private fun KartaRebrika(
 
     TonovanaKarta(modifier = modifier, onClick = onClick, vnutorneOdsadenie = 16.dp) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            KruhPostavicky(rebrik.id, zakladna, akcent, velkost = 64)
+            KruhPostavicky(rebrik.id, zakladna, akcent, velkost = 64, pohyb = pohyb)
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -503,9 +541,17 @@ private fun KartaRebrika(
     }
 }
 
-/** Postavička v tónovanom kruhu; ak rebrík pózu nemá, náhradná ikona. */
+/** Postavička v tónovanom kruhu (pohyb cviku, inak rebríka); ak pohyb nie je, náhradná ikona. */
 @Composable
-private fun KruhPostavicky(rebrikId: String, zakladna: Color, akcent: Color, velkost: Int, trvanieMs: Int = 1400) {
+private fun KruhPostavicky(
+    rebrikId: String,
+    zakladna: Color,
+    akcent: Color,
+    velkost: Int,
+    trvanieMs: Int = 1400,
+    pohyb: String? = null,
+) {
+    val context = LocalContext.current
     Box(
         Modifier
             .size(velkost.dp)
@@ -513,13 +559,14 @@ private fun KruhPostavicky(rebrikId: String, zakladna: Color, akcent: Color, vel
             .background(tonovanie(zakladna)),
         contentAlignment = Alignment.Center,
     ) {
-        if (Pozy.pre(rebrikId) != null) {
+        if (Pohyby.maPohyb(context, pohyb) || Pozy.pre(rebrikId) != null) {
             Postavicka(
                 rebrikId,
                 Modifier.size((velkost * 0.82f).dp),
                 farba = MaterialTheme.colorScheme.onSurface,
                 farbaAkcent = akcent,
                 trvanieMs = trvanieMs,
+                pohyb = pohyb,
             )
         } else {
             Icon(
@@ -630,6 +677,7 @@ fun RebrikObrazovka(rebrikId: String, spat: () -> Unit, model: RebrikModel = vie
                 maxUroven = maxUroven,
                 zacaty = zacaty,
                 detsky = detsky,
+                pohyb = cviky.firstOrNull { it.uroven == uroven }?.pohyb ?: cviky.firstOrNull()?.pohyb,
                 spat = spat,
             )
         }
@@ -729,6 +777,7 @@ private fun HlavickaRebrika(
     zacaty: Boolean,
     detsky: Boolean,
     spat: () -> Unit,
+    pohyb: String? = null,
 ) {
     Column(Modifier.fillMaxWidth()) {
         IconButton(onClick = spat, modifier = Modifier.padding(start = 8.dp, top = 8.dp)) {
@@ -738,7 +787,7 @@ private fun HlavickaRebrika(
             Modifier.fillMaxWidth().padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            KruhPostavicky(rebrik.id, zakladna, akcent, velkost = 176, trvanieMs = 1600)
+            KruhPostavicky(rebrik.id, zakladna, akcent, velkost = 176, trvanieMs = 1600, pohyb = pohyb)
             Spacer(Modifier.height(20.dp))
             Text(
                 rebrik.nazov,
@@ -918,6 +967,23 @@ private fun RiadokStupna(
                 }
 
                 if (rozbaleny) {
+                    if (Pohyby.maPohyb(LocalContext.current, cvik.pohyb)) {
+                        Spacer(Modifier.height(12.dp))
+                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            Box(
+                                Modifier.size(132.dp).clip(CircleShape).background(tonovanie(zakladna)),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Postavicka(
+                                    cvik.rebrikId,
+                                    Modifier.size(112.dp),
+                                    farba = MaterialTheme.colorScheme.onSurface,
+                                    farbaAkcent = akcent,
+                                    pohyb = cvik.pohyb,
+                                )
+                            }
+                        }
+                    }
                     val pokyny = cvik.cue.split("|").map { it.trim() }.filter { it.isNotBlank() }
                     val chyby = cvik.chyby.split("|").map { it.trim() }.filter { it.isNotBlank() }
                     if (pokyny.isNotEmpty()) {
