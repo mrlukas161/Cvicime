@@ -480,6 +480,14 @@ private fun Navigacia(navigacia: NavHostController, vypln: PaddingValues) {
                     naPrehravac = { minuty, dieta, dospely, hlavny ->
                         navigacia.navigate(Cesty.prehravac(minuty, dieta, dospely, hlavny))
                     },
+                    // Rovnako ako ťuk na záložku Nastavenia (sekcia Rodina).
+                    naRodinu = {
+                        navigacia.navigate(Cesty.NASTAVENIA) {
+                            popUpTo(navigacia.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                 )
             }
         }

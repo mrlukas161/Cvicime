@@ -80,6 +80,7 @@ object Pohyby {
         "poskoky" to "poskok",
         "doska" to "doska",
         "hollow" to "hollow-hold",
+        "stred-setrne" to "vtacik-pes",
         "nohy-k-hrazde" to "vis-kolena-hrud",
         "mobilita-ramena" to "klzanie-po-stene",
         "mobilita-kompresia" to "predklon-sed",

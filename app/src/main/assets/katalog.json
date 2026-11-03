@@ -1,5 +1,5 @@
 {
- "verzia": 4,
+ "verzia": 5,
  "rebriky": [
   {
    "id": "rozohriatie",
@@ -4853,7 +4853,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "tlak_brucho"
+     ]
     },
     {
      "id": "doska-4",
@@ -4880,7 +4882,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "tlak_brucho"
+     ]
     },
     {
      "id": "doska-5",
@@ -4934,7 +4938,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "tlak_brucho"
+     ]
     }
    ]
   },
@@ -5022,7 +5028,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "tlak_brucho"
+     ]
     },
     {
      "id": "hollow-4",
@@ -5048,7 +5056,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "tlak_brucho"
+     ]
     },
     {
      "id": "hollow-5",
@@ -5075,7 +5085,8 @@
      "jeDetsky": false,
      "zviera": null,
      "znacky": [
-      "nad_hlavu"
+      "nad_hlavu",
+      "tlak_brucho"
      ]
     },
     {
@@ -5105,6 +5116,183 @@
      "znacky": [
       "tlak_brucho"
      ]
+    }
+   ]
+  },
+  {
+   "id": "stred-setrne",
+   "nazov": "Stred šetrne",
+   "popis": "Stabilita trupu bez veľkého tlaku do brucha - vhodné po pôrode a pri režime Panvové dno. Pohyb ide vždy s výdychom.",
+   "skupina": "stred",
+   "jeZrucnost": false,
+   "poradie": 195,
+   "cviky": [
+    {
+     "id": "stred-setrne-1",
+     "uroven": 1,
+     "nazov": "Brušné dýchanie so stiahnutím v ľahu",
+     "meranie": "opakovania",
+     "pohyb": "panvove-dno-lah",
+     "cielMin": 6,
+     "cielMax": 10,
+     "naradie": [
+      "ziadne"
+     ],
+     "partie": {
+      "stred": 1.0
+     },
+     "cue": [
+      "Ľahni si na chrbát, kolená pokrčené, chodidlá na zemi.",
+      "Pri nádychu nechaj brucho povoliť, pri výdychu jemne stiahni panvové dno a vtiahni podbruško.",
+      "Krk a ramená ostávajú uvoľnené."
+     ],
+     "chyby": [
+      "Zadržiavanie dychu.",
+      "Tlačenie brucha von pri výdychu."
+     ],
+     "jeDetsky": false,
+     "zviera": null,
+     "znacky": []
+    },
+    {
+     "id": "stred-setrne-2",
+     "uroven": 2,
+     "nazov": "Mŕtvy chrobák – päty k zemi",
+     "meranie": "opakovania",
+     "pohyb": "mrtvy-chrobak",
+     "cielMin": 6,
+     "cielMax": 10,
+     "naradie": [
+      "ziadne"
+     ],
+     "partie": {
+      "stred": 1.0
+     },
+     "cue": [
+      "Ľahni si na chrbát, kolená nad bedrami pokrčené v 90°.",
+      "Pomaly spúšťaj jednu pätu k zemi a vráť ju, potom druhú.",
+      "S výdychom jemne stiahni panvové dno a podbruško, dych nezadržiavaj."
+     ],
+     "chyby": [
+      "Driek sa odlepí od podložky.",
+      "Brucho sa vyduje do kopčeka."
+     ],
+     "jeDetsky": false,
+     "zviera": null,
+     "znacky": []
+    },
+    {
+     "id": "stred-setrne-3",
+     "uroven": 3,
+     "nazov": "Vtáčik – pes",
+     "meranie": "opakovania",
+     "pohyb": "vtacik-pes",
+     "cielMin": 6,
+     "cielMax": 10,
+     "naradie": [
+      "ziadne"
+     ],
+     "partie": {
+      "stred": 1.0,
+      "zadok": 0.5,
+      "chrbat": 0.5
+     },
+     "cue": [
+      "Kľakni si na štyri, dlane pod ramenami, kolená pod bedrami.",
+      "Natiahni opačnú ruku a nohu, chvíľu podrž a vráť sa.",
+      "S výdychom jemne stiahni panvové dno a podbruško, dych nezadržiavaj."
+     ],
+     "chyby": [
+      "Prehnutý driek pri zdvihu nohy.",
+      "Prepadnutá panva na jednu stranu."
+     ],
+     "jeDetsky": false,
+     "zviera": null,
+     "znacky": []
+    },
+    {
+     "id": "stred-setrne-4",
+     "uroven": 4,
+     "nazov": "Doska o stoličku s výdychom",
+     "meranie": "vydrz",
+     "pohyb": "doska-stolicka",
+     "cielMin": 20,
+     "cielMax": 40,
+     "naradie": [
+      "stolicka"
+     ],
+     "partie": {
+      "stred": 1.0,
+      "ramena": 0.5
+     },
+     "cue": [
+      "Ruky alebo predlaktia opri o sedadlo stoličky, telo v jednej priamke.",
+      "S výdychom jemne stiahni panvové dno a podbruško, dych nezadržiavaj.",
+      "Keď cítiš tlak dole, skráť výdrž."
+     ],
+     "chyby": [
+      "Prepadnutá panva.",
+      "Zadržaný dych."
+     ],
+     "jeDetsky": false,
+     "zviera": null,
+     "znacky": []
+    },
+    {
+     "id": "stred-setrne-5",
+     "uroven": 5,
+     "nazov": "Bočná doska na kolenách",
+     "meranie": "vydrz",
+     "pohyb": "bocna-doska-kolena",
+     "cielMin": 15,
+     "cielMax": 30,
+     "naradie": [
+      "ziadne"
+     ],
+     "partie": {
+      "stred": 1.0
+     },
+     "cue": [
+      "Ľahni si na bok, lakeť pod ramenom, kolená pokrčené.",
+      "Zdvihni boky do priamky od hlavy po kolená.",
+      "S výdychom jemne stiahni panvové dno a podbruško, dych nezadržiavaj."
+     ],
+     "chyby": [
+      "Boky klesajú k zemi.",
+      "Rameno vytlačené k uchu."
+     ],
+     "jeDetsky": false,
+     "zviera": null,
+     "znacky": []
+    },
+    {
+     "id": "stred-setrne-6",
+     "uroven": 6,
+     "nazov": "Most so stiahnutím panvového dna",
+     "meranie": "opakovania",
+     "pohyb": "most",
+     "cielMin": 8,
+     "cielMax": 12,
+     "naradie": [
+      "ziadne"
+     ],
+     "partie": {
+      "zadok": 1.0,
+      "stred": 0.5,
+      "hamstringy": 0.5
+     },
+     "cue": [
+      "Ľahni si na chrbát, chodidlá na šírku bokov.",
+      "S výdychom stiahni panvové dno a zdvihni boky.",
+      "Hore chvíľu podrž, s nádychom pomaly dole."
+     ],
+     "chyby": [
+      "Prehnutý driek hore.",
+      "Zadržiavanie dychu."
+     ],
+     "jeDetsky": false,
+     "zviera": null,
+     "znacky": []
     }
    ]
   },
@@ -5533,7 +5721,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "tlak_brucho"
+     ]
     },
     {
      "id": "mobilita-kompresia-5",
@@ -5557,7 +5747,9 @@
      ],
      "jeDetsky": false,
      "zviera": null,
-     "znacky": []
+     "znacky": [
+      "tlak_brucho"
+     ]
     }
    ]
   },

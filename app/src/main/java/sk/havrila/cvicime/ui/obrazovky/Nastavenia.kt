@@ -237,6 +237,7 @@ fun NastaveniaObrazovka(
 
     var vibracie by remember { mutableStateOf(model.prefs.vibracieZapnute) }
     var obrazovka by remember { mutableStateOf(model.prefs.obrazovkaStaleZapnuta) }
+    var hlasPopis by remember { mutableStateOf(model.prefs.hlasPopis) }
     var hlas by remember { mutableStateOf(model.prefs.rezimZvuku == RezimZvuku.HLAS) }
     var hladam by remember { mutableStateOf(false) }
     var stavAktualizacie by remember { mutableStateOf<String?>(null) }
@@ -335,6 +336,17 @@ fun NastaveniaObrazovka(
                 hlas = it
                 model.prefs.hlasZapnuty = it
                 model.prefs.rezimZvuku = if (it) RezimZvuku.HLAS else RezimZvuku.PIPANIE
+            }
+            Oddelovac()
+            RiadokPrepinaca(
+                ikona = Icons.Outlined.RecordVoiceOver,
+                farba = farbaPrehravac,
+                titul = "Hlas popíše cvik",
+                popis = "Pri novom cviku povie aj krátko, ako sa robí. Dá sa prepnúť aj v prehrávači (⋮).",
+                hodnota = hlasPopis,
+            ) {
+                hlasPopis = it
+                model.prefs.hlasPopis = it
             }
             Oddelovac()
             RiadokPrepinaca(

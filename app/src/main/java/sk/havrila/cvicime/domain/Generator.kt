@@ -52,6 +52,13 @@ data class PlanPolozka(
 
 data class PlanBloku(val blok: Blok, val polozky: List<PlanPolozka>)
 
+/**
+ * Plán druhého dospelého zladený s hlavným: pre každú položku bloku hlavného plánu jeho položka
+ * na tom istom mieste (null = v tom kroku nič). Série, pauzy a páry sú prevzaté, aby sa
+ * cvičilo v jednom rytme.
+ */
+data class PlanPartnera(val bloky: Map<Blok, List<PlanPolozka?>>)
+
 data class PlanTreningu(
     val bloky: List<PlanBloku>,
     val odhadMinut: Int,
@@ -182,6 +189,108 @@ object Generator {
         return (Math.round(s * dlzka.nasobok / 5.0) * 5).toInt().coerceAtLeast(5)
     }
 
+    // ---------------------------------------------------------------- spoločný tréning
+
+    /**
+     * Zladí druhého dospelého s hlavným plánom. Pravidlá v poradí:
+     *  1. ten istý rebrík na JEHO stupni, ak ho smie a má naň náradie (cvičíte to isté),
+     *  2. inak šetrná náhrada z tej istej pohybovej skupiny s čo najväčším prekrytím partií
+     *     (napr. namiesto L-situ mŕtvy chrobák, namiesto poskokov výpony),
+     *  3. zručnosti sú jeho vlastné (napr. panvové dno) - na miestach tvojej zručnosti,
+     *     a ak ty dnes zručnosť nemáš, na miestach mobility (pokojný koniec tréningu).
+     * Série, pauzy, páry a kolá sa preberajú - rozdiel je len v cviku a dávke.
+     */
+    fun zladPartnera(hlavny: PlanTreningu, v: VstupGeneratora): PlanPartnera {
+        val vlastnySkill = zostavSkill(v, 8, mutableListOf())
+        val pouzite = mutableSetOf<String>()
+        val bloky = hlavny.bloky.associate { b ->
+            b.blok to b.polozky.mapIndexed { i, p ->
+                if (b.blok == Blok.SKILL) {
+                    vlastnySkill.getOrNull(i)?.let { zarovnaj(v, b.blok, it.cvik, it.rebrikId, it.rebrikNazov, p) }
+                } else {
+                    najdiNahradu(v, b.blok, p, pouzite)?.let { (rebrik, cvik) ->
+                        pouzite += rebrik.id
+                        zarovnaj(v, b.blok, cvik, rebrik.id, rebrik.nazov, p)
+                    }
+                }
+            }
+        }.toMutableMap()
+        // Bez tvojej zručnosti by jeho zručnosť (panvové dno!) vypadla - dostane miesta mobility.
+        if (hlavny.bloky.none { it.blok == Blok.SKILL } && vlastnySkill.isNotEmpty()) {
+            val mobilita = hlavny.bloky.firstOrNull { it.blok == Blok.MOBILITA }
+            if (mobilita != null) {
+                bloky[Blok.MOBILITA] = mobilita.polozky.mapIndexed { i, p ->
+                    vlastnySkill.getOrNull(i)?.let { zarovnaj(v, Blok.MOBILITA, it.cvik, it.rebrikId, it.rebrikNazov, p) }
+                        ?: bloky[Blok.MOBILITA]?.getOrNull(i)
+                }
+            }
+        }
+        return PlanPartnera(bloky)
+    }
+
+    private fun najdiNahradu(
+        v: VstupGeneratora,
+        blok: Blok,
+        p: PlanPolozka,
+        pouzite: Set<String>,
+    ): Pair<RebrikEntity, CvikEntity>? {
+        val rebrik = v.rebriky.firstOrNull { it.id == p.rebrikId } ?: return null
+        val skupina = Skupina.z(rebrik.skupina)
+        // Rozohriatie a mobilita sú zásobníky: najprv presne ten istý cvik, inak iný z toho istého zásobníka.
+        if (skupina == Skupina.ROZOHRIATIE || skupina == Skupina.MOBILITA) {
+            if (jePovoleny(v, p.cvik)) return rebrik to p.cvik
+            return zasobnikCvikov(v, skupina)
+                .filter { it.second.id != p.cvik.id }
+                .maxByOrNull { (r, c) -> (if (r.id == rebrik.id) 10 else 0) + prekrytie(c, p.cvik) }
+        }
+        if (rebrik.id !in pouzite && jeRebrikPreNeho(v, rebrik)) {
+            aktualnyCvik(v, rebrik)?.let { return rebrik to it }
+        }
+        return dostupneCviky(v, null)
+            .filter { (r, _) -> r.id !in pouzite && Skupina.z(r.skupina) == skupina }
+            .filter { (r, _) -> blok != Blok.KRUH || r.id !in MIMO_KRUHU }
+            .maxByOrNull { (r, c) -> prekrytie(c, p.cvik) + (if (r.id in LEN_PRI_OBMEDZENI) 0.5 else 0.0) }
+    }
+
+    /** Súčet spoločných váh partií - čím vyššie, tým lepšie náhrada zaťaží to isté. */
+    private fun prekrytie(a: CvikEntity, b: CvikEntity): Double {
+        val pb = rozparsujPartie(b.partie).toMap()
+        return rozparsujPartie(a.partie).sumOf { (k, w) -> minOf(w, pb[k] ?: 0.0) }
+    }
+
+    private fun zarovnaj(
+        v: VstupGeneratora,
+        blok: Blok,
+        cvik: CvikEntity,
+        rebrikId: String,
+        rebrikNazov: String,
+        hlavna: PlanPolozka,
+    ): PlanPolozka {
+        val vydrz = Meranie.z(cvik.meranie) == Meranie.VYDRZ
+        val praca = v.nastavenie.pracaS
+        val ciel = when (blok) {
+            Blok.SKILL -> cielProCvik(cvik, konzervativne = true)
+            Blok.SILA -> cielProCvik(cvik, konzervativne = v.deload)
+            Blok.KRUH -> if (vydrz) praca else cvik.cielMin
+            Blok.MOBILITA -> if (vydrz) 40 else cvik.cielMin
+            else -> if (vydrz) 30 else cvik.cielMin
+        }
+        val naCas = when {
+            vydrz -> null
+            blok == Blok.KRUH -> praca
+            v.nastavenie.vsetkoNaCas -> praca
+            else -> null
+        }
+        return hlavna.copy(
+            cvik = cvik,
+            rebrikId = rebrikId,
+            rebrikNazov = rebrikNazov,
+            ciel = ciel,
+            naCasS = naCas,
+            cielRir = if (blok == Blok.SKILL) Pravidla.CIEL_RIR_SKILL else hlavna.cielRir,
+        )
+    }
+
     // ---------------------------------------------------------------- páry a kruh
 
     /**
@@ -229,6 +338,15 @@ object Generator {
         val hb = hlavnePartie(b)
         return (ha.any { it in tlak } && hb.any { it in tah }) || (ha.any { it in tah } && hb.any { it in tlak })
     }
+
+    /**
+     * Šetrné rebríky sú náhrada, nie bežný tréning: ponúkajú sa len tomu, koho obmedzenie
+     * vylučuje ich „plnohodnotnú" verziu (stred-setrne pri tlaku do brucha).
+     */
+    private val LEN_PRI_OBMEDZENI = mapOf("stred-setrne" to "tlak_brucho")
+
+    private fun jeRebrikPreNeho(v: VstupGeneratora, rebrik: RebrikEntity): Boolean =
+        LEN_PRI_OBMEDZENI[rebrik.id]?.let { it in v.vylucitZnacky } ?: true
 
     /** Rebríky, ktoré do kruhu nepatria: technika alebo úchop sa v únave kazí (vis, predlaktia, kliky do stojky). */
     private val MIMO_KRUHU = setOf("vis", "predlaktia", "kliky-do-stojky", "panvove-dno")
@@ -518,6 +636,7 @@ object Generator {
         v.rebriky
             .asSequence()
             .filter { skupina == null || Skupina.z(it.skupina) == skupina }
+            .filter { jeRebrikPreNeho(v, it) }
             .filter { Skupina.z(it.skupina) != Skupina.DETSKY }
             .filter { skupina != null || !it.jeZrucnost } // zručnosti rieši skill blok
             .mapNotNull { rebrik -> aktualnyCvik(v, rebrik)?.let { rebrik to it } }

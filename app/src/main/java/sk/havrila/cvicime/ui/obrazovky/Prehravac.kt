@@ -60,6 +60,7 @@ import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.NotificationsActive
+import androidx.compose.material.icons.rounded.RecordVoiceOver
 import androidx.compose.material.icons.rounded.ScreenLockLandscape
 import androidx.compose.material.icons.rounded.Tv
 import androidx.compose.material.icons.rounded.Check
@@ -196,6 +197,9 @@ data class PartnerKrok(
     val zoSerii: Int,
 )
 
+fun PartnerKrok.jeNaCas(): Boolean = polozka.naCasS != null || Meranie.z(polozka.cvik.meranie) == Meranie.VYDRZ
+fun PartnerKrok.sekundOdpoctu(): Int = polozka.naCasS ?: polozka.ciel
+
 /** Detský cvik na chvíľu na odpočet („Skúsiš to, kým zapípa?"). */
 const val DETSKY_ODPOCET_S = 20
 
@@ -325,6 +329,28 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
     private val _partnerZapis = MutableStateFlow<PartnerZapis?>(null)
     val partnerZapis = _partnerZapis.asStateFlow()
 
+    /**
+     * Odpočet druhého dospelého, keď jeho cvik ide na čas (napr. ona 40 s, ty na počet).
+     * Beží od začiatku série nezávisle od tvojho; 0 = nebeží.
+     */
+    private val _partnerKoniec = MutableStateFlow(0L)
+    val partnerKoniec = _partnerKoniec.asStateFlow()
+    private val _partnerCelkom = MutableStateFlow(0L)
+    val partnerCelkom = _partnerCelkom.asStateFlow()
+    private var partnerZostatokPozastaveny = 0L
+
+    /** Cviky, ktoré už hlas popísal - popis zaznie raz (v pauze alebo pri štarte), nie pri každej sérii. */
+    val popisane = mutableSetOf<String>()
+    val hlasPopis get() = repo.prefs.hlasPopis
+
+    private val _popis = MutableStateFlow(repo.prefs.hlasPopis)
+    val popis = _popis.asStateFlow()
+
+    fun prepniPopis() {
+        _popis.value = !_popis.value
+        repo.prefs.hlasPopis = _popis.value
+    }
+
     /** Otázka na príznak po sérii hlavného cvičiaceho (len pri obmedzení, ktoré sa pýta). */
     private val _otazkaPriznaku = MutableStateFlow<OtazkaPriznaku?>(null)
     val otazkaPriznaku = _otazkaPriznaku.asStateFlow()
@@ -416,19 +442,17 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
             otazkaHlavneho = repo.obmedzenia(hlavnyId).firstNotNullOfOrNull { it.otazkaPoSerii }
             val plan = repo.zostavPlan(minuty, hlavnyId)
 
-            // Druhý dospelý: vlastný plán (úrovne, ciele, obmedzenia), kroky spárované po blokoch -
-            // k-ta séria bloku u hlavného ↔ k-ta séria toho istého bloku u neho. Chýbajúca = v tom kroku nič.
+            // Druhý dospelý: plán ZLADENÝ s hlavným (ten istý rebrík na jeho stupni, inak šetrná
+            // náhrada) - položka na tom istom mieste bloku. Chýbajúca = v tom kroku nič.
             val druhy = repo.ucastnik(dospelyId)?.takeIf { dospelyId > 0 && dospelyId != hlavnyId }
-            val partnerovePodlaBloku: Map<Blok, List<PartnerKrok>> = if (druhy != null) {
+            val partnerovePodlaBloku: Map<Blok, List<PlanPolozka?>> = if (druhy != null) {
                 _partner.value = PartnerStopa(
                     ucastnikId = druhy.id,
                     meno = druhy.meno,
                     farba = druhy.farba,
                     otazka = repo.obmedzenia(druhy.id).firstNotNullOfOrNull { it.otazkaPoSerii },
                 )
-                repo.zostavPlan(minuty, druhy.id).bloky.associate { blok ->
-                    blok.blok to Rozvrh.kroky(blok).map { k -> PartnerKrok(k.polozka, k.cisloSerie, k.zoSerii) }
-                }
+                repo.zostavPlanPartnera(minuty, druhy.id, plan).bloky
             } else {
                 emptyMap()
             }
@@ -436,13 +460,16 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
             // Poradie sérií (páry, kruh) určuje Rozvrh - ten istý, z ktorého ráta odhad času Domov.
             val zoznam = plan.bloky.flatMap { blok ->
                 val partnerove = partnerovePodlaBloku[blok.blok].orEmpty()
-                Rozvrh.kroky(blok).mapIndexed { i, k ->
+                Rozvrh.kroky(blok).map { k ->
+                    // Rozvrh berie položky plánu priamo - poloha v bloku = poloha jeho položky.
+                    val miesto = blok.polozky.indexOfFirst { it === k.polozka }
+                    val jeho = partnerove.getOrNull(miesto)
                     KrokTreningu(
                         blok = k.blok,
                         polozka = k.polozka,
                         cisloSerie = k.cisloSerie,
                         zoSerii = k.zoSerii,
-                        partner = partnerove.getOrNull(i),
+                        partner = jeho?.let { PartnerKrok(it, minOf(k.cisloSerie, it.serie), it.serie) },
                         pauzaPoS = k.pauzaPoS,
                     )
                 }
@@ -497,6 +524,15 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
         val ms = krok.sekundOdpoctu() * 1000L
         _celkomOdpoctu.value = if (naCas) ms else 0L
         _koniecOdpoctu.value = if (naCas) SystemClock.elapsedRealtime() + ms else 0L
+        val p = krok.partner
+        val msP = p?.let { if (it.jeNaCas()) it.sekundOdpoctu() * 1000L else 0L } ?: 0L
+        _partnerCelkom.value = msP
+        _partnerKoniec.value = if (msP > 0L) SystemClock.elapsedRealtime() + msP else 0L
+    }
+
+    /** Odpočet druhého dospelého dobehol (pípne a ohlási obrazovka). */
+    fun partnerDobehol() {
+        _partnerKoniec.value = 0L
     }
 
     fun hotovoCvicenie() {
@@ -667,6 +703,8 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
         } else {
             0L
         }
+        val koniecP = _partnerKoniec.value
+        partnerZostatokPozastaveny = if (koniecP > 0L) (koniecP - SystemClock.elapsedRealtime()).coerceAtLeast(1L) else 0L
         _pozastavene.value = true
     }
 
@@ -676,6 +714,10 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
         if (_koniecOdpoctu.value > 0L) {
             _koniecOdpoctu.value = SystemClock.elapsedRealtime() + _zostatokPozastaveny.value
         }
+        if (_partnerKoniec.value > 0L && partnerZostatokPozastaveny > 0L) {
+            _partnerKoniec.value = SystemClock.elapsedRealtime() + partnerZostatokPozastaveny
+        }
+        partnerZostatokPozastaveny = 0L
         _zostatokPozastaveny.value = 0L
         _pozastavene.value = false
     }
@@ -855,11 +897,22 @@ private data class PrehravacObraz(
     val partner: PartnerStopa?,
     val partnerZapis: PartnerZapis?,
     val otazkaPriznaku: OtazkaPriznaku?,
+    val partnerKoniec: Long = 0L,
+    val partnerCelkom: Long = 0L,
 )
 
 private class PrehravacDrzak<T>(var hodnota: T)
 
 private fun KrokTreningu.jeVydrz() = Meranie.z(polozka.cvik.meranie) == Meranie.VYDRZ
+
+/**
+ * Krátky hlasový popis cviku: prvé dva pokyny z katalógu. Zaznie raz na cvik a tréning
+ * (v polovici pauzy alebo pri štarte, podľa toho, čo príde skôr); vypína sa v menu prehrávača.
+ */
+private fun popisCviku(model: PrehravacModel, cvik: CvikEntity): String {
+    if (!model.popis.value || !model.popisane.add(cvik.id)) return ""
+    return cvik.cue.split("|").map { it.trim() }.filter { it.isNotBlank() }.take(2).joinToString(" ")
+}
 
 /** Na ležato (zrkadlenie na TV) sa obrazovky prehrávača skladajú do dvoch stĺpcov. */
 private val LocalNaLezato = compositionLocalOf { false }
@@ -899,6 +952,9 @@ fun PrehravacObrazovka(
     val partner by model.partner.collectAsStateWithLifecycle()
     val partnerZapis by model.partnerZapis.collectAsStateWithLifecycle()
     val otazkaPriznaku by model.otazkaPriznaku.collectAsStateWithLifecycle()
+    val partnerKoniec by model.partnerKoniec.collectAsStateWithLifecycle()
+    val partnerCelkom by model.partnerCelkom.collectAsStateWithLifecycle()
+    val popisZapnuty by model.popis.collectAsStateWithLifecycle()
 
     val zvuk by model.zvuk.collectAsStateWithLifecycle()
     val tvRezim by model.tvRezim.collectAsStateWithLifecycle()
@@ -941,11 +997,20 @@ fun PrehravacObrazovka(
                 } else {
                     ""
                 }
-                // Druhý dospelý počuje svoj cvik hneď za tvojím - ak má iný.
+                // Krátky popis, ako sa cvik robí - raz na cvik (nie pri každej sérii), dá sa vypnúť.
+                val popis = popisCviku(model, k.polozka.cvik)
+                // Druhý dospelý počuje svoj cvik a dávku hneď za tvojím.
                 val druhy = model.partner.value?.let { p ->
-                    k.partner?.polozka?.cvik?.takeIf { it.id != k.polozka.cvik.id }?.let { " ${p.meno}: ${it.nazov}." }
+                    k.partner?.let { pk ->
+                        val davkaP = if (pk.jeNaCas()) "${pk.sekundOdpoctu()} sekúnd" else "${pk.polozka.ciel} opakovaní"
+                        if (pk.polozka.cvik.id == k.polozka.cvik.id) {
+                            " ${p.meno} tiež, $davkaP."
+                        } else {
+                            " ${p.meno}: ${pk.polozka.cvik.nazov}, $davkaP. ${popisCviku(model, pk.polozka.cvik)}"
+                        }
+                    }
                 }.orEmpty()
-                hlas.povedz("$seria${k.polozka.cvik.nazov}. $davka.$druhy", model.hlasZapnuty)
+                hlas.povedz("$seria${k.polozka.cvik.nazov}. $davka. $popis$druhy", model.hlasZapnuty)
             }
             StavPrehravaca.PAUZA -> {
                 val dalsi = kroky.getOrNull(index)
@@ -996,9 +1061,12 @@ fun PrehravacObrazovka(
                 if (vydrz) {
                     hlas.povedz("Polovica.", model.hlasZapnuty)
                 } else {
-                    // Predstavenie ďalšieho cviku v polovici pauzy: názov + prvý pokyn.
-                    val pokyn = k.polozka.cvik.cue.split("|").firstOrNull { it.isNotBlank() }?.trim().orEmpty()
-                    hlas.povedz("Ďalej ${k.polozka.cvik.nazov}. $pokyn", model.hlasZapnuty)
+                    // Predstavenie ďalšieho cviku v polovici pauzy: názov + krátky popis (ak je zapnutý).
+                    val druhy = model.partner.value?.let { p ->
+                        k.partner?.polozka?.cvik?.takeIf { it.id != k.polozka.cvik.id }
+                            ?.let { " ${p.meno}: ${it.nazov}. ${popisCviku(model, it)}" }
+                    }.orEmpty()
+                    hlas.povedz("Ďalej ${k.polozka.cvik.nazov}. ${popisCviku(model, k.polozka.cvik)}$druhy", model.hlasZapnuty)
                 }
             }
             if (vydrz && !piatPovedane && ms <= 5_500 && celkomMs >= 15_000) {
@@ -1011,6 +1079,20 @@ fun PrehravacObrazovka(
         hlas.pipniKoniec(model.pipanieZapnute)
         hlas.zavibruj(model.vibracieZapnute)
         if (stavOdpoctu == StavPrehravaca.PAUZA) model.pauzaSkoncila() else model.hotovoCvicenie()
+    }
+
+    // Odpočet druhého dospelého (jeho cvik na čas, tvoj môže byť na počet) - pípne a povie meno.
+    LaunchedEffect(partnerKoniec, pozastavene) {
+        if (pozastavene || partnerKoniec <= 0L) return@LaunchedEffect
+        val koniecP = partnerKoniec
+        while (true) {
+            if (model.pozastavene.value) return@LaunchedEffect
+            if (koniecP - SystemClock.elapsedRealtime() <= 0) break
+            delay(100)
+        }
+        hlas.pipniKoniec(model.pipanieZapnute)
+        model.partner.value?.let { hlas.povedzPotom("${it.meno}, hotovo.", model.hlasZapnuty) }
+        model.partnerDobehol()
     }
 
     var potvrdenieKonca by rememberSaveable { mutableStateOf(false) }
@@ -1075,6 +1157,8 @@ fun PrehravacObrazovka(
         partner = partner,
         partnerZapis = partnerZapis,
         otazkaPriznaku = otazkaPriznaku,
+        partnerKoniec = partnerKoniec,
+        partnerCelkom = partnerCelkom,
     )
     val kluc = PrehravacKluc(stav, index, krok?.polozka?.cvik?.id, krok?.cisloSerie ?: 0)
 
@@ -1111,6 +1195,8 @@ fun PrehravacObrazovka(
                     naTv = model::prepniTv,
                     zamokLezato = zamokLezato,
                     naZamok = model::prepniZamok,
+                    popis = popisZapnuty,
+                    naPopis = model::prepniPopis,
                 )
             }
 
@@ -1158,7 +1244,7 @@ fun PrehravacObrazovka(
                                 } else {
                                     CvicenieOpakovania(
                                         krok = kr,
-                                        partner = o.partner,
+                                        o = o,
                                         naHotovo = {
                                             model.akAktualny(k) {
                                                 hlas.zavibruj(true)
@@ -1202,7 +1288,7 @@ fun PrehravacObrazovka(
                 Spacer(Modifier.width(12.dp))
                 Column(
                     Modifier
-                        .width(300.dp)
+                        .width(280.dp)
                         .fillMaxHeight()
                         .verticalScroll(rememberScrollState()),
                 ) { DetskyPruh(d, model) }
@@ -1299,6 +1385,8 @@ private fun Hlavicka(
     naTv: () -> Unit,
     zamokLezato: Boolean,
     naZamok: () -> Unit,
+    popis: Boolean,
+    naPopis: () -> Unit,
 ) {
     val krok = kroky.getOrNull(index)
     val farbaBloku = krok?.let { FarbyBlokov.pre(it.blok) } ?: MaterialTheme.colorScheme.primary
@@ -1358,6 +1446,12 @@ private fun Hlavicka(
                         leadingIcon = { Icon(Icons.Rounded.Tv, contentDescription = null) },
                         trailingIcon = { if (tvRezim) Icon(Icons.Rounded.Check, contentDescription = "zapnuté") },
                         onClick = { menu = false; naTv() },
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Hlas popíše, ako sa cvik robí") },
+                        leadingIcon = { Icon(Icons.Rounded.RecordVoiceOver, contentDescription = null) },
+                        trailingIcon = { if (popis) Icon(Icons.Rounded.Check, contentDescription = "zapnuté") },
+                        onClick = { menu = false; naPopis() },
                     )
                     DropdownMenuItem(
                         text = { Text("Zamknúť na ležato") },
@@ -1453,7 +1547,9 @@ private fun vypocitajZostatok(koniec: Long, pozastavene: Boolean, zostatokPozast
 
 /** Číslo v strede kruhu. Posledné 3 sekundy zmení farbu - signál „už len chvíľu". */
 @Composable
-private fun CisloOdpoctu(zostatokMs: Long, pauza: Boolean) {
+private fun CisloOdpoctu(zostatokMs: Long, pauza: Boolean, kruh: Dp = 300.dp) {
+    // Číslo rastie s kruhom - menší kruh nechá miesto deťom a druhému dospelému.
+    val velkost = (kruh.value * 0.34f).coerceIn(34f, 96f).sp
     val sekundy = ((zostatokMs + 999L) / 1000L).toInt()
     val farbaCisla by animateColorAsState(
         targetValue = if (sekundy in 1..3) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
@@ -1464,11 +1560,11 @@ private fun CisloOdpoctu(zostatokMs: Long, pauza: Boolean) {
         if (sekundy >= 60) {
             Text(
                 formatujStopky(sekundy * 1000L),
-                style = StylVelkeCislo.copy(fontSize = 72.sp),
+                style = StylVelkeCislo.copy(fontSize = velkost * 0.75f),
                 color = farbaCisla,
             )
         } else {
-            AnimovaneCislo(hodnota = sekundy, style = StylVelkeCislo, color = farbaCisla)
+            AnimovaneCislo(hodnota = sekundy, style = StylVelkeCislo.copy(fontSize = velkost), color = farbaCisla)
         }
         Text(
             when {
@@ -1593,42 +1689,49 @@ private fun Rozlozenie(
     }
 }
 
-/** Opakovania: veľký cieľ v strede, pod ním jedna veľká akcia „Hotovo". */
+/**
+ * Opakovania: postavička a cieľ vedľa seba (nie pod sebou), aby sa na jednu obrazovku zmestil
+ * aj druhý dospelý a detský pruh. Pod tým jedna veľká akcia „Hotovo".
+ */
 @Composable
-private fun CvicenieOpakovania(krok: KrokTreningu, partner: PartnerStopa?, naHotovo: () -> Unit) {
+private fun CvicenieOpakovania(krok: KrokTreningu, o: PrehravacObraz, naHotovo: () -> Unit) {
     val farba = FarbyBlokov.pre(krok.blok)
     val ciel = krok.polozka.ciel
     val naLezato = LocalNaLezato.current
     Rozlozenie(
         lavy = {
-            KruhPostavicky(krok.polozka.rebrikId, farba, if (naLezato) 150.dp else 128.dp, pohyb = krok.polozka.cvik.pohyb)
-            Spacer(Modifier.height(if (naLezato) 8.dp else 16.dp))
             if (!naLezato) HlavaCviku(krok, farba)
-            Spacer(Modifier.height(4.dp))
-            Text("$ciel", style = StylVelkeCislo, color = MaterialTheme.colorScheme.onSurface)
-            Text(
-                if (Meranie.z(krok.polozka.cvik.meranie) == Meranie.VZDIALENOST) {
-                    sklonuj(ciel, "meter", "metre", "metrov")
-                } else {
-                    sklonuj(ciel, "opakovanie", "opakovania", "opakovaní")
-                },
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                KruhPostavicky(krok.polozka.rebrikId, farba, if (naLezato) 140.dp else 120.dp, pohyb = krok.polozka.cvik.pohyb)
+                Spacer(Modifier.width(16.dp))
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("$ciel", style = StylVelkeCislo.copy(fontSize = 72.sp), color = MaterialTheme.colorScheme.onSurface)
+                    Text(
+                        if (Meranie.z(krok.polozka.cvik.meranie) == Meranie.VZDIALENOST) {
+                            sklonuj(ciel, "meter", "metre", "metrov")
+                        } else {
+                            sklonuj(ciel, "opakovanie", "opakovania", "opakovaní")
+                        },
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
         },
         pravy = {
             if (naLezato) HlavaCviku(krok, farba)
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(10.dp))
             Pokyny(krok)
-            KartaPartnera(krok, partner)
+            KartaPartnera(krok, o)
         },
         spodok = { VelkeTlacidlo(text = "Hotovo", onClick = naHotovo, ikona = Icons.Rounded.Check) },
     )
 }
 
 /**
- * Na čas (výdrž, alebo opakovania na odpočet): veľký kruh vo farbe bloku, ktorý sa plynulo plní,
- * číslo zostávajúcich sekúnd vo vnútri. Pri opakovaniach na čas je pod ním cieľ počtu.
+ * Na čas (výdrž, alebo opakovania na odpočet): postavička a kruh odpočtu vedľa seba.
+ * Kruh je zámerne menší - dôležité je vidieť naraz cvik, čas, druhého dospelého aj deti.
  */
 @Composable
 private fun CvicenieVydrz(krok: KrokTreningu, o: PrehravacObraz) {
@@ -1637,39 +1740,32 @@ private fun CvicenieVydrz(krok: KrokTreningu, o: PrehravacObraz) {
     val celkom = (if (o.celkom > 0L) o.celkom else krok.sekundOdpoctu() * 1000L).coerceAtLeast(1L)
     val naLezato = LocalNaLezato.current
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val nizka = maxHeight < 600.dp
         val kruh = if (naLezato) {
-            minOf(maxHeight * 0.86f, maxWidth * 0.44f).coerceIn(160.dp, 340.dp)
+            minOf(maxHeight * 0.62f, maxWidth * 0.26f).coerceIn(120.dp, 220.dp)
         } else {
-            minOf(maxWidth * 0.84f, maxHeight * 0.56f).coerceIn(200.dp, 320.dp)
+            minOf(maxWidth * 0.46f, maxHeight * 0.3f).coerceIn(130.dp, 190.dp)
         }
         Rozlozenie(
             lavy = {
-                if (!naLezato) {
-                    if (!nizka) {
-                        KruhPostavicky(krok.polozka.rebrikId, farba, 84.dp, pohyb = krok.polozka.cvik.pohyb)
-                        Spacer(Modifier.height(12.dp))
+                if (!naLezato) HlavaCviku(krok, farba)
+                Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                    KruhPostavicky(krok.polozka.rebrikId, farba, kruh * 0.8f, pohyb = krok.polozka.cvik.pohyb)
+                    Spacer(Modifier.width(12.dp))
+                    KruhPostupu(
+                        postup = 1f - zostatok.toFloat() / celkom.toFloat(),
+                        modifier = Modifier.size(kruh),
+                        farba = farba,
+                        hrubka = 12.dp,
+                    ) {
+                        CisloOdpoctu(zostatok, pauza = false, kruh = kruh)
                     }
-                    HlavaCviku(krok, farba)
-                    Spacer(Modifier.height(18.dp))
-                }
-                KruhPostupu(
-                    postup = 1f - zostatok.toFloat() / celkom.toFloat(),
-                    modifier = Modifier.size(kruh),
-                    farba = farba,
-                    hrubka = 18.dp,
-                ) {
-                    CisloOdpoctu(zostatok, pauza = false)
                 }
             },
             pravy = {
-                if (naLezato) {
-                    KruhPostavicky(krok.polozka.rebrikId, farba, 96.dp, pohyb = krok.polozka.cvik.pohyb)
-                    Spacer(Modifier.height(10.dp))
-                    HlavaCviku(krok, farba)
-                }
+                if (naLezato) HlavaCviku(krok, farba)
                 if (krok.polozka.naCasS != null && !krok.jeVydrz()) {
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(6.dp))
                     Text(
                         "cieľ ~${krok.polozka.ciel} ${sklonuj(krok.polozka.ciel, "opakovanie", "opakovania", "opakovaní")}" +
                             if (krok.pytaSaPoSerii()) " · počet zapíšeš potom" else "",
@@ -1678,9 +1774,9 @@ private fun CvicenieVydrz(krok: KrokTreningu, o: PrehravacObraz) {
                         textAlign = TextAlign.Center,
                     )
                 }
-                Spacer(Modifier.height(18.dp))
+                Spacer(Modifier.height(10.dp))
                 Pokyny(krok)
-                KartaPartnera(krok, o.partner)
+                KartaPartnera(krok, o)
             },
         )
     }
@@ -1850,57 +1946,61 @@ private fun Pauza(
     val naLezato = LocalNaLezato.current
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
+        // Malý kruh s tlačidlami vedľa neho - pod ním je miesto na predstavenie ďalšieho cviku a deti.
         val kruh = if (naLezato) {
-            minOf(maxHeight * 0.62f, maxWidth * 0.36f).coerceIn(140.dp, 280.dp)
+            minOf(maxHeight * 0.5f, maxWidth * 0.24f).coerceIn(110.dp, 200.dp)
         } else {
-            minOf(maxWidth * 0.7f, maxHeight * (if (sDoplnenim) 0.26f else 0.32f)).coerceIn(150.dp, 260.dp)
+            minOf(maxWidth * 0.42f, maxHeight * (if (sDoplnenim) 0.2f else 0.24f)).coerceIn(110.dp, 170.dp)
         }
         Rozlozenie(
             lavy = {
-                // Kruh sa vyprázdňuje - oddych ubúda.
-                KruhPostupu(
-                    postup = zostatok.toFloat() / celkom.toFloat(),
-                    modifier = Modifier.size(kruh),
-                    farba = farba,
-                    hrubka = 16.dp,
-                ) {
-                    CisloOdpoctu(zostatok, pauza = true)
-                }
-                Spacer(Modifier.height(14.dp))
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    FilledTonalButton(
-                        onClick = {
-                            haptika.klik()
-                            naUpravu(-15)
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .heightIn(min = 56.dp),
-                        shape = RoundedCornerShape(18.dp),
-                        contentPadding = PaddingValues(horizontal = 8.dp),
-                    ) { Text("−15 s", style = MaterialTheme.typography.titleMedium, maxLines = 1) }
-                    FilledTonalButton(
-                        onClick = {
-                            haptika.klik()
-                            naUpravu(15)
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .heightIn(min = 56.dp),
-                        shape = RoundedCornerShape(18.dp),
-                        contentPadding = PaddingValues(horizontal = 8.dp),
-                    ) { Text("+15 s", style = MaterialTheme.typography.titleMedium, maxLines = 1) }
-                    Button(
-                        onClick = {
-                            haptika.potvrdenie()
-                            naPreskocenie()
-                        },
-                        modifier = Modifier
-                            .weight(1.3f)
-                            .heightIn(min = 56.dp),
-                        shape = RoundedCornerShape(18.dp),
-                        contentPadding = PaddingValues(horizontal = 8.dp),
-                    ) { Text("Začať", style = MaterialTheme.typography.titleMedium, maxLines = 1) }
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    // Kruh sa vyprázdňuje - oddych ubúda.
+                    KruhPostupu(
+                        postup = zostatok.toFloat() / celkom.toFloat(),
+                        modifier = Modifier.size(kruh),
+                        farba = farba,
+                        hrubka = 12.dp,
+                    ) {
+                        CisloOdpoctu(zostatok, pauza = true, kruh = kruh)
+                    }
+                    Spacer(Modifier.width(14.dp))
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilledTonalButton(
+                                onClick = {
+                                    haptika.klik()
+                                    naUpravu(-15)
+                                },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .heightIn(min = 52.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                contentPadding = PaddingValues(horizontal = 6.dp),
+                            ) { Text("−15 s", style = MaterialTheme.typography.titleMedium, maxLines = 1) }
+                            FilledTonalButton(
+                                onClick = {
+                                    haptika.klik()
+                                    naUpravu(15)
+                                },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .heightIn(min = 52.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                contentPadding = PaddingValues(horizontal = 6.dp),
+                            ) { Text("+15 s", style = MaterialTheme.typography.titleMedium, maxLines = 1) }
+                        }
+                        Button(
+                            onClick = {
+                                haptika.potvrdenie()
+                                naPreskocenie()
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 52.dp),
+                            shape = RoundedCornerShape(16.dp),
+                        ) { Text("Začať", style = MaterialTheme.typography.titleMedium, maxLines = 1) }
+                    }
                 }
             },
             pravy = {
@@ -1927,7 +2027,7 @@ private fun PredstavenieCviku(krok: KrokTreningu, partner: PartnerStopa?) {
     val chyba = remember(cvik.chyby) { cvik.chyby.split("|").map { it.trim() }.firstOrNull { it.isNotBlank() } }
     TonovanaKarta(farba = farba, vnutorneOdsadenie = 16.dp) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            KruhPostavicky(krok.polozka.rebrikId, farba, 104.dp, pohyb = krok.polozka.cvik.pohyb)
+            KruhPostavicky(krok.polozka.rebrikId, farba, 96.dp, pohyb = krok.polozka.cvik.pohyb)
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
                 Text(
@@ -1980,29 +2080,64 @@ private fun PredstavenieCviku(krok: KrokTreningu, partner: PartnerStopa?) {
 
 // ---------------------------------------------------------------- druhý dospelý
 
-/** „<meno>: cvik · plán" - čo v tomto kroku cvičí druhý dospelý. */
+/**
+ * Čo v tomto kroku cvičí druhý dospelý: jeho postavička, cvik, dávka a - keď ide na čas -
+ * jeho vlastný odpočet (ty môžeš ísť na počet, on na čas).
+ */
 @Composable
-private fun KartaPartnera(krok: KrokTreningu, partner: PartnerStopa?) {
+private fun KartaPartnera(krok: KrokTreningu, o: PrehravacObraz) {
     val p = krok.partner
+    val partner = o.partner
     if (partner == null || p == null) return
     val farba = Color(partner.farba)
-    Spacer(Modifier.height(16.dp))
-    TonovanaKarta(farba = farba, vnutorneOdsadenie = 14.dp) {
+    val spolu = p.polozka.cvik.id == krok.polozka.cvik.id
+    Spacer(Modifier.height(12.dp))
+    TonovanaKarta(farba = farba, vnutorneOdsadenie = 12.dp) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Inicialka(partner.meno, farba, 40.dp)
+            Box(
+                Modifier
+                    .size(72.dp)
+                    .clip(CircleShape)
+                    .background(farba.copy(alpha = 0.16f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Postavicka(
+                    rebrikId = p.polozka.rebrikId,
+                    pohyb = p.polozka.cvik.pohyb,
+                    modifier = Modifier.size(58.dp),
+                    farba = MaterialTheme.colorScheme.onSurface,
+                    farbaAkcent = farba,
+                )
+            }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(
-                    "${partner.meno}: ${p.polozka.cvik.nazov}",
+                    if (spolu) "${partner.meno}: to isté" else "${partner.meno}: ${p.polozka.cvik.nazov}",
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
+                val davka = if (p.jeNaCas()) "${p.sekundOdpoctu()} s" else formatujHodnotu(p.polozka.ciel, p.polozka.cvik.meranie)
                 Text(
-                    "${formatujHodnotu(p.polozka.ciel, p.polozka.cvik.meranie)} · séria ${p.cisloSerie} / ${p.zoSerii}",
+                    "$davka · séria ${p.cisloSerie} / ${p.zoSerii}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+            }
+            if (p.jeNaCas() && o.partnerCelkom > 0L) {
+                val zostatok = rememberZostatokMs(o.partnerKoniec, o.pozastavene, 0L)
+                Spacer(Modifier.width(8.dp))
+                KruhPostupu(
+                    postup = if (o.partnerKoniec > 0L) 1f - zostatok.toFloat() / o.partnerCelkom.toFloat() else 1f,
+                    modifier = Modifier.size(64.dp),
+                    farba = farba,
+                    hrubka = 6.dp,
+                ) {
+                    Text(
+                        if (o.partnerKoniec > 0L) "${((zostatok + 999) / 1000)}" else "✓",
+                        style = MaterialTheme.typography.titleLarge.copy(fontFamily = Grotesk, fontWeight = FontWeight.Bold),
+                    )
+                }
             }
         }
     }
@@ -2250,69 +2385,87 @@ private fun DetskyPruhKompaktny(d: DetskyStav, model: PrehravacModel) {
     val haptika = rememberHaptika()
     TonovanaKarta(farba = farba, vnutorneOdsadenie = 10.dp, modifier = Modifier.animateContentSize()) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.width(76.dp)) {
-                Text(d.meno, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Labky(d.labky, farba, velkost = 20.dp)
-            }
-            Spacer(Modifier.width(8.dp))
-            when (d.krok) {
-                DetskyKrok.VYBER -> Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    d.moznosti.forEach { cvik ->
-                        val zviera = cvik.zviera?.let { Zvierata.podla(it) }
-                        Surface(
-                            onClick = { haptika.klik(); model.dietaVybralo(cvik) },
-                            modifier = Modifier.weight(1f).heightIn(min = 56.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            color = MaterialTheme.colorScheme.surface,
-                            border = BorderStroke(2.dp, farba.copy(alpha = 0.45f)),
-                        ) {
-                            Row(Modifier.padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Text(zviera?.emoji ?: "⭐", fontSize = 28.sp)
-                                Spacer(Modifier.width(6.dp))
-                                Text(
-                                    zviera?.meno ?: cvik.nazov,
-                                    style = MaterialTheme.typography.labelLarge,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
+            Text(
+                d.meno,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+            Labky(d.labky, farba, velkost = 24.dp)
+        }
+        Spacer(Modifier.height(6.dp))
+        when (d.krok) {
+            DetskyKrok.VYBER -> Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                d.moznosti.forEach { cvik ->
+                    val zviera = cvik.zviera?.let { Zvierata.podla(it) }
+                    Surface(
+                        onClick = { haptika.klik(); model.dietaVybralo(cvik) },
+                        modifier = Modifier.weight(1f).heightIn(min = 72.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        border = BorderStroke(2.dp, farba.copy(alpha = 0.45f)),
+                    ) {
+                        Row(Modifier.padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(zviera?.emoji ?: "⭐", fontSize = 36.sp)
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                zviera?.meno ?: cvik.nazov,
+                                style = MaterialTheme.typography.titleSmall,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
                         }
                     }
                 }
-                DetskyKrok.CVICI -> {
-                    val cvik = d.aktualny
-                    Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                        if (cvik != null) {
+            }
+            DetskyKrok.CVICI -> {
+                val cvik = d.aktualny
+                // Deti musia cvik VIDIEŤ - postavička je tu najväčší prvok pruhu.
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    if (cvik != null) {
+                        Box(
+                            Modifier
+                                .size(104.dp)
+                                .clip(CircleShape)
+                                .background(farba.copy(alpha = 0.14f)),
+                            contentAlignment = Alignment.Center,
+                        ) {
                             Postavicka(
                                 rebrikId = cvik.rebrikId,
                                 pohyb = cvik.pohyb,
-                                modifier = Modifier.size(48.dp),
+                                modifier = Modifier.size(88.dp),
                                 farba = MaterialTheme.colorScheme.onSurface,
                                 farbaAkcent = farba,
                             )
                         }
-                        Spacer(Modifier.width(6.dp))
+                    }
+                    Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f)) {
+                        val zviera = cvik?.zviera?.let { Zvierata.podla(it) }
                         Text(
-                            cvik?.nazov.orEmpty(),
-                            style = MaterialTheme.typography.titleSmall,
+                            "${zviera?.emoji ?: ""} ${cvik?.nazov.orEmpty()}".trim(),
+                            style = MaterialTheme.typography.titleMedium,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f),
                         )
-                        DetskyOdpocet(cvik?.id, farba, model, kompaktny = true)
-                        Spacer(Modifier.width(6.dp))
-                        Button(
-                            onClick = { haptika.potvrdenie(); model.dietaSpravilo() },
-                            modifier = Modifier.heightIn(min = 48.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            contentPadding = PaddingValues(horizontal = 12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = farba, contentColor = MaterialTheme.colorScheme.onTertiary),
-                        ) { Text("Spravené 🐾", style = MaterialTheme.typography.labelLarge) }
+                        Spacer(Modifier.height(6.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            DetskyOdpocet(cvik?.id, farba, model, kompaktny = true)
+                            Spacer(Modifier.width(6.dp))
+                            Button(
+                                onClick = { haptika.potvrdenie(); model.dietaSpravilo() },
+                                modifier = Modifier.heightIn(min = 48.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = farba, contentColor = MaterialTheme.colorScheme.onTertiary),
+                            ) { Text("Spravené 🐾", style = MaterialTheme.typography.labelLarge) }
+                        }
                     }
                 }
-                DetskyKrok.ODHALENIE -> Box(Modifier.weight(1f)) { DetskeOdhalenieMale(d, model) }
-                DetskyKrok.HOTOVO -> Box(Modifier.weight(1f)) { EsteTlacidlo(farba, model) }
             }
+            DetskyKrok.ODHALENIE -> DetskeOdhalenieMale(d, model)
+            DetskyKrok.HOTOVO -> EsteTlacidlo(farba, model)
         }
     }
 }
@@ -2486,7 +2639,7 @@ private fun DetskeCvicenie(s: DetskyStav, farba: Color, model: PrehravacModel) {
             Postavicka(
                 rebrikId = cvik.rebrikId,
                 pohyb = cvik.pohyb,
-                modifier = Modifier.size(88.dp),
+                modifier = Modifier.size(120.dp),
                 farba = MaterialTheme.colorScheme.onSurface,
                 farbaAkcent = farba,
             )

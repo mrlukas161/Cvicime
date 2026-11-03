@@ -398,4 +398,63 @@ class GeneratorTest {
         assertTrue(plan.bloky.isNotEmpty())
         assertTrue("odhad ${plan.odhadMinut}", plan.odhadMinut in 1..20)
     }
+
+    // ---------------------------------------------------------------- 0.8.1: spoločný tréning
+
+    @Test
+    fun `partner bez obmedzeni cvici ten isty rebrik na svojom stupni`() {
+        val hlavny = Generator.zostav(vstup(minuty = 30))
+        val partner = Generator.zladPartnera(hlavny, vstup(minuty = 30))
+        val sila = hlavny.bloky.first { it.blok == Blok.SILA }
+        val jeho = partner.bloky.getValue(Blok.SILA)
+        assertEquals(sila.polozky.size, jeho.size)
+        sila.polozky.zip(jeho).forEach { (h, p) ->
+            assertEquals(h.rebrikId, p?.rebrikId)
+            assertEquals("rovnaký rytmus", h.serie, p?.serie)
+        }
+    }
+
+    @Test
+    fun `partner s obmedzenim dostane setrnu nahradu na tu istu skupinu`() {
+        val sZnackami = cviky + mapOf(
+            "plank" to listOf(cvik("plank", 1, "stred:1.0", meranie = "vydrz").copy(znacky = "tlak_brucho")),
+        )
+        val rebrikySetrnym = rebriky + rebrik("stred-setrne", "stred")
+        val katalog = sZnackami + ("stred-setrne" to listOf(cvik("stred-setrne", 1, "stred:1.0")))
+        val hlavny = Generator.zostav(vstup(minuty = 45).copy(rebriky = rebrikySetrnym, cvikyPodlaRebrika = katalog))
+        val jej = vstup(minuty = 45).copy(
+            rebriky = rebrikySetrnym,
+            cvikyPodlaRebrika = katalog,
+            vylucitZnacky = setOf("tlak_brucho", "skok"),
+        )
+        val partner = Generator.zladPartnera(hlavny, jej)
+        val vsetky = partner.bloky.values.flatten().filterNotNull()
+        assertTrue("prešiel zakázaný cvik", vsetky.none { "tlak_brucho" in it.cvik.znacky })
+        // kde ty máš plank, ona má šetrný stred
+        hlavny.bloky.forEach { b ->
+            b.polozky.forEachIndexed { i, p ->
+                if (p.rebrikId == "plank") assertEquals("stred-setrne", partner.bloky.getValue(b.blok)[i]?.rebrikId)
+            }
+        }
+    }
+
+    @Test
+    fun `setrny rebrik sa bez obmedzenia neponuka`() {
+        val rebrikySetrnym = rebriky + rebrik("stred-setrne", "stred")
+        val katalog = cviky + ("stred-setrne" to listOf(cvik("stred-setrne", 1, "stred:1.0,lytka:1.0")))
+        val plan = Generator.zostav(vstup(minuty = 60).copy(rebriky = rebrikySetrnym, cvikyPodlaRebrika = katalog))
+        assertTrue(plan.vsetkyPolozky.none { it.second.rebrikId == "stred-setrne" })
+    }
+
+    @Test
+    fun `partner na cas a ty na pocet`() {
+        val hlavny = Generator.zostav(vstup(minuty = 30))
+        val partner = Generator.zladPartnera(
+            hlavny,
+            vstup(minuty = 30, nastavenie = NastavenieTreningu(vsetkoNaCas = true, pracaS = 45)),
+        )
+        val sila = partner.bloky.getValue(Blok.SILA).filterNotNull()
+        assertTrue(hlavny.bloky.first { it.blok == Blok.SILA }.polozky.all { it.naCasS == null })
+        assertTrue(sila.filter { it.cvik.meranie == "opakovania" }.all { it.naCasS == 45 })
+    }
 }

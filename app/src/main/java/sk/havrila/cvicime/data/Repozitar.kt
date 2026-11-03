@@ -22,6 +22,7 @@ import sk.havrila.cvicime.data.model.Naradie
 import sk.havrila.cvicime.data.model.Obmedzenie
 import sk.havrila.cvicime.data.model.Partia
 import sk.havrila.cvicime.domain.Generator
+import sk.havrila.cvicime.domain.PlanPartnera
 import sk.havrila.cvicime.domain.PlanTreningu
 import sk.havrila.cvicime.domain.Pravidla
 import sk.havrila.cvicime.domain.VstupGeneratora
@@ -132,7 +133,19 @@ class Repozitar(context: Context) {
      * Plán na dnes pre daného cvičiaceho. Náradie je spoločné pre domácnosť, všetko ostatné
      * (úrovne, ciele, objem, deload, obmedzenia) je jeho vlastné.
      */
-    suspend fun zostavPlan(dostupneMinuty: Int, ucastnikId: Long = 0): PlanTreningu {
+    suspend fun zostavPlan(dostupneMinuty: Int, ucastnikId: Long = 0): PlanTreningu =
+        Generator.zostav(vstupGeneratora(dostupneMinuty, ucastnikId, popri = false))
+
+    /**
+     * Plán druhého dospelého ZLADENÝ s hlavným: kde môže, cvičí ten istý rebrík (na svojom
+     * stupni), kde nie (obmedzenie, náradie), šetrnú náhradu na tie isté partie. Cvičí sa tak
+     * čo najviac spolu - rovnaký blok, rovnaký rytmus, často aj rovnaký cvik.
+     */
+    suspend fun zostavPlanPartnera(dostupneMinuty: Int, ucastnikId: Long, hlavny: PlanTreningu): PlanPartnera =
+        Generator.zladPartnera(hlavny, vstupGeneratora(dostupneMinuty, ucastnikId, popri = true))
+
+    /** Vstup generátora pre cvičiaceho; [popri] = cvičí popri hlavnom (vlastná voľba „na čas"). */
+    private suspend fun vstupGeneratora(dostupneMinuty: Int, ucastnikId: Long, popri: Boolean): VstupGeneratora {
         val profil = profil()
         val rebriky = katalog.rebriky()
         val cvikyPodlaRebrika = rebriky.associate { it.id to katalog.cvikyRebrika(it.id) }
@@ -164,8 +177,8 @@ class Repozitar(context: Context) {
             0
         }
 
-        return Generator.zostav(
-            VstupGeneratora(
+        val spolocne = prefs.nastavenieTreningu
+        return VstupGeneratora(
                 dostupneMinuty = dostupneMinuty,
                 naradie = naradie(),
                 urovne = urovne,
@@ -180,9 +193,13 @@ class Repozitar(context: Context) {
                 cvikyPodlaRebrika = cvikyPodlaRebrika,
                 vylucitZnacky = obmedzenia.flatMap { it.vylucujeZnacky }.toSet(),
                 // „Ako dnes" je spoločné pre všetkých, čo dnes cvičia - rovnaký štýl, každý svoj plán.
-                nastavenie = prefs.nastavenieTreningu,
+                // Kto cvičí popri, má vlastnú voľbu „všetko na čas" (ty na počet, ona na čas).
+                nastavenie = if (popri) {
+                    spolocne.copy(vsetkoNaCas = prefs.naCasUcastnika(ucastnikId) ?: spolocne.vsetkoNaCas)
+                } else {
+                    spolocne
+                },
             )
-        )
     }
 
     /**

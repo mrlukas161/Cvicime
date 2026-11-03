@@ -30,6 +30,17 @@ class Prefs(context: Context) {
             ?: if (hlasZapnuty) RezimZvuku.HLAS else RezimZvuku.PIPANIE
         set(v) = p.edit().putString("rezim_zvuku", v.kluc).apply()
 
+    /** Hlas pri cviku povie aj krátky popis, ako sa robí (prvé pokyny). */
+    var hlasPopis: Boolean
+        get() = p.getBoolean("hlas_popis", true)
+        set(v) = p.edit().putBoolean("hlas_popis", v).apply()
+
+    /** Druhý dospelý cvičí popri tebe všetko na čas? null = ako „Ako dnes". */
+    fun naCasUcastnika(id: Long): Boolean? =
+        if (p.contains("na_cas_$id")) p.getBoolean("na_cas_$id", false) else null
+
+    fun nastavNaCasUcastnika(id: Long, naCas: Boolean) = p.edit().putBoolean("na_cas_$id", naCas).apply()
+
     /** Prehrávač s väčším písmom a číslami na zrkadlenie na TV. */
     var tvRezim: Boolean
         get() = p.getBoolean("tv_rezim", false)

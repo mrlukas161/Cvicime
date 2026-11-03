@@ -54,6 +54,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Egg
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Replay
@@ -314,6 +315,10 @@ class DomovModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun naCasUcastnika(id: Long): Boolean = repo.prefs.naCasUcastnika(id) ?: _nastavenie.value.vsetkoNaCas
+
+    fun nastavNaCasUcastnika(id: Long, naCas: Boolean) = repo.prefs.nastavNaCasUcastnika(id, naCas)
+
     fun nastavHlavneho(ucastnikId: Long) {
         _hlavny.value = ucastnikId
     }
@@ -354,6 +359,7 @@ fun DomovObrazovka(
     naTest: () -> Unit,
     /** minúty, dieťa (-1 = žiadne), druhý dospelý (-1 = nikto), hlavný cvičiaci (0 = ty) */
     naPrehravac: (Int, Long, Long, Long) -> Unit,
+    naRodinu: () -> Unit = {},
     model: DomovModel = viewModel(),
 ) {
     val profil by model.profil.collectAsStateWithLifecycle()
@@ -371,6 +377,7 @@ fun DomovObrazovka(
     val zrucnosti by model.zrucnosti.collectAsStateWithLifecycle()
 
     val dospeli by model.dospeli.collectAsStateWithLifecycle()
+    var popriNaCas by remember(dospeli) { mutableStateOf(dospeli.associate { it.id to model.naCasUcastnika(it.id) }) }
     val nastavenie by model.nastavenie.collectAsStateWithLifecycle()
     val nedokonceny by model.nedokonceny.collectAsStateWithLifecycle()
 
@@ -469,6 +476,12 @@ fun DomovObrazovka(
                         deti = deti,
                         dieta = vybraneDieta,
                     ),
+                    popriNaCas = vybranyDospely?.let { popriNaCas[it] } ?: false,
+                    naPopriNaCas = { id, naCas ->
+                        model.nastavNaCasUcastnika(id, naCas)
+                        popriNaCas = popriNaCas + (id to naCas)
+                    },
+                    naRodinu = naRodinu,
                     naJa = { jaCvicim = !ja },
                     naDospeleho = { id -> sDospelym = if (vybranyDospely == id) null else id },
                     naDieta = { id -> sDietatom = if (vybraneDieta == id) null else id },
@@ -553,6 +566,9 @@ private fun DnesnyTrening(
     nastavenie: NastavenieTreningu,
     naNastavenie: (NastavenieTreningu) -> Unit,
     kto: KtoCvici,
+    popriNaCas: Boolean,
+    naPopriNaCas: (Long, Boolean) -> Unit,
+    naRodinu: () -> Unit,
     naJa: () -> Unit,
     naDospeleho: (Long) -> Unit,
     naDieta: (Long) -> Unit,
@@ -621,7 +637,8 @@ private fun DnesnyTrening(
 
         // Kto dnes cvičí - každý čip sa zapína a vypína. Deti cvičia v pauzách dospelých,
         // druhý dospelý svoj vlastný plán popri tebe (rovnaký blok, iné cviky a stupne).
-        if (kto.deti.isNotEmpty() || kto.dospeli.isNotEmpty()) {
+        // Sekcia je vždy viditeľná - aj bez rodiny, aby bolo jasné, kde sa pridáva partner či dieťa.
+        run {
             Spacer(Modifier.height(12.dp))
             NadpisSekcie("Kto dnes cvičí")
             Spacer(Modifier.height(8.dp))
@@ -651,6 +668,30 @@ private fun DnesnyTrening(
                         vybrany = kto.dieta == d.id,
                         onClick = { naDieta(d.id) },
                     )
+                }
+                PridatCip(onClick = naRodinu)
+            }
+            // Kto cvičí popri tebe, má vlastnú voľbu: ty napr. na počet, partnerka na čas.
+            val popri = kto.dospeli.firstOrNull { it.id == kto.dospely }?.takeIf { kto.ja }
+            if (popri != null) {
+                val haptika = rememberHaptika()
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                        .toggleable(value = popriNaCas, role = Role.Switch) { haptika.klik(); naPopriNaCas(popri.id, it) }
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text("${popri.meno} cvičí na čas", style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            "Cvičíte spolu: kde môže, ten istý cvik, inak šetrnú náhradu na tie isté svaly.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Switch(checked = popriNaCas, onCheckedChange = null)
                 }
             }
             val menoHlavneho = kto.dospeli.firstOrNull { it.id == kto.dospely }?.meno
@@ -948,6 +989,25 @@ private fun NedokoncenyKarta(t: TreningEntity, naUloz: () -> Unit, naZahod: () -
 }
 
 // ------------------------------------------------------------------ rodinný režim
+
+/** „+ Pridať" - vedie do Nastavení, sekcia Rodina (partner aj deti). */
+@Composable
+private fun PridatCip(onClick: () -> Unit) {
+    val haptika = rememberHaptika()
+    Row(
+        Modifier
+            .heightIn(min = 48.dp)
+            .clip(CircleShape)
+            .border(1.5.dp, MaterialTheme.colorScheme.outline, CircleShape)
+            .clickable { haptika.klik(); onClick() }
+            .padding(horizontal = 16.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(Icons.Filled.PersonAdd, contentDescription = null, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(8.dp))
+        Text("Pridať", style = MaterialTheme.typography.labelLarge)
+    }
+}
 
 /** Výber „Kto dnes cvičí" - [dospely] a [dieta] sú id vybraných (null = nikto). */
 private data class KtoCvici(
