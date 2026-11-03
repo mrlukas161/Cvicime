@@ -202,8 +202,9 @@ object Generator {
      */
     fun zladPartnera(hlavny: PlanTreningu, v: VstupGeneratora): PlanPartnera {
         val vlastnySkill = zostavSkill(v, 8, mutableListOf())
-        val pouzite = mutableSetOf<String>()
         val bloky = hlavny.bloky.associate { b ->
+            // Bez opakovania v rámci bloku; v inom bloku sa rebrík smie zopakovať (ako u hlavného).
+            val pouzite = mutableSetOf<String>()
             b.blok to b.polozky.mapIndexed { i, p ->
                 if (b.blok == Blok.SKILL) {
                     vlastnySkill.getOrNull(i)?.let { zarovnaj(v, b.blok, it.cvik, it.rebrikId, it.rebrikNazov, p) }
