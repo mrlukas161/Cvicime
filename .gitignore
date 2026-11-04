@@ -17,3 +17,4 @@ captures/
 keystore.properties
 *.jks.base64
 .claude/worktrees/
+.kotlin/
