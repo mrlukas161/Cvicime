@@ -39,6 +39,7 @@ import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.LightMode
+import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.MonitorWeight
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.PersonAdd
@@ -238,6 +239,13 @@ fun NastaveniaObrazovka(
     var vibracie by remember { mutableStateOf(model.prefs.vibracieZapnute) }
     var obrazovka by remember { mutableStateOf(model.prefs.obrazovkaStaleZapnuta) }
     var hlasPopis by remember { mutableStateOf(model.prefs.hlasPopis) }
+    var povely by remember { mutableStateOf(model.prefs.hlasovePovely) }
+    val ziadostOMikrofon = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+    ) { dane ->
+        povely = dane
+        model.prefs.hlasovePovely = dane
+    }
     var hlas by remember { mutableStateOf(model.prefs.rezimZvuku == RezimZvuku.HLAS) }
     var hladam by remember { mutableStateOf(false) }
     var stavAktualizacie by remember { mutableStateOf<String?>(null) }
@@ -336,6 +344,26 @@ fun NastaveniaObrazovka(
                 hlas = it
                 model.prefs.hlasZapnuty = it
                 model.prefs.rezimZvuku = if (it) RezimZvuku.HLAS else RezimZvuku.PIPANIE
+            }
+            Oddelovac()
+            RiadokPrepinaca(
+                ikona = Icons.Outlined.Mic,
+                farba = farbaPrehravac,
+                titul = "Hlasové povely",
+                popis = "Po sérii sa appka spýta a pár sekúnd počúva: „desať“, potom „nič / dve / päť“. " +
+                    "V pauze „preskoč“, „pridaj“ alebo „pauza“. Rozpoznávanie robí systém telefónu; " +
+                    "zvuk appka neukladá.",
+                hodnota = povely,
+            ) { zapnut ->
+                if (zapnut && androidx.core.content.ContextCompat.checkSelfPermission(
+                        kontext, android.Manifest.permission.RECORD_AUDIO,
+                    ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+                ) {
+                    ziadostOMikrofon.launch(android.Manifest.permission.RECORD_AUDIO)
+                } else {
+                    povely = zapnut
+                    model.prefs.hlasovePovely = zapnut
+                }
             }
             Oddelovac()
             RiadokPrepinaca(

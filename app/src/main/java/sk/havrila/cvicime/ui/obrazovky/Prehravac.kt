@@ -4,6 +4,7 @@ import android.app.Application
 import android.os.SystemClock
 import android.content.pm.ActivityInfo
 import androidx.activity.compose.BackHandler
+import androidx.annotation.VisibleForTesting
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -34,6 +35,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -58,6 +61,7 @@ import androidx.compose.material.icons.automirrored.rounded.TrendingUp
 import androidx.compose.material.icons.automirrored.rounded.VolumeOff
 import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.NotificationsActive
 import androidx.compose.material.icons.rounded.RecordVoiceOver
@@ -143,7 +147,10 @@ import sk.havrila.cvicime.deti.Zvierata
 import sk.havrila.cvicime.domain.PlanPolozka
 import sk.havrila.cvicime.domain.Pravidla
 import sk.havrila.cvicime.domain.Rozvrh
+import sk.havrila.cvicime.trening.Povel
+import sk.havrila.cvicime.trening.Povely
 import sk.havrila.cvicime.trening.RezimZvuku
+import sk.havrila.cvicime.trening.Ucho
 import sk.havrila.cvicime.trening.Hlas
 import sk.havrila.cvicime.trening.TreningService
 import sk.havrila.cvicime.ui.komponenty.AnimovaneCislo
@@ -364,6 +371,77 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
      */
     val hlas = Hlas(app)
 
+    /** Hlasové povely: krátke okná počúvania po otázke appky (zapína sa v Nastaveniach). */
+    private val ucho = Ucho(app)
+    private val povelyZapnute get() = repo.prefs.hlasovePovely && ucho.dostupne &&
+        androidx.core.content.ContextCompat.checkSelfPermission(app, android.Manifest.permission.RECORD_AUDIO) ==
+        android.content.pm.PackageManager.PERMISSION_GRANTED
+
+    /** Appka práve počúva (v hlavičke sa ukáže mikrofón). */
+    private val _pocuva = MutableStateFlow(false)
+    val pocuva = _pocuva.asStateFlow()
+
+    /** Počet povedaný hlasom - otázka po sérii si ho prevezme do stepperu. */
+    private val _hlasomPocet = MutableStateFlow<Int?>(null)
+    val hlasomPocet = _hlasomPocet.asStateFlow()
+
+    private var pocuvanie: Job? = null
+
+    private suspend fun pocuvaj(ms: Long = 4000): List<String> {
+        _pocuva.value = true
+        hlas.pipni(pipanieZapnute)
+        return try {
+            ucho.pocuvaj(ms)
+        } finally {
+            _pocuva.value = false
+        }
+    }
+
+    /**
+     * Po sérii: appka sa opýta nahlas a chvíľu počúva - „desať", potom „nič / dve / päť".
+     * Odpoveď vyplní to isté, čo by sa ťukalo. Kto medzitým ťukne, má prednosť (počúvanie sa zruší).
+     */
+    private fun spytajSaHlasomPoSerii(krok: KrokTreningu) {
+        if (!povelyZapnute) return
+        pocuvanie?.cancel()
+        val idx = _index.value
+        pocuvanie = viewModelScope.launch {
+            fun stale() = _stav.value != StavPrehravaca.OTAZKA || _index.value != idx || _pozastavene.value
+            _hlasomPocet.value = null
+            hlas.povedzAPockaj(if (krok.jeVydrz()) "Koľko sekúnd?" else "Koľko si spravil?", hlasZapnuty)
+            if (stale()) return@launch
+            val pocet = pocuvaj().firstNotNullOfOrNull { Povely.cislo(it) }
+            if (stale()) return@launch
+            if (pocet != null) _hlasomPocet.value = pocet
+            hlas.povedzAPockaj(
+                (if (pocet != null) "$pocet. " else "") + "Koľko si mal ešte v sebe?",
+                hlasZapnuty,
+            )
+            if (stale()) return@launch
+            val rezerva = pocuvaj().firstNotNullOfOrNull { Povely.rezerva(it) }
+            if (stale() || rezerva == null) return@launch
+            hlas.zavibruj(vibracieZapnute)
+            odpovedRir(Rir.z(rezerva), _hlasomPocet.value ?: krok.polozka.ciel)
+        }
+    }
+
+    /** Na začiatku pauzy krátke okno: „preskoč / ďalej" = koniec pauzy, „pridaj" = +15 s, „pauza" = pozastaviť. */
+    private fun pocuvajVPauze() {
+        if (!povelyZapnute) return
+        pocuvanie?.cancel()
+        val idx = _index.value
+        pocuvanie = viewModelScope.launch {
+            delay(1500) // „Pauza." dohovorí
+            if (_stav.value != StavPrehravaca.PAUZA || _index.value != idx) return@launch
+            when (pocuvaj(3500).firstNotNullOfOrNull { Povely.rozpoznaj(it) }) {
+                Povel.Preskoc, Povel.Dalej, Povel.Pokracuj -> if (_stav.value == StavPrehravaca.PAUZA && _index.value == idx) pauzaSkoncila()
+                Povel.Pridaj -> upravPauzu(15)
+                Povel.Pozastav -> pozastav()
+                else -> {}
+            }
+        }
+    }
+
     private val _zvuk = MutableStateFlow(repo.prefs.rezimZvuku)
     val zvuk = _zvuk.asStateFlow()
     val hlasZapnuty get() = _zvuk.value.hlas
@@ -407,6 +485,8 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
     }
 
     override fun onCleared() {
+        pocuvanie?.cancel()
+        ucho.zavri()
         zastavSluzbu()
         hlas.zavri()
         super.onCleared()
@@ -431,6 +511,36 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
      * [dospelyId] = druhý dospelý, ktorý cvičí popri hlavnom (-1 = nikto).
      * [hlavny] = čí plán vedie tréning: 0 = tvoj, inak dospelého (keď ty dnes necvičíš).
      */
+    /**
+     * Len pre náhľadové testy obrazoviek (rôzne telefóny): nastaví stav prehrávača priamo,
+     * bez založenia tréningu, služby a databázy. [spusti] potom už nič nerobí.
+     */
+    @VisibleForTesting
+    internal fun nastavNahlad(
+        kroky: List<KrokTreningu>,
+        index: Int,
+        stav: StavPrehravaca,
+        odpocetMs: Long = 0L,
+        detsky: DetskyStav? = null,
+        partner: PartnerStopa? = null,
+        partnerZapis: PartnerZapis? = null,
+    ) {
+        spusteny = true
+        _kroky.value = kroky
+        _index.value = index
+        _stav.value = stav
+        _celkomOdpoctu.value = odpocetMs
+        _koniecOdpoctu.value = if (odpocetMs > 0L) SystemClock.elapsedRealtime() + odpocetMs * 2 / 3 else 0L
+        _detsky.value = detsky
+        _partner.value = partner
+        _partnerZapis.value = partnerZapis
+        val p = kroky.getOrNull(index)?.partner
+        val msP = p?.let { if (it.jeNaCas()) it.sekundOdpoctu() * 1000L else 0L } ?: 0L
+        _partnerCelkom.value = msP
+        _partnerKoniec.value = if (msP > 0L) SystemClock.elapsedRealtime() + msP / 2 else 0L
+        _zaciatok.value = System.currentTimeMillis() - 7 * 60_000L
+    }
+
     fun spusti(minuty: Int, dietaId: Long, dospelyId: Long = -1, hlavny: Long = 0) {
         // Poistka: po otočení obrazovky sa LaunchedEffect spustí znova. Tréning sa nesmie založiť
         // druhýkrát - ani počas načítania, ani na súhrne (vtedy je treningId už -1).
@@ -505,6 +615,8 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
         _celkomOdpoctu.value = sekundy * 1000L
         _koniecOdpoctu.value = SystemClock.elapsedRealtime() + sekundy * 1000L
         _index.value = dalsiIndex
+        // Len pri skutočnej pauze - krátky prechod (kruh, „priprav sa") je na povel prikrátky.
+        if (sekundy >= 30) pocuvajVPauze()
     }
 
     // ------------------------------------------------------------ dospelá vetva
@@ -541,6 +653,7 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
         zacniZapisPartnera(krok)
         if (krok.pytaSaPoSerii()) {
             _stav.value = StavPrehravaca.OTAZKA
+            spytajSaHlasomPoSerii(krok)
         } else {
             zapis(krok, krok.polozka.ciel, null)
             dalej()
@@ -548,6 +661,8 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
     }
 
     fun odpovedRir(rir: Rir, skutocnaHodnota: Int?) {
+        pocuvanie?.cancel()
+        _hlasomPocet.value = null
         val krok = _kroky.value.getOrNull(_index.value) ?: return
         zapis(krok, skutocnaHodnota ?: krok.polozka.ciel, rir.hodnota)
         dalej()
@@ -917,6 +1032,9 @@ private fun popisCviku(model: PrehravacModel, cvik: CvikEntity): String {
 /** Na ležato (zrkadlenie na TV) sa obrazovky prehrávača skladajú do dvoch stĺpcov. */
 private val LocalNaLezato = compositionLocalOf { false }
 
+/** Málo výšky (menší telefón, ležato, väčšie písmo): menší nadpis, menej pokynov, nižšie tlačidlá. */
+private val LocalKompaktne = compositionLocalOf { false }
+
 /** Od akej dĺžky sa v pauze/výdrži hovorí „polovica" a predstavuje ďalší cvik (kratšie = hneď). */
 private const val POLOVICA_PAUZY_OD_MS = 16_000L
 
@@ -955,6 +1073,8 @@ fun PrehravacObrazovka(
     val partnerKoniec by model.partnerKoniec.collectAsStateWithLifecycle()
     val partnerCelkom by model.partnerCelkom.collectAsStateWithLifecycle()
     val popisZapnuty by model.popis.collectAsStateWithLifecycle()
+    val hlasomPocet by model.hlasomPocet.collectAsStateWithLifecycle()
+    val pocuva by model.pocuva.collectAsStateWithLifecycle()
 
     val zvuk by model.zvuk.collectAsStateWithLifecycle()
     val tvRezim by model.tvRezim.collectAsStateWithLifecycle()
@@ -1170,7 +1290,13 @@ fun PrehravacObrazovka(
     val detskyPanel = detsky != null && vTreningu
     BoxWithConstraints(Modifier.fillMaxSize()) {
     val naLezato = maxWidth > maxHeight
-    CompositionLocalProvider(LocalDensity provides tvHustota, LocalNaLezato provides naLezato) {
+    // Výška v dp po zohľadnení TV režimu a veľkosti písma (väčšie písmo = „menej" miesta).
+    val kompaktne = naLezato || maxHeight * (hustota.density / tvHustota.density) / tvHustota.fontScale < 760.dp
+    CompositionLocalProvider(
+        LocalDensity provides tvHustota,
+        LocalNaLezato provides naLezato,
+        LocalKompaktne provides kompaktne,
+    ) {
     Box(Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -1197,6 +1323,12 @@ fun PrehravacObrazovka(
                     naZamok = model::prepniZamok,
                     popis = popisZapnuty,
                     naPopis = model::prepniPopis,
+                    pocuva = pocuva,
+                    ovladanie = if (naLezato && (stav == StavPrehravaca.CVICENIE || stav == StavPrehravaca.PAUZA)) {
+                        { SpodneOvladanie(model::preskoc, model::skrat, pytajSaNaKoniec, vHlavicke = true) }
+                    } else {
+                        null
+                    },
                 )
             }
 
@@ -1259,7 +1391,7 @@ fun PrehravacObrazovka(
                         StavPrehravaca.OTAZKA -> {
                             val kr = o.krok
                             if (kr != null) {
-                                OtazkaRezervy(kr) { rir, hodnota ->
+                                OtazkaRezervy(kr, hlasomPocet) { rir, hodnota ->
                                     model.akAktualny(k) { model.odpovedRir(rir, hodnota) }
                                 }
                             }
@@ -1288,10 +1420,10 @@ fun PrehravacObrazovka(
                 Spacer(Modifier.width(12.dp))
                 Column(
                     Modifier
-                        .width(280.dp)
+                        .width(250.dp)
                         .fillMaxHeight()
                         .verticalScroll(rememberScrollState()),
-                ) { DetskyPruh(d, model) }
+                ) { DetskyPruhKompaktny(d, model) }
             }
             }
 
@@ -1303,7 +1435,7 @@ fun PrehravacObrazovka(
             }
 
             AnimatedVisibility(
-                visible = vTreningu && (stav == StavPrehravaca.CVICENIE || stav == StavPrehravaca.PAUZA),
+                visible = !naLezato && vTreningu && (stav == StavPrehravaca.CVICENIE || stav == StavPrehravaca.PAUZA),
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically(),
             ) {
@@ -1353,7 +1485,7 @@ fun PrehravacObrazovka(
                         potvrdenieKonca = false
                         model.ukonci()
                     },
-                ) { Text("Ukončiť") }
+                ) { Text("Ukončiť", maxLines = 1, softWrap = false) }
             },
             dismissButton = {
                 TextButton(onClick = zavriPotvrdenie) { Text("Pokračovať") }
@@ -1387,6 +1519,9 @@ private fun Hlavicka(
     naZamok: () -> Unit,
     popis: Boolean,
     naPopis: () -> Unit,
+    pocuva: Boolean = false,
+    /** na ležato idú Vynechať / Nevládzem / Ukončiť do hlavičky - dole by zjedli výšku */
+    ovladanie: (@Composable () -> Unit)? = null,
 ) {
     val krok = kroky.getOrNull(index)
     val farbaBloku = krok?.let { FarbyBlokov.pre(it.blok) } ?: MaterialTheme.colorScheme.primary
@@ -1417,6 +1552,17 @@ private fun Hlavicka(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
             )
+            ovladanie?.invoke()
+            if (pocuva) {
+                // Appka počúva odpoveď - mikrofón v hlavičke, aby bolo jasné, že treba hovoriť.
+                Icon(
+                    Icons.Rounded.Mic,
+                    contentDescription = "Počúvam",
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(24.dp),
+                )
+                Spacer(Modifier.width(6.dp))
+            }
             UplynulyCas(zaciatok)
             Spacer(Modifier.width(4.dp))
             // Reproduktor: hlas + pípanie → len pípanie → ticho (napr. keď hrá vlastná hudba).
@@ -1621,21 +1767,24 @@ private fun KruhPostavicky(rebrikId: String, farba: Color, velkost: Dp, pohyb: S
 @Composable
 private fun HlavaCviku(krok: KrokTreningu, farba: Color) {
     val slovo = if (krok.blok == Blok.KRUH) "Kolo" else "Séria"
+    val kompaktne = LocalKompaktne.current
     Kapsula(text = "$slovo ${krok.cisloSerie} / ${krok.zoSerii}", farba = farba)
-    Spacer(Modifier.height(10.dp))
+    Spacer(Modifier.height(if (kompaktne) 4.dp else 10.dp))
     Text(
         krok.polozka.cvik.nazov,
-        style = MaterialTheme.typography.headlineMedium,
+        style = if (kompaktne) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium,
         textAlign = TextAlign.Center,
-        maxLines = 3,
+        maxLines = 2,
         overflow = TextOverflow.Ellipsis,
     )
 }
 
 @Composable
 private fun Pokyny(krok: KrokTreningu) {
-    val pokyny = remember(krok.polozka.cvik.cue) {
-        krok.polozka.cvik.cue.split("|").filter { it.isNotBlank() }.take(3)
+    // Na menšom displeji len dva pokyny - zvyšok povie hlas (popis cviku).
+    val kolko = if (LocalKompaktne.current) 2 else 3
+    val pokyny = remember(krok.polozka.cvik.cue, kolko) {
+        krok.polozka.cvik.cue.split("|").filter { it.isNotBlank() }.take(kolko)
     }
     if (pokyny.isEmpty()) return
     Column(
@@ -1702,11 +1851,15 @@ private fun CvicenieOpakovania(krok: KrokTreningu, o: PrehravacObraz, naHotovo: 
         lavy = {
             if (!naLezato) HlavaCviku(krok, farba)
             Spacer(Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                KruhPostavicky(krok.polozka.rebrikId, farba, if (naLezato) 140.dp else 120.dp, pohyb = krok.polozka.cvik.pohyb)
-                Spacer(Modifier.width(16.dp))
+            val cislo: @Composable () -> Unit = {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("$ciel", style = StylVelkeCislo.copy(fontSize = 72.sp), color = MaterialTheme.colorScheme.onSurface)
+                    Text(
+                        "$ciel",
+                        style = StylVelkeCislo.copy(fontSize = if (naLezato) 56.sp else 72.sp),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        softWrap = false,
+                    )
                     Text(
                         if (Meranie.z(krok.polozka.cvik.meranie) == Meranie.VZDIALENOST) {
                             sklonuj(ciel, "meter", "metre", "metrov")
@@ -1715,15 +1868,28 @@ private fun CvicenieOpakovania(krok: KrokTreningu, o: PrehravacObraz, naHotovo: 
                         },
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
                     )
+                }
+            }
+            if (naLezato) {
+                // Úzky stĺpec: postavička a číslo pod sebou, inak by sa číslo lámalo po cifrách.
+                KruhPostavicky(krok.polozka.rebrikId, farba, 120.dp, pohyb = krok.polozka.cvik.pohyb)
+                cislo()
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                    KruhPostavicky(krok.polozka.rebrikId, farba, 120.dp, pohyb = krok.polozka.cvik.pohyb)
+                    Spacer(Modifier.width(16.dp))
+                    cislo()
                 }
             }
         },
         pravy = {
             if (naLezato) HlavaCviku(krok, farba)
-            Spacer(Modifier.height(10.dp))
-            Pokyny(krok)
+            // Druhý dospelý hneď pod tvojím cvikom - pokyny sú až potom (a povie ich aj hlas).
             KartaPartnera(krok, o)
+            Spacer(Modifier.height(8.dp))
+            Pokyny(krok)
         },
         spodok = { VelkeTlacidlo(text = "Hotovo", onClick = naHotovo, ikona = Icons.Rounded.Check) },
     )
@@ -1764,6 +1930,7 @@ private fun CvicenieVydrz(krok: KrokTreningu, o: PrehravacObraz) {
             },
             pravy = {
                 if (naLezato) HlavaCviku(krok, farba)
+                KartaPartnera(krok, o)
                 if (krok.polozka.naCasS != null && !krok.jeVydrz()) {
                     Spacer(Modifier.height(6.dp))
                     Text(
@@ -1774,9 +1941,8 @@ private fun CvicenieVydrz(krok: KrokTreningu, o: PrehravacObraz) {
                         textAlign = TextAlign.Center,
                     )
                 }
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(8.dp))
                 Pokyny(krok)
-                KartaPartnera(krok, o)
             },
         )
     }
@@ -1785,11 +1951,13 @@ private fun CvicenieVydrz(krok: KrokTreningu, o: PrehravacObraz) {
 // ---------------------------------------------------------------- otázka po sérii
 
 @Composable
-private fun OtazkaRezervy(krok: KrokTreningu, odpoved: (Rir, Int?) -> Unit) {
+private fun OtazkaRezervy(krok: KrokTreningu, hlasomPocet: Int?, odpoved: (Rir, Int?) -> Unit) {
     val naCas = krok.jeVydrz()
     var hodnota by rememberSaveable(krok.polozka.cvik.id, krok.cisloSerie) {
         mutableIntStateOf(krok.polozka.ciel)
     }
+    // Povedané hlasom sa prepíše do stepperu - dá sa ešte opraviť ťuknutím.
+    LaunchedEffect(hlasomPocet) { if (hlasomPocet != null) hodnota = hlasomPocet }
     val krokZmeny = if (naCas) 5 else 1
     val farba = FarbyBlokov.pre(krok.blok)
 
@@ -1801,13 +1969,14 @@ private fun OtazkaRezervy(krok: KrokTreningu, odpoved: (Rir, Int?) -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
+            val kompaktne = LocalKompaktne.current
             Spacer(Modifier.height(6.dp))
             Text(
                 if (naCas) "Koľko sekúnd si vydržal?" else "Koľko si spravil?",
-                style = MaterialTheme.typography.headlineMedium,
+                style = if (kompaktne) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium,
                 textAlign = TextAlign.Center,
             )
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(if (kompaktne) 8.dp else 18.dp))
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 TlacidloKroku(Icons.Rounded.Remove, "Menej", farba) {
                     val nova = (hodnota - krokZmeny).coerceAtLeast(0)
@@ -1818,7 +1987,7 @@ private fun OtazkaRezervy(krok: KrokTreningu, odpoved: (Rir, Int?) -> Unit) {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     AnimovaneCislo(
                         hodnota = hodnota,
-                        style = StylVelkeCislo,
+                        style = if (LocalKompaktne.current) StylVelkeCislo.copy(fontSize = 64.sp) else StylVelkeCislo,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
@@ -1842,9 +2011,18 @@ private fun OtazkaRezervy(krok: KrokTreningu, odpoved: (Rir, Int?) -> Unit) {
             Spacer(Modifier.height(16.dp))
             Text("Koľko si mal ešte v sebe?", style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(10.dp))
-            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                listOf(Rir.NIC, Rir.JEDNO_DVE, Rir.TRI_A_VIAC).forEach { r ->
-                    VolbaRezervy(r.popis, farba) { odpoved(r, hodnota) }
+            if (LocalKompaktne.current && !LocalNaLezato.current) {
+                // Menší telefón: tri odpovede vedľa seba, aby pod nimi ostalo miesto pre deti.
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(Rir.NIC to "Nič", Rir.JEDNO_DVE to "1–2", Rir.TRI_A_VIAC to "3+").forEach { (r, text) ->
+                        Box(Modifier.weight(1f)) { VolbaRezervy(text, farba) { odpoved(r, hodnota) } }
+                    }
+                }
+            } else {
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    listOf(Rir.NIC, Rir.JEDNO_DVE, Rir.TRI_A_VIAC).forEach { r ->
+                        VolbaRezervy(r.popis, farba) { odpoved(r, hodnota) }
+                    }
                 }
             }
         },
@@ -1890,7 +2068,7 @@ private fun TlacidloKroku(ikona: ImageVector, popis: String, farba: Color, naKro
             }
         },
         modifier = Modifier
-            .size(80.dp)
+            .size(if (LocalKompaktne.current) 64.dp else 80.dp)
             .pruzneStlacenie(interakcia),
         shape = CircleShape,
         color = farba.copy(alpha = 0.16f).compositeOver(MaterialTheme.colorScheme.surfaceContainerHigh),
@@ -1915,14 +2093,14 @@ private fun VolbaRezervy(text: String, farba: Color, onClick: () -> Unit) {
         },
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 60.dp)
+            .heightIn(min = if (LocalKompaktne.current) 52.dp else 60.dp)
             .pruzneStlacenie(interakcia),
         shape = RoundedCornerShape(20.dp),
         color = farba.copy(alpha = 0.16f).compositeOver(MaterialTheme.colorScheme.surfaceContainerLow),
         contentColor = MaterialTheme.colorScheme.onSurface,
         interactionSource = interakcia,
     ) {
-        Box(Modifier.padding(vertical = 14.dp), contentAlignment = Alignment.Center) {
+        Box(Modifier.padding(vertical = if (LocalKompaktne.current) 8.dp else 14.dp), contentAlignment = Alignment.Center) {
             Text(text, style = MaterialTheme.typography.titleLarge)
         }
     }
@@ -2091,12 +2269,13 @@ private fun KartaPartnera(krok: KrokTreningu, o: PrehravacObraz) {
     if (partner == null || p == null) return
     val farba = Color(partner.farba)
     val spolu = p.polozka.cvik.id == krok.polozka.cvik.id
-    Spacer(Modifier.height(12.dp))
+    Spacer(Modifier.height(8.dp))
     TonovanaKarta(farba = farba, vnutorneOdsadenie = 12.dp) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            val velkost = if (LocalKompaktne.current) 56.dp else 72.dp
             Box(
                 Modifier
-                    .size(72.dp)
+                    .size(velkost)
                     .clip(CircleShape)
                     .background(farba.copy(alpha = 0.16f)),
                 contentAlignment = Alignment.Center,
@@ -2104,7 +2283,7 @@ private fun KartaPartnera(krok: KrokTreningu, o: PrehravacObraz) {
                 Postavicka(
                     rebrikId = p.polozka.rebrikId,
                     pohyb = p.polozka.cvik.pohyb,
-                    modifier = Modifier.size(58.dp),
+                    modifier = Modifier.size(velkost * 0.8f),
                     farba = MaterialTheme.colorScheme.onSurface,
                     farbaAkcent = farba,
                 )
@@ -2215,8 +2394,10 @@ private fun ZapisPartnera(z: PartnerZapis, partner: PartnerStopa, uprav: ((Partn
         if (rir != null) {
             Spacer(Modifier.height(8.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                listOf(Rir.NIC, Rir.JEDNO_DVE, Rir.TRI_A_VIAC).forEach { r ->
-                    MalaVolba(r.popis, vybrana = rir == r, farba = farba, modifier = Modifier.weight(1f)) {
+                listOf(Rir.NIC to "Už nič", Rir.JEDNO_DVE to "Ešte 1–2", Rir.TRI_A_VIAC to "Ešte 3+").forEach { (r, dlhy) ->
+                    // V úzkom stĺpci (ležato) krátke popisy, inak sa orežú.
+                    val text = if (LocalNaLezato.current) dlhy.removePrefix("Ešte ").removePrefix("Už ") else dlhy
+                    MalaVolba(text, vybrana = rir == r, farba = farba, modifier = Modifier.weight(1f)) {
                         uprav { it.copy(rir = r) }
                     }
                 }
@@ -2270,8 +2451,14 @@ private fun MalaVolba(text: String, vybrana: Boolean, farba: Color, modifier: Mo
         contentColor = MaterialTheme.colorScheme.onSurface,
         border = if (vybrana) BorderStroke(1.5.dp, farba) else null,
     ) {
-        Box(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), contentAlignment = Alignment.Center) {
-            Text(text, style = MaterialTheme.typography.labelLarge, maxLines = 1, fontWeight = if (vybrana) FontWeight.SemiBold else FontWeight.Medium)
+        Box(Modifier.padding(horizontal = 8.dp, vertical = 10.dp), contentAlignment = Alignment.Center) {
+            Text(
+                text,
+                style = MaterialTheme.typography.labelLarge,
+                maxLines = 1,
+                softWrap = false,
+                fontWeight = if (vybrana) FontWeight.SemiBold else FontWeight.Medium,
+            )
         }
     }
 }
@@ -2379,6 +2566,7 @@ private fun EsteTlacidlo(farba: Color, model: PrehravacModel) {
  * Detský pruh na výšku: jeden riadok pod tvojím cvikom, aby nezabral sériu.
  * Rovnaká mechanika ako veľký panel (výber z dvoch, labka za pokus, neohlásené zviera).
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DetskyPruhKompaktny(d: DetskyStav, model: PrehravacModel) {
     val farba = MaterialTheme.colorScheme.tertiary
@@ -2406,15 +2594,28 @@ private fun DetskyPruhKompaktny(d: DetskyStav, model: PrehravacModel) {
                         color = MaterialTheme.colorScheme.surface,
                         border = BorderStroke(2.dp, farba.copy(alpha = 0.45f)),
                     ) {
-                        Row(Modifier.padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text(zviera?.emoji ?: "⭐", fontSize = 36.sp)
-                            Spacer(Modifier.width(6.dp))
-                            Text(
-                                zviera?.meno ?: cvik.nazov,
-                                style = MaterialTheme.typography.titleSmall,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
-                            )
+                        if (LocalNaLezato.current) {
+                            // Úzky stĺpec: zviera a meno pod sebou.
+                            Column(Modifier.padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(zviera?.emoji ?: "⭐", fontSize = 36.sp)
+                                Text(
+                                    zviera?.meno ?: cvik.nazov,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        } else {
+                            Row(Modifier.padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Text(zviera?.emoji ?: "⭐", fontSize = 36.sp)
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    zviera?.meno ?: cvik.nazov,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
                         }
                     }
                 }
@@ -2426,7 +2627,7 @@ private fun DetskyPruhKompaktny(d: DetskyStav, model: PrehravacModel) {
                     if (cvik != null) {
                         Box(
                             Modifier
-                                .size(104.dp)
+                                .size(if (LocalNaLezato.current) 84.dp else 104.dp)
                                 .clip(CircleShape)
                                 .background(farba.copy(alpha = 0.14f)),
                             contentAlignment = Alignment.Center,
@@ -2450,16 +2651,19 @@ private fun DetskyPruhKompaktny(d: DetskyStav, model: PrehravacModel) {
                             overflow = TextOverflow.Ellipsis,
                         )
                         Spacer(Modifier.height(6.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        // V úzkom stĺpci (ležato) sa tlačidlá zalomia pod seba.
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
                             DetskyOdpocet(cvik?.id, farba, model, kompaktny = true)
-                            Spacer(Modifier.width(6.dp))
                             Button(
                                 onClick = { haptika.potvrdenie(); model.dietaSpravilo() },
                                 modifier = Modifier.heightIn(min = 48.dp),
                                 shape = RoundedCornerShape(16.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp),
+                                contentPadding = PaddingValues(horizontal = 14.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = farba, contentColor = MaterialTheme.colorScheme.onTertiary),
-                            ) { Text("Spravené 🐾", style = MaterialTheme.typography.labelLarge) }
+                            ) { Text("Spravené", style = MaterialTheme.typography.labelLarge, maxLines = 1) }
                         }
                     }
                 }
@@ -2709,13 +2913,16 @@ private fun DetskeOdhalenie(s: DetskyStav, model: PrehravacModel) {
 // ---------------------------------------------------------------- ovládanie a pozastavenie
 
 @Composable
-private fun SpodneOvladanie(naVynechanie: () -> Unit, naSkratenie: () -> Unit, naUkoncenie: () -> Unit) {
+private fun SpodneOvladanie(
+    naVynechanie: () -> Unit,
+    naSkratenie: () -> Unit,
+    naUkoncenie: () -> Unit,
+    vHlavicke: Boolean = false,
+) {
     val haptika = rememberHaptika()
     Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(top = 10.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
+        if (vHlavicke) Modifier else Modifier.fillMaxWidth().padding(top = if (LocalKompaktne.current) 4.dp else 10.dp),
+        horizontalArrangement = if (vHlavicke) Arrangement.spacedBy(2.dp) else Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TextButton(
@@ -2724,21 +2931,21 @@ private fun SpodneOvladanie(naVynechanie: () -> Unit, naSkratenie: () -> Unit, n
                 naVynechanie()
             },
             modifier = Modifier.heightIn(min = 48.dp),
-        ) { Text("Vynechať") }
+        ) { Text("Vynechať", maxLines = 1, softWrap = false) }
         OutlinedButton(
             onClick = {
                 haptika.klik()
                 naSkratenie()
             },
             modifier = Modifier.heightIn(min = 48.dp),
-        ) { Text("Nevládzem") }
+        ) { Text("Nevládzem", maxLines = 1, softWrap = false) }
         TextButton(
             onClick = {
                 haptika.klik()
                 naUkoncenie()
             },
             modifier = Modifier.heightIn(min = 48.dp),
-        ) { Text("Ukončiť") }
+        ) { Text("Ukončiť", maxLines = 1, softWrap = false) }
     }
 }
 

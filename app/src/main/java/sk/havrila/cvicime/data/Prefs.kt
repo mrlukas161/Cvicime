@@ -30,6 +30,11 @@ class Prefs(context: Context) {
             ?: if (hlasZapnuty) RezimZvuku.HLAS else RezimZvuku.PIPANIE
         set(v) = p.edit().putString("rezim_zvuku", v.kluc).apply()
 
+    /** Hlasové povely (po sérii sa appka spýta a chvíľu počúva). Vyžaduje povolenie mikrofónu. */
+    var hlasovePovely: Boolean
+        get() = p.getBoolean("hlasove_povely", false)
+        set(v) = p.edit().putBoolean("hlasove_povely", v).apply()
+
     /** Hlas pri cviku povie aj krátky popis, ako sa robí (prvé pokyny). */
     var hlasPopis: Boolean
         get() = p.getBoolean("hlas_popis", true)

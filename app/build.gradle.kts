@@ -100,4 +100,8 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
 
     testImplementation(libs.bundles.test)
+    // Náhľady obrazoviek na rôznych telefónoch (Robolectric so skutočným vykreslením) - len testy.
+    testImplementation(platform(libs.compose.bom))
+    testImplementation(libs.compose.ui.test.junit4)
+    debugImplementation(libs.compose.ui.test.manifest)
 }

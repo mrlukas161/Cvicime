@@ -14,6 +14,7 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import java.util.Locale
+import kotlin.coroutines.resume
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -52,6 +53,9 @@ class Hlas(context: Context) {
 
     /** Vety, ktoré ešte nedohovoril - focus sa vráti až po poslednej (aj prerušenej). */
     private val rozpravane: MutableSet<String> = ConcurrentHashMap.newKeySet()
+
+    /** Čo spraviť, keď konkrétna veta dobehne (napr. začať počúvať odpoveď). */
+    private val poVete = ConcurrentHashMap<String, () -> Unit>()
     private var cisloVety = 0
 
     private val vibrator: Vibrator? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -87,23 +91,44 @@ class Hlas(context: Context) {
     }
 
     /** Povie text (preruší, čo práve hovorí), ak je slovenský hlas dostupný a hlas je zapnutý. */
-    fun povedz(text: String, zapnuty: Boolean) = hovor(text, zapnuty, TextToSpeech.QUEUE_FLUSH)
+    fun povedz(text: String, zapnuty: Boolean) {
+        hovor(text, zapnuty, TextToSpeech.QUEUE_FLUSH)
+    }
 
     /** Povie text po tom, čo práve hovorí - napr. detská veta za ohlásením tvojho cviku. */
-    fun povedzPotom(text: String, zapnuty: Boolean) = hovor(text, zapnuty, TextToSpeech.QUEUE_ADD)
+    fun povedzPotom(text: String, zapnuty: Boolean) {
+        hovor(text, zapnuty, TextToSpeech.QUEUE_ADD)
+    }
 
-    private fun hovor(text: String, zapnuty: Boolean, rezim: Int) {
-        if (!zapnuty || !jazykOk || text.isBlank()) return
-        val t = tts ?: return
+    /**
+     * Povie otázku a počká, kým ju dohovorí (aby mikrofón nepočul appku samu seba).
+     * Keď hlas nie je, vráti sa hneď.
+     */
+    suspend fun povedzAPockaj(text: String, zapnuty: Boolean) {
+        if (!zapnuty || !jazykOk || text.isBlank() || tts == null) return
+        kotlinx.coroutines.suspendCancellableCoroutine { k ->
+            val id = hovor(text, true, TextToSpeech.QUEUE_FLUSH) { if (k.isActive) k.resume(Unit) }
+            if (id == null && k.isActive) k.resume(Unit)
+        }
+    }
+
+    private fun hovor(text: String, zapnuty: Boolean, rezim: Int, potom: (() -> Unit)? = null): String? {
+        if (!zapnuty || !jazykOk || text.isBlank()) return null
+        val t = tts ?: return null
         val id = "cvicime-${cisloVety++}"
+        if (potom != null) poVete[id] = potom
         if (rozpravane.isEmpty()) poziadajOFocus()
         rozpravane += id
         val vysledok = t.speak(text, rezim, Bundle(), id)
         if (vysledok != TextToSpeech.SUCCESS) dohovorene(id)
+        return id
     }
 
     private fun dohovorene(id: String?) {
-        if (id != null) rozpravane -= id
+        if (id != null) {
+            rozpravane -= id
+            poVete.remove(id)?.invoke()
+        }
         if (rozpravane.isEmpty()) vratFocus()
     }
 
@@ -131,6 +156,8 @@ class Hlas(context: Context) {
     fun stichni() {
         tts?.stop()
         rozpravane.clear()
+        // Kto čakal na dohovorenie, nesmie visieť navždy.
+        poVete.keys.toList().forEach { poVete.remove(it)?.invoke() }
         vratFocus()
     }
 
