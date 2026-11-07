@@ -111,6 +111,18 @@ class NahladyObrazoviekTest {
     @Test @Config(qualifiers = "w412dp-h915dp-port-xxhdpi")
     fun velky() = snimky("velky-412x915")
 
+    /** POCO X6/X7/M6 Pro a podobné: 6,67" 1080×2400 pri 440 dpi. */
+    @Test @Config(qualifiers = "w393dp-h873dp-port-xxhdpi")
+    fun poco1080() = snimky("poco-393x873")
+
+    /** POCO F6/X6 Pro a podobné: 6,67" 1220×2712 pri 480 dpi (HyperOS predvolene). */
+    @Test @Config(qualifiers = "w407dp-h904dp-port-xxhdpi")
+    fun poco1220() = snimky("poco-407x904")
+
+    /** Lacnejšie POCO (C-séria): 6,7" 720×1600 - po prepočte užší a nižší. */
+    @Test @Config(qualifiers = "w360dp-h800dp-port-xhdpi")
+    fun pocoC() = snimky("poco-c-360x800")
+
     @Test @Config(qualifiers = "w800dp-h360dp-land-xxhdpi")
     fun lezato() = snimky("lezato-800x360")
 
