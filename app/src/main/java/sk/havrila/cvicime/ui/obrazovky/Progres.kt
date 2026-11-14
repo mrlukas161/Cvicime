@@ -7,6 +7,10 @@ import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import sk.havrila.cvicime.data.model.Skupina
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Remove
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -133,6 +137,22 @@ data class ProgresZrucnost(
 )
 
 /** Súhrnné čísla v hlavičke Pokroku. */
+/** Riadok mapy úrovní: kde som v rebríku a čo chýba do ďalšieho stupňa. */
+data class RiadokMapy(
+    val rebrikId: String,
+    val nazov: String,
+    val skupina: Skupina,
+    val uroven: Int,
+    val max: Int,
+    val cvik: String,
+    val meranie: String,
+    val cielMin: Int,
+    val cielMax: Int,
+    /** série z posledného tréningu na aktuálnom cviku (napr. 11, 11, 10) */
+    val naposledy: List<Int>,
+    val jeCiel: Boolean,
+)
+
 data class ProgresStatistiky(
     val treningov: Int,
     val trvanieMs: Long,
@@ -192,11 +212,45 @@ class ProgresModel(app: Application) : AndroidViewModel(app) {
         obnov()
     }
 
+    private val _mapa = MutableStateFlow<List<RiadokMapy>>(emptyList())
+    val mapa = _mapa.asStateFlow()
+
+    /** Ručná zmena stupňa (napr. keď cvik ide ľahko, alebo naopak bolí) - bez čakania na engine. */
+    fun zmenUroven(rebrikId: String, delta: Int) {
+        viewModelScope.launch {
+            val max = repo.katalog.maxUroven(rebrikId) ?: return@launch
+            val nova = (repo.urovenVRebriku(rebrikId) + delta).coerceIn(1, max)
+            repo.nastavUroven(rebrikId, nova)
+            obnov()
+        }
+    }
+
+    private suspend fun zostavMapu(urovne: Map<String, Int>, maxy: Map<String, Int>, ciele: Set<String>) {
+        val posledne = repo.denik.posledneSerieSily(0).groupBy { it.cvikId }
+        _mapa.value = repo.rebriky()
+            .filter { Skupina.z(it.skupina) in MAPA_SKUPINY && it.id !in MIMO_MAPY }
+            .mapNotNull { r ->
+                val max = maxy[r.id] ?: return@mapNotNull null
+                val uroven = (urovne[r.id] ?: 1).coerceIn(1, max)
+                val cvik = repo.katalog.cvik(r.id, uroven) ?: return@mapNotNull null
+                val serie = posledne[cvik.id].orEmpty()
+                val naposledy = serie.filter { it.treningId == serie.firstOrNull()?.treningId }
+                    .sortedBy { it.poradie }.mapNotNull { it.skutocnaHodnota }
+                RiadokMapy(
+                    rebrikId = r.id, nazov = r.nazov, skupina = Skupina.z(r.skupina), uroven = uroven, max = max,
+                    cvik = cvik.nazov, meranie = cvik.meranie, cielMin = cvik.cielMin, cielMax = cvik.cielMax,
+                    naposledy = naposledy, jeCiel = r.id in ciele,
+                )
+            }
+            .sortedWith(compareByDescending<RiadokMapy> { it.jeCiel }.thenBy { it.skupina.ordinal })
+    }
+
     fun obnov() {
         viewModelScope.launch {
             val urovne = repo.denik.urovne().associate { it.rebrikId to it.uroven }
             val maxy = repo.katalog.maxUrovne().associate { it.rebrikId to it.maxUroven }
             val aktivne = repo.denik.aktivneCiele()
+            zostavMapu(urovne, maxy, aktivne.map { it.kluc }.toSet())
             val cieleZrucnosti = aktivne.filter { DruhCiela.z(it.druh) == DruhCiela.ZRUCNOST }
 
             _zrucnosti.value = cieleZrucnosti.map { c ->
@@ -273,6 +327,7 @@ fun ProgresObrazovka(naTest: () -> Unit, model: ProgresModel = viewModel()) {
     val retest by model.retest.collectAsStateWithLifecycle()
     val nacitane by model.nacitane.collectAsStateWithLifecycle()
 
+    val mapa by model.mapa.collectAsStateWithLifecycle()
     var dialogMiera by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) { model.obnov() }
@@ -318,6 +373,24 @@ fun ProgresObrazovka(naTest: () -> Unit, model: ProgresModel = viewModel()) {
             item(key = "nadpis-ciele") { NadpisSekcie("Ciele") }
             items(zrucnosti, key = { "ciel-${it.stav.kluc}" }) { z ->
                 KartaZrucnosti(z, Modifier.animateItem())
+            }
+        }
+
+        // ---------------- mapa úrovní ----------------
+        if (mapa.isNotEmpty()) {
+            item(key = "nadpis-mapa") {
+                Column {
+                    NadpisSekcie("Mapa úrovní")
+                    Text(
+                        "Kde si v každom rebríku a čo chýba do ďalšieho stupňa. Stupeň posúva appka sama " +
+                            "z tvojich odpovedí po sérii; ± ho zmeníš ručne.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            items(mapa, key = { "mapa-${it.rebrikId}" }) { r ->
+                RiadokMapyKarta(r, naZmenu = { d -> model.zmenUroven(r.rebrikId, d) }, modifier = Modifier.animateItem())
             }
         }
 
@@ -1174,4 +1247,64 @@ private fun DialogMiery(zavri: () -> Unit, uloz: (String, Double) -> Unit) {
         },
         dismissButton = { TextButton(onClick = zavri) { Text("Zrušiť") } },
     )
+}
+
+private val MAPA_SKUPINY = setOf(Skupina.ZRUCNOST, Skupina.TLAK, Skupina.TAH, Skupina.NOHY, Skupina.STRED)
+
+/** Šetrný stred je náhrada pri obmedzení, nie rebrík na mape hlavného cvičiaceho. */
+private val MIMO_MAPY = setOf("stred-setrne")
+
+@Composable
+private fun RiadokMapyKarta(r: RiadokMapy, naZmenu: (Int) -> Unit, modifier: Modifier = Modifier) {
+    val farba = if (r.jeCiel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+    TonovanaKarta(farba = if (r.jeCiel) farba else null, vnutorneOdsadenie = 14.dp, modifier = modifier) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    r.nazov + if (r.jeCiel) " · cieľ" else "",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(r.cvik, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            }
+            FilledTonalIconButton(onClick = { naZmenu(-1) }, enabled = r.uroven > 1, modifier = Modifier.size(40.dp)) {
+                Icon(Icons.Rounded.Remove, contentDescription = "O stupeň nižšie")
+            }
+            Text(
+                "${r.uroven}/${r.max}",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(horizontal = 8.dp),
+            )
+            FilledTonalIconButton(onClick = { naZmenu(1) }, enabled = r.uroven < r.max, modifier = Modifier.size(40.dp)) {
+                Icon(Icons.Rounded.Add, contentDescription = "O stupeň vyššie")
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        // Stupne ako bodky - na prvý pohľad, koľko z rebríka je za mnou.
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            repeat(r.max) { i ->
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .height(6.dp)
+                        .clip(CircleShape)
+                        .background(if (i < r.uroven) farba else MaterialTheme.colorScheme.surfaceContainerHighest),
+                )
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        val j = if (r.meranie == "vydrz") " s" else ""
+        Text(
+            buildString {
+                if (r.naposledy.isNotEmpty()) append("Naposledy ${r.naposledy.joinToString(" · ")}$j. ")
+                if (r.uroven < r.max) {
+                    append("Ďalší stupeň: ${r.cielMax}$j v dvoch sériách s rezervou.")
+                } else {
+                    append("Posledný stupeň rebríka.")
+                }
+            },
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 }
