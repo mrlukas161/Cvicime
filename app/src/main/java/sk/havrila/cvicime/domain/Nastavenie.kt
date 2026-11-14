@@ -10,7 +10,20 @@ data class NastavenieTreningu(
     val vsetkoNaCas: Boolean = false,
     val pracaS: Int = 40,
     val pauzy: DlzkaPauz = DlzkaPauz.AUTOMATICKY,
+    val zrucnosti: PocetZrucnosti = PocetZrucnosti.DVE,
 )
+
+/** Koľko zručností (L-sit, stojka…) v jednom tréningu. */
+enum class PocetZrucnosti(val kluc: String, val nazov: String) {
+    JEDNA("jedna", "Jedna"),
+    DVE("dve", "Dve"),
+    /** jedna za tréning, každý deň iná - keď je cieľov viac a času málo */
+    STRIEDAT("striedat", "Striedať");
+
+    companion object {
+        fun z(kluc: String?): PocetZrucnosti = entries.firstOrNull { it.kluc == kluc } ?: DVE
+    }
+}
 
 enum class StylTreningu(val kluc: String, val nazov: String, val popis: String) {
     KLASIKA(

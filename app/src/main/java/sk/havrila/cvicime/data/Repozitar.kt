@@ -256,6 +256,12 @@ class Repozitar(context: Context) {
         return id
     }
 
+    /** Tréning sa stal rodinným (dieťa sa pridalo uprostred). */
+    suspend fun oznacRodinny(treningId: Long) {
+        val t = denik.trening(treningId) ?: return
+        if (!t.rodinny) denik.aktualizujTrening(t.copy(rodinny = true))
+    }
+
     suspend fun zapisSeriu(
         treningId: Long,
         blok: String,

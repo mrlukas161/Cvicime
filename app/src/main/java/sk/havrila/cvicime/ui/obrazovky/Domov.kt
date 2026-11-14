@@ -117,6 +117,7 @@ import sk.havrila.cvicime.data.denik.VlastnyTreningEntity
 import sk.havrila.cvicime.domain.DlzkaPauz
 import sk.havrila.cvicime.domain.NastavenieTreningu
 import sk.havrila.cvicime.domain.PONUKA_PRACE_S
+import sk.havrila.cvicime.domain.PocetZrucnosti
 import sk.havrila.cvicime.domain.StylTreningu
 import sk.havrila.cvicime.data.denik.ProfilEntity
 import sk.havrila.cvicime.data.denik.SuhrnTreningov
@@ -365,10 +366,10 @@ fun DomovObrazovka(
     naOnboarding: () -> Unit,
     naTest: () -> Unit,
     /** minúty, dieťa (-1 = žiadne), druhý dospelý (-1 = nikto), hlavný cvičiaci (0 = ty) */
-    naPrehravac: (Int, Long, Long, Long) -> Unit,
+    naPrehravac: (Int, String, Long, Long) -> Unit,
     naRodinu: () -> Unit = {},
     naVlastny: (Long) -> Unit = {},
-    naSpustiVlastny: (Long, Long, Long) -> Unit = { _, _, _ -> },
+    naSpustiVlastny: (Long, String, Long) -> Unit = { _, _, _ -> },
     model: DomovModel = viewModel(),
 ) {
     val profil by model.profil.collectAsStateWithLifecycle()
@@ -395,9 +396,11 @@ fun DomovObrazovka(
     // (deti sa nestriedajú o displej, prehrávač vedie dve dospelé stopy).
     var jaCvicim by rememberSaveable { mutableStateOf(true) }
     var sDospelym by rememberSaveable { mutableStateOf<Long?>(null) }
-    var sDietatom by rememberSaveable { mutableStateOf<Long?>(null) }
+    // Deti ako text „1,3" (rememberSaveable s ním počíta aj po otočení); cvičiť môžu viaceré naraz.
+    var sDetmi by rememberSaveable { mutableStateOf("") }
     // Dieťa či dospelý medzičasom odstránený v Nastaveniach sa nesmie poslať do prehrávača.
-    val vybraneDieta = sDietatom?.takeIf { id -> deti.any { it.id == id } }
+    val vybraneDeti = sDetmi.split(",").mapNotNull { it.toLongOrNull() }.filter { id -> deti.any { it.id == id } }
+    val detiCsv = vybraneDeti.joinToString(",").ifEmpty { "-1" }
     val vybranyDospely = sDospelym?.takeIf { id -> dospeli.any { it.id == id } }
     // Bez ďalších dospelých sa „Ja" vypnúť nedá (čip vtedy ani nie je vidno).
     val ja = jaCvicim || dospeli.isEmpty()
@@ -484,7 +487,7 @@ fun DomovObrazovka(
                         dospeli = dospeli,
                         dospely = vybranyDospely,
                         deti = deti,
-                        dieta = vybraneDieta,
+                        vybraneDeti = vybraneDeti.toSet(),
                     ),
                     popriNaCas = vybranyDospely?.let { popriNaCas[it] } ?: false,
                     naPopriNaCas = { id, naCas ->
@@ -494,16 +497,18 @@ fun DomovObrazovka(
                     naRodinu = naRodinu,
                     naJa = { jaCvicim = !ja },
                     naDospeleho = { id -> sDospelym = if (vybranyDospely == id) null else id },
-                    naDieta = { id -> sDietatom = if (vybraneDieta == id) null else id },
+                    naDieta = { id ->
+                        sDetmi = (if (id in vybraneDeti) vybraneDeti - id else vybraneDeti + id).joinToString(",")
+                    },
                     mozeZacat = !niktoDospely,
-                    naStart = { naPrehravac(minuty, vybraneDieta ?: -1L, dospelyPopri, hlavny) },
+                    naStart = { naPrehravac(minuty, detiCsv, dospelyPopri, hlavny) },
                     naOnboarding = naOnboarding,
                 )
 
                 MojeTreningy(
                     treningy = vlastne,
                     pocet = model::pocetCvikov,
-                    naSpusti = { id -> naSpustiVlastny(id, vybraneDieta ?: -1L, dospelyPopri) },
+                    naSpusti = { id -> naSpustiVlastny(id, detiCsv, dospelyPopri) },
                     naUprav = naVlastny,
                 )
 
@@ -682,7 +687,7 @@ private fun DnesnyTrening(
                     AvatarCip(
                         meno = d.meno,
                         farba = farbaDietata(d),
-                        vybrany = kto.dieta == d.id,
+                        vybrany = d.id in kto.vybraneDeti,
                         onClick = { naDieta(d.id) },
                     )
                 }
@@ -728,7 +733,7 @@ private fun DnesnyTrening(
         }
 
         if (stav == StavPlanu.PLAN) {
-            val spolu = kto.dieta != null || (kto.ja && kto.dospely != null)
+            val spolu = kto.vybraneDeti.isNotEmpty() || (kto.ja && kto.dospely != null)
             Spacer(Modifier.height(20.dp))
             VelkeTlacidlo(
                 text = if (spolu) "Začať spolu" else "Začať tréning",
@@ -969,6 +974,16 @@ private fun AkoDnes(n: NastavenieTreningu, naZmenu: (NastavenieTreningu) -> Unit
                         }
                     }
                 }
+                Text("Zručnosti v tréningu", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    PocetZrucnosti.entries.forEach { z ->
+                        FilterChip(
+                            selected = n.zrucnosti == z,
+                            onClick = { haptika.tik(); naZmenu(n.copy(zrucnosti = z)) },
+                            label = { Text(z.nazov) },
+                        )
+                    }
+                }
                 Text("Pauzy", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     DlzkaPauz.entries.forEach { d ->
@@ -1069,7 +1084,7 @@ private data class KtoCvici(
     val dospeli: List<UcastnikEntity>,
     val dospely: Long?,
     val deti: List<DietaEntity>,
-    val dieta: Long?,
+    val vybraneDeti: Set<Long>,
 )
 
 /** Farby avatarov detí. DietaEntity.farba zatiaľ ostáva 0 - vtedy sa farba odvodí od id. */

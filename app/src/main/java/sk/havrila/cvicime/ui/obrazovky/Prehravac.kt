@@ -62,6 +62,7 @@ import androidx.compose.material.icons.automirrored.rounded.VolumeOff
 import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Mic
+import androidx.compose.material.icons.rounded.MicOff
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.NotificationsActive
 import androidx.compose.material.icons.rounded.PersonAdd
@@ -263,8 +264,12 @@ private val BLOKY_S_REZERVOU = setOf(Blok.SILA, Blok.KONDICIA, Blok.SKILL)
 enum class DetskyKrok { VYBER, CVICI, ODHALENIE, HOTOVO }
 
 data class DetskyStav(
+    /** prvé dieťa kola (kvôli spätnej kompatibilite); všetky deti sú v [deti] */
     val dietaId: Long,
+    /** mená detí spolu, napr. „Ema a Tomi" - kolo je spoločné, deti cvičia naraz */
     val meno: String,
+    /** všetky deti v kole (id) - labka a zviera platia pre každé */
+    val deti: List<Long> = listOf(dietaId),
     val krok: DetskyKrok = DetskyKrok.VYBER,
     /** dve možnosti na výber - voľba je podľa rešerše bezpečný motivátor */
     val moznosti: List<CvikEntity> = emptyList(),
@@ -413,6 +418,28 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
     private val _pocuva = MutableStateFlow(false)
     val pocuva = _pocuva.asStateFlow()
 
+    /** Krátka správa o počúvaní („Nič som nezachytil", „Zapísané hlasom") - zmizne sama. */
+    private val _stavUcha = MutableStateFlow<String?>(null)
+    val stavUcha = _stavUcha.asStateFlow()
+
+    /** Hlasom zadaná odpoveď čaká 2 s na „Späť" - deti a hudba vedia spôsobiť falošný zápis. */
+    private val _hlasovyZapis = MutableStateFlow<Pair<Rir, Int>?>(null)
+    val hlasovyZapis = _hlasovyZapis.asStateFlow()
+
+    fun zrusHlasovyZapis() {
+        pocuvanie?.cancel()
+        _hlasovyZapis.value = null
+        _stavUcha.value = "Zrušené - zadaj ťuknutím."
+    }
+
+    private fun ukazStavUcha(text: String?) {
+        _stavUcha.value = text
+        if (text != null) viewModelScope.launch {
+            delay(3000)
+            if (_stavUcha.value == text) _stavUcha.value = null
+        }
+    }
+
     /** Počet povedaný hlasom - otázka po sérii si ho prevezme do stepperu. */
     private val _hlasomPocet = MutableStateFlow<Int?>(null)
     val hlasomPocet = _hlasomPocet.asStateFlow()
@@ -423,7 +450,7 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
         _pocuva.value = true
         hlas.pipni(pipanieZapnute)
         return try {
-            ucho.pocuvaj(ms)
+            ucho.pocuvaj(ms).also { if (it.isEmpty()) ukazStavUcha(ucho.poslednaChyba ?: "Nič som nezachytil.") }
         } finally {
             _pocuva.value = false
         }
@@ -453,7 +480,13 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
             val rezerva = pocuvaj().firstNotNullOfOrNull { Povely.rezerva(it) }
             if (stale() || rezerva == null) return@launch
             hlas.zavibruj(vibracieZapnute)
-            odpovedRir(Rir.z(rezerva), _hlasomPocet.value ?: krok.polozka.ciel)
+            // 2 s na „Späť" - potom sa zapíše, ako keby sa ťuklo.
+            val pocetZapisu = _hlasomPocet.value ?: krok.polozka.ciel
+            _hlasovyZapis.value = Rir.z(rezerva) to pocetZapisu
+            delay(2000)
+            if (stale() || _hlasovyZapis.value == null) return@launch
+            _hlasovyZapis.value = null
+            odpovedRir(Rir.z(rezerva), pocetZapisu)
         }
     }
 
@@ -589,7 +622,11 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
         _zaciatok.value = System.currentTimeMillis() - 7 * 60_000L
     }
 
-    fun spusti(minuty: Int, dietaId: Long, dospelyId: Long = -1, hlavny: Long = 0, vlastnyId: Long = -1) {
+    fun spusti(minuty: Int, dietaId: Long, dospelyId: Long = -1, hlavny: Long = 0, vlastnyId: Long = -1) =
+        spusti(minuty, listOf(dietaId).filter { it > 0 }, dospelyId, hlavny, vlastnyId)
+
+    /** [detiIds] = deti, ktoré cvičia spolu (spoločné detské kolo); prázdne = bez detí. */
+    fun spusti(minuty: Int, detiIds: List<Long>, dospelyId: Long = -1, hlavny: Long = 0, vlastnyId: Long = -1) {
         // Poistka: po otočení obrazovky sa LaunchedEffect spustí znova. Tréning sa nesmie založiť
         // druhýkrát - ani počas načítania, ani na súhrne (vtedy je treningId už -1).
         if (spusteny || treningId > 0) return
@@ -642,8 +679,8 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
                 return@launch
             }
 
-            val rodinny = dietaId > 0
-            if (rodinny) zapojDieta(dietaId)
+            val rodinny = detiIds.isNotEmpty()
+            detiIds.forEach { zapojDieta(it) }
             _zaciatok.value = System.currentTimeMillis()
             treningId = repo.zacniTrening(minuty, rodinny = rodinny)
             obnovNaPridanie()
@@ -705,6 +742,7 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
 
     fun odpovedRir(rir: Rir, skutocnaHodnota: Int?) {
         pocuvanie?.cancel()
+        _hlasovyZapis.value = null
         _hlasomPocet.value = null
         val krok = _kroky.value.getOrNull(_index.value) ?: return
         zapis(krok, skutocnaHodnota ?: krok.polozka.ciel, rir.hodnota)
@@ -882,7 +920,7 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
         val dospeli = repo.ucastnici()
             .filter { it.aktivny && it.id != hlavnyId && p == null }
             .map { Pridatelny(it.id, it.meno, it.farba, dieta = false) }
-        val deti = if (d == null) repo.denik.deti().map { Pridatelny(it.id, it.meno, it.farba, dieta = true) } else emptyList()
+        val deti = repo.denik.deti().filter { d == null || it.id !in d.deti }.map { Pridatelny(it.id, it.meno, it.farba, dieta = true) }
         // Keď vedie dospelý (ty dnes necvičíš), dá sa pridať aj „Ja".
         val ja = if (hlavnyId != 0L && p == null) listOf(Pridatelny(0L, "Ja", 0, dieta = false)) else emptyList()
         _naPridanie.value = ja + dospeli + deti
@@ -895,7 +933,7 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
     fun pridaj(kto: Pridatelny) {
         viewModelScope.launch {
             if (kto.dieta) {
-                if (_detsky.value == null) zapojDieta(kto.id)
+                zapojDieta(kto.id)
             } else if (_partner.value == null) {
                 val u = if (kto.id == 0L) null else repo.ucastnik(kto.id)
                 if (kto.id != 0L && u == null) return@launch
@@ -923,15 +961,34 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /**
+     * Zapojí dieťa do detského kola. Ďalšie dieťa sa pridá k tým, čo už cvičia - kolo je
+     * spoločné (rovnaký výber, odpočet a labka), aby sa deti nestriedali o displej.
+     */
     private suspend fun zapojDieta(dietaId: Long) {
         val dieta = repo.denik.deti().firstOrNull { it.id == dietaId } ?: return
         if (detskeCviky.isEmpty()) detskeCviky = repo.katalog.detskeCviky()
+        val d = _detsky.value
+        if (d != null) {
+            if (dietaId in d.deti) return
+            _detsky.value = d.copy(
+                deti = d.deti + dieta.id,
+                meno = "${d.meno} a ${dieta.meno}".replace(" a ", ", ").replaceLast(", ", " a "),
+                // Odpočet podľa najmladšieho - aby to zvládol aj on.
+                vek = minOf(d.vek, dieta.vek),
+            )
+            if (treningId > 0) repo.oznacRodinny(treningId)
+            return
+        }
         _detsky.value = DetskyStav(
             dietaId = dieta.id,
             meno = dieta.meno,
+            deti = listOf(dieta.id),
             vek = dieta.vek,
             moznosti = vyberDvoch(emptyList()),
         )
+        // Dieťa pridané uprostred tréningu: tréning je odteraz rodinný (štatistiky, história).
+        if (treningId > 0) repo.oznacRodinny(treningId)
     }
 
     private fun dalej() {
@@ -1037,9 +1094,9 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
             // Postupy sa vyhodnotia JEDINÝ raz, v ukonciTrening (druhé volanie posúvalo o ďalší stupeň).
             val vsetkyPostupy = repo.ukonciTrening(id, pocitPo = null, zachovajPrazdny = d != null && d.labky > 0)
             if (d != null) {
-                repo.denik.ulozUcast(
-                    UcastEntity(treningId = id, dietaId = d.dietaId, splneneKroky = d.labky)
-                )
+                d.deti.forEach { dieta ->
+                    repo.denik.ulozUcast(UcastEntity(treningId = id, dietaId = dieta, splneneKroky = d.labky))
+                }
             }
             suspend fun popisPostupov(ucastnikId: Long, pred: Map<String, Int>, tykanie: Boolean) =
                 vsetkyPostupy.filter { it.ucastnikId == ucastnikId }.mapNotNull { p ->
@@ -1180,13 +1237,16 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
 
         if (labky >= 3 && !d.zvieraDnes) {
             viewModelScope.launch {
-                val uzMa = repo.denik.zvierataDietata(d.dietaId).map { it.zvieraKluc }.toSet()
+                // Zviera, ktoré ešte nemá aspoň jedno z detí kola - odomkne sa každému, kto ho nemá.
+                val majuVsetky = d.deti.map { dieta -> repo.denik.zvierataDietata(dieta).map { it.zvieraKluc }.toSet() }
                 val kandidati = spravene
                     .mapNotNull { id -> detskeCviky.firstOrNull { it.id == id }?.zviera }
-                    .filter { it !in uzMa }
+                    .filter { z -> majuVsetky.any { z !in it } }
                     .distinct()
                 val zviera = kandidati.shuffled().firstOrNull()?.let { Zvierata.podla(it) }
-                if (zviera != null) repo.odomkniZviera(d.dietaId, zviera.kluc)
+                if (zviera != null) {
+                    d.deti.forEachIndexed { i, dieta -> if (zviera.kluc !in majuVsetky[i]) repo.odomkniZviera(dieta, zviera.kluc) }
+                }
                 _detsky.value = d.copy(
                     krok = if (zviera != null) DetskyKrok.ODHALENIE else DetskyKrok.HOTOVO,
                     labky = labky,
@@ -1282,6 +1342,8 @@ private fun PrehravacModel.akAktualny(k: PrehravacKluc, akcia: () -> Unit) {
 fun PrehravacObrazovka(
     minuty: Int,
     dietaId: Long,
+    /** viac detí naraz (spoločné kolo); ak je prázdne, platí [dietaId] */
+    detiIds: List<Long> = emptyList(),
     hotovo: () -> Unit,
     dospelyId: Long = -1,
     hlavnyId: Long = 0,
@@ -1308,6 +1370,8 @@ fun PrehravacObrazovka(
     val popisZapnuty by model.popis.collectAsStateWithLifecycle()
     val hlasomPocet by model.hlasomPocet.collectAsStateWithLifecycle()
     val sprava by model.sprava.collectAsStateWithLifecycle()
+    val hlasovyZapis by model.hlasovyZapis.collectAsStateWithLifecycle()
+    val stavUcha by model.stavUcha.collectAsStateWithLifecycle()
     val naPridanie by model.naPridanie.collectAsStateWithLifecycle()
     val pocuva by model.pocuva.collectAsStateWithLifecycle()
 
@@ -1319,7 +1383,8 @@ fun PrehravacObrazovka(
     val hlas = model.hlas
 
     LaunchedEffect(minuty, dietaId, dospelyId, hlavnyId, vlastnyId) {
-        model.spusti(minuty, dietaId, dospelyId, hlavnyId, vlastnyId)
+        val deti = detiIds.ifEmpty { listOf(dietaId) }.filter { it > 0 }
+        model.spusti(minuty, deti, dospelyId, hlavnyId, vlastnyId)
     }
 
     DisposableEffect(Unit) {
@@ -1456,6 +1521,7 @@ fun PrehravacObrazovka(
     }
 
     var potvrdenieKonca by rememberSaveable { mutableStateOf(false) }
+    var potvrdenieSkratenia by rememberSaveable { mutableStateOf(false) }
     var pozastaveneUzPredDialogom by rememberSaveable { mutableStateOf(false) }
 
     val pozastav: () -> Unit = {
@@ -1564,10 +1630,11 @@ fun PrehravacObrazovka(
                     popis = popisZapnuty,
                     naPopis = model::prepniPopis,
                     pocuva = pocuva,
+                    stavUcha = stavUcha,
                     naPridanie = naPridanie,
                     naPridaj = model::pridaj,
                     ovladanie = if (naLezato && (stav == StavPrehravaca.CVICENIE || stav == StavPrehravaca.PAUZA)) {
-                        { SpodneOvladanie(model::preskoc, model::skrat, pytajSaNaKoniec, vHlavicke = true) }
+                        { SpodneOvladanie(model::preskoc, { potvrdenieSkratenia = true }, pytajSaNaKoniec, vHlavicke = true) }
                     } else {
                         null
                     },
@@ -1633,7 +1700,7 @@ fun PrehravacObrazovka(
                         StavPrehravaca.OTAZKA -> {
                             val kr = o.krok
                             if (kr != null) {
-                                OtazkaRezervy(kr, hlasomPocet) { rir, hodnota ->
+                                OtazkaRezervy(kr, hlasomPocet, hlasovyZapis, model::zrusHlasovyZapis) { rir, hodnota ->
                                     model.akAktualny(k) { model.odpovedRir(rir, hodnota) }
                                 }
                             }
@@ -1689,7 +1756,7 @@ fun PrehravacObrazovka(
             ) {
                 SpodneOvladanie(
                     naVynechanie = model::preskoc,
-                    naSkratenie = model::skrat,
+                    naSkratenie = { potvrdenieSkratenia = true },
                     naUkoncenie = pytajSaNaKoniec,
                 )
             }
@@ -1717,6 +1784,18 @@ fun PrehravacObrazovka(
         }
     }
     }
+    }
+
+    if (potvrdenieSkratenia) {
+        AlertDialog(
+            onDismissRequest = { potvrdenieSkratenia = false },
+            title = { Text("Skrátiť zvyšok?") },
+            text = { Text("Z každého ďalšieho cviku ostane len jedna séria. Späť sa to vrátiť nedá.") },
+            confirmButton = {
+                TextButton(onClick = { potvrdenieSkratenia = false; model.skrat() }) { Text("Skrátiť") }
+            },
+            dismissButton = { TextButton(onClick = { potvrdenieSkratenia = false }) { Text("Pokračovať naplno") } },
+        )
     }
 
     if (potvrdenieKonca) {
@@ -1768,6 +1847,7 @@ private fun Hlavicka(
     popis: Boolean,
     naPopis: () -> Unit,
     pocuva: Boolean = false,
+    stavUcha: String? = null,
     naPridanie: List<Pridatelny> = emptyList(),
     naPridaj: (Pridatelny) -> Unit = {},
     /** na ležato idú Vynechať / Nevládzem / Ukončiť do hlavičky - dole by zjedli výšku */
@@ -1803,6 +1883,16 @@ private fun Hlavicka(
                 modifier = Modifier.weight(1f),
             )
             ovladanie?.invoke()
+            if (stavUcha != null && !pocuva) {
+                // Čo sa s hlasovým povelom stalo (nezachytil, chýba internet…) - zmizne samo.
+                Icon(
+                    Icons.Rounded.MicOff,
+                    contentDescription = stavUcha,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(22.dp),
+                )
+                Spacer(Modifier.width(4.dp))
+            }
             if (pocuva) {
                 // Appka počúva odpoveď - mikrofón v hlavičke, aby bolo jasné, že treba hovoriť.
                 Icon(
@@ -2230,7 +2320,13 @@ private fun CvicenieVydrz(krok: KrokTreningu, o: PrehravacObraz) {
 // ---------------------------------------------------------------- otázka po sérii
 
 @Composable
-private fun OtazkaRezervy(krok: KrokTreningu, hlasomPocet: Int?, odpoved: (Rir, Int?) -> Unit) {
+private fun OtazkaRezervy(
+    krok: KrokTreningu,
+    hlasomPocet: Int?,
+    hlasovyZapis: Pair<Rir, Int>? = null,
+    naSpat: () -> Unit = {},
+    odpoved: (Rir, Int?) -> Unit,
+) {
     val naCas = krok.jeVydrz()
     var hodnota by rememberSaveable(krok.polozka.cvik.id, krok.cisloSerie) {
         mutableIntStateOf(krok.polozka.ciel)
@@ -2287,6 +2383,19 @@ private fun OtazkaRezervy(krok: KrokTreningu, hlasomPocet: Int?, odpoved: (Rir, 
             )
         },
         pravy = {
+            if (hlasovyZapis != null) {
+                // Hlasom zadané - 2 s na opravu, potom sa zapíše samo.
+                TonovanaKarta(farba = MaterialTheme.colorScheme.tertiary, vnutorneOdsadenie = 12.dp) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            "Počul som: ${hlasovyZapis.second}, ${hlasovyZapis.first.popis.lowercase()}",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.weight(1f),
+                        )
+                        TextButton(onClick = naSpat) { Text("Späť") }
+                    }
+                }
+            }
             Spacer(Modifier.height(16.dp))
             Text("Koľko si mal ešte v sebe?", style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(10.dp))
@@ -3619,4 +3728,9 @@ private fun formatujStopky(ms: Long): String {
     val m = (s % 3600L) / 60L
     val sek = s % 60L
     return if (h > 0L) "%d:%02d:%02d".format(h, m, sek) else "%d:%02d".format(m, sek)
+}
+
+private fun String.replaceLast(co: String, za: String): String {
+    val i = lastIndexOf(co)
+    return if (i < 0) this else substring(0, i) + za + substring(i + co.length)
 }

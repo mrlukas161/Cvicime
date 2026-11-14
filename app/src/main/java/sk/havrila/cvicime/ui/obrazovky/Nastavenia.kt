@@ -181,6 +181,39 @@ class NastaveniaModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { repo.ulozDieta(dieta.copy(aktivne = false)) }
     }
 
+    private val ucho = sk.havrila.cvicime.trening.Ucho(app)
+
+    /** „Vyskúšať povely": čo telefón počul a ako to appka pochopila. */
+    private val _skuskaPovelov = MutableStateFlow<String?>(null)
+    val skuskaPovelov = _skuskaPovelov.asStateFlow()
+
+    fun vyskusajPovely() {
+        viewModelScope.launch {
+            if (!ucho.dostupne) {
+                _skuskaPovelov.value = "Telefón nemá rozpoznávanie reči (Google appka chýba alebo je vypnutá)."
+                return@launch
+            }
+            _skuskaPovelov.value = "Počúvam… povedz napr. „desať“ alebo „preskoč“."
+            val vysledok = ucho.pocuvaj(4000)
+            _skuskaPovelov.value = if (vysledok.isEmpty()) {
+                ucho.poslednaChyba ?: "Nič som nezachytil."
+            } else {
+                val text = vysledok.first()
+                val povel = vysledok.firstNotNullOfOrNull { sk.havrila.cvicime.trening.Povely.rozpoznaj(it) }
+                "Počul som: „$text“ → " + when (povel) {
+                    is sk.havrila.cvicime.trening.Povel.Cislo -> "číslo ${povel.hodnota}"
+                    null -> "nerozumiem (skús číslo, „preskoč“, „pridaj“, „pauza“)"
+                    else -> povel::class.simpleName.orEmpty().lowercase()
+                }
+            }
+        }
+    }
+
+    override fun onCleared() {
+        ucho.zavri()
+        super.onCleared()
+    }
+
     fun ulozKotvu(kontext: android.content.Context, text: String, minuty: Int) {
         viewModelScope.launch { repo.ulozKotvu(kontext, text, minuty) }
     }
@@ -364,6 +397,16 @@ fun NastaveniaObrazovka(
                     povely = zapnut
                     model.prefs.hlasovePovely = zapnut
                 }
+            }
+            if (povely) {
+                val skuska by model.skuskaPovelov.collectAsStateWithLifecycle()
+                RiadokNastavenia(
+                    ikona = Icons.Outlined.Mic,
+                    farba = farbaPrehravac,
+                    titul = "Vyskúšať povely",
+                    popis = skuska ?: "Povedz povel a uvidíš, čo telefón počul a ako to appka pochopila.",
+                    onClick = { model.vyskusajPovely() },
+                )
             }
             Oddelovac()
             RiadokPrepinaca(

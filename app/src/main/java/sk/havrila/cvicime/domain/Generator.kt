@@ -576,15 +576,24 @@ object Generator {
     ): List<PlanPolozka> {
         if (minuty <= 0) return emptyList()
 
-        val zrucnosti = v.cieleZrucnosti
+        val dostupne = v.cieleZrucnosti
             .mapNotNull { id -> v.rebriky.firstOrNull { it.id == id } }
             .filter { jeDostupny(v, it) }
-            // Dve zručnosti sa zmestia aj do kratšieho tréningu (3 série každá); jedna len pri 10 min.
-            .take(if (minuty >= 4) 2 else 1)
+        // Voľba v „Ako dnes": jedna (podľa priority), dve, alebo striedať (každý deň iná).
+        val zrucnosti = when (v.nastavenie.zrucnosti) {
+            PocetZrucnosti.JEDNA -> dostupne.take(1)
+            PocetZrucnosti.STRIEDAT -> rotuj(dostupne, v.dnesEpochDen).take(1)
+            PocetZrucnosti.DVE -> dostupne.take(if (minuty >= 4) 2 else 1)
+        }
 
         if (zrucnosti.isEmpty()) return emptyList()
 
-        val serieNaZrucnost = if (zrucnosti.size == 1) 4 else 3
+        // Dve zručnosti v krátkom tréningu: po 2 sériách, aby nezjedli silu.
+        val serieNaZrucnost = when {
+            zrucnosti.size == 1 -> 4
+            minuty < 6 -> 2
+            else -> 3
+        }
         if (zdovodnenie.none { it.startsWith("Zručnosť") }) {
             zdovodnenie += "Zručnosť je hneď na začiatku zámerne — pohyb sa učí, kým si čerstvý, " +
                 "a nikdy sa netrénuje do zlyhania."

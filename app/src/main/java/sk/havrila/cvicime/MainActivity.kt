@@ -282,8 +282,9 @@ object Cesty {
 
     fun prehravac(minuty: Int, dieta: Long) = "prehravac/$minuty/$dieta"
     fun vlastny(id: Long) = "vlastny/$id"
-    fun prehravacVlastny(id: Long, dieta: Long, dospely: Long) = "prehravac/30/$dieta?dospely=$dospely&hlavny=0&vlastny=$id"
-    fun prehravac(minuty: Int, dieta: Long, dospely: Long, hlavny: Long) =
+    fun prehravacVlastny(id: Long, dieta: String, dospely: Long) = "prehravac/30/$dieta?dospely=$dospely&hlavny=0&vlastny=$id"
+    /** [dieta] = id detí oddelené čiarkou („1,3"), „-1" = bez detí. */
+    fun prehravac(minuty: Int, dieta: String, dospely: Long, hlavny: Long) =
         "prehravac/$minuty/$dieta?dospely=$dospely&hlavny=$hlavny"
     fun rebrik(id: String) = "kniznica/$id"
     fun clanok(id: String) = "teoria/$id"
@@ -525,7 +526,9 @@ private fun Navigacia(navigacia: NavHostController, vypln: PaddingValues) {
             ),
         ) { zaznam ->
             val minuty = zaznam.arguments?.getString("minuty")?.toIntOrNull() ?: 30
-            val dieta = zaznam.arguments?.getString("dieta")?.toLongOrNull() ?: -1L
+            // „3" (staré cesty) aj „1,3" (viac detí naraz)
+            val deti = zaznam.arguments?.getString("dieta").orEmpty().split(",").mapNotNull { it.toLongOrNull() }.filter { it > 0 }
+            val dieta = deti.firstOrNull() ?: -1L
             val dospely = zaznam.arguments?.getString("dospely")?.toLongOrNull() ?: -1L
             val hlavny = zaznam.arguments?.getString("hlavny")?.toLongOrNull() ?: 0L
             val vlastny = zaznam.arguments?.getString("vlastny")?.toLongOrNull() ?: -1L
@@ -533,6 +536,7 @@ private fun Navigacia(navigacia: NavHostController, vypln: PaddingValues) {
                 PrehravacObrazovka(
                     minuty = minuty,
                     dietaId = dieta,
+                    detiIds = deti,
                     hotovo = { navigacia.popBackStack() },
                     dospelyId = dospely,
                     hlavnyId = hlavny,

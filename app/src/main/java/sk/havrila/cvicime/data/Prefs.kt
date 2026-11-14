@@ -3,6 +3,7 @@ package sk.havrila.cvicime.data
 import android.content.Context
 import sk.havrila.cvicime.domain.DlzkaPauz
 import sk.havrila.cvicime.domain.NastavenieTreningu
+import sk.havrila.cvicime.domain.PocetZrucnosti
 import sk.havrila.cvicime.domain.StylTreningu
 import sk.havrila.cvicime.trening.RezimZvuku
 
@@ -63,12 +64,14 @@ class Prefs(context: Context) {
             vsetkoNaCas = p.getBoolean("vsetko_na_cas", false),
             pracaS = p.getInt("praca_s", 40),
             pauzy = DlzkaPauz.z(p.getString("dlzka_pauz", null)),
+            zrucnosti = PocetZrucnosti.z(p.getString("pocet_zrucnosti", null)),
         )
         set(v) = p.edit()
             .putString("styl_treningu", v.styl.kluc)
             .putBoolean("vsetko_na_cas", v.vsetkoNaCas)
             .putInt("praca_s", v.pracaS)
             .putString("dlzka_pauz", v.pauzy.kluc)
+            .putString("pocet_zrucnosti", v.zrucnosti.kluc)
             .apply()
 
     var vibracieZapnute: Boolean
