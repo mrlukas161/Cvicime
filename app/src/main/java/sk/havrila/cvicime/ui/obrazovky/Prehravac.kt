@@ -150,6 +150,8 @@ import sk.havrila.cvicime.domain.PlanPolozka
 import sk.havrila.cvicime.domain.PlanTreningu
 import sk.havrila.cvicime.domain.Pravidla
 import sk.havrila.cvicime.domain.Rozvrh
+import sk.havrila.cvicime.domain.StylTreningu
+import sk.havrila.cvicime.domain.VlastnaPolozka
 import sk.havrila.cvicime.trening.Povel
 import sk.havrila.cvicime.trening.Povely
 import sk.havrila.cvicime.trening.RezimZvuku
@@ -587,7 +589,7 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
         _zaciatok.value = System.currentTimeMillis() - 7 * 60_000L
     }
 
-    fun spusti(minuty: Int, dietaId: Long, dospelyId: Long = -1, hlavny: Long = 0) {
+    fun spusti(minuty: Int, dietaId: Long, dospelyId: Long = -1, hlavny: Long = 0, vlastnyId: Long = -1) {
         // Poistka: po otočení obrazovky sa LaunchedEffect spustí znova. Tréning sa nesmie založiť
         // druhýkrát - ani počas načítania, ani na súhrne (vtedy je treningId už -1).
         if (spusteny || treningId > 0) return
@@ -597,7 +599,8 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
             hlavnyId = if (hlavny > 0 && repo.ucastnik(hlavny) != null) hlavny else 0L
             minutyTreningu = minuty
             otazkaHlavneho = repo.obmedzenia(hlavnyId).firstNotNullOfOrNull { it.otazkaPoSerii }
-            val plan = repo.zostavPlan(minuty, hlavnyId)
+            // Vlastný tréning (šablóna) má presne svoje cviky; inak plán zostaví engine.
+            val plan = (if (vlastnyId > 0) repo.vlastnyPlan(vlastnyId) else null) ?: repo.zostavPlan(minuty, hlavnyId)
             bloky = plan.bloky
 
             // Druhý dospelý: plán ZLADENÝ s hlavným (ten istý rebrík na jeho stupni, inak šetrná
@@ -846,6 +849,25 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
             val prvy = _kroky.value.size
             _kroky.value = _kroky.value + nove
             zacniPauzu(prvy, Pravidla.PRIPRAV_SA_S)
+        }
+    }
+
+    /**
+     * Dnešný tréning ako vlastný (šablóna): cviky hlavného v poradí, koľko sérií sa naplánovalo
+     * a s akou dávkou. Štýl podľa „Ako dnes" (kruh ostane kruhom).
+     */
+    fun ulozAkoVlastny(nazov: String) {
+        val kroky = _kroky.value.filter { it.blok != Blok.ROZOHRIATIE && it.blok != Blok.MOBILITA }
+        if (kroky.isEmpty() || nazov.isBlank()) return
+        val polozky = kroky.groupBy { it.polozka.cvik.id }.values.map { serie ->
+            val p = serie.first().polozka
+            VlastnaPolozka(cvikId = p.cvik.id, serie = serie.size, ciel = p.ciel, naCasS = p.naCasS, pauzaS = p.pauzaS)
+        }
+        val styl = if (kroky.any { it.blok == Blok.KRUH }) StylTreningu.KRUH else repo.prefs.nastavenieTreningu.styl
+            .takeIf { it != StylTreningu.KRUH } ?: StylTreningu.KLASIKA
+        viewModelScope.launch {
+            repo.ulozVlastnyTrening(0, nazov.trim(), styl, polozky)
+            _sprava.value = "Uložené ako „${nazov.trim()}“ - nájdeš ho na Domove v Moje tréningy."
         }
     }
 
@@ -1263,6 +1285,7 @@ fun PrehravacObrazovka(
     hotovo: () -> Unit,
     dospelyId: Long = -1,
     hlavnyId: Long = 0,
+    vlastnyId: Long = -1,
     model: PrehravacModel = viewModel(),
 ) {
     val kontext = LocalContext.current
@@ -1295,7 +1318,9 @@ fun PrehravacObrazovka(
     // Hlas aj služba patria modelu - otočenie displeja ich nesmie zastaviť (pád 0.7 po otočení).
     val hlas = model.hlas
 
-    LaunchedEffect(minuty, dietaId, dospelyId, hlavnyId) { model.spusti(minuty, dietaId, dospelyId, hlavnyId) }
+    LaunchedEffect(minuty, dietaId, dospelyId, hlavnyId, vlastnyId) {
+        model.spusti(minuty, dietaId, dospelyId, hlavnyId, vlastnyId)
+    }
 
     DisposableEffect(Unit) {
         if (model.obrazovkaStaleZapnuta) pohlad.keepScreenOn = true
@@ -1633,7 +1658,7 @@ fun PrehravacObrazovka(
                             naHotovo = { model.akAktualny(k) { model.doplnenieHotove() } },
                         )
 
-                        StavPrehravaca.HOTOVO -> Zaver(o.detsky, o.suhrn, hotovo)
+                        StavPrehravaca.HOTOVO -> Zaver(o.detsky, o.suhrn, hotovo, sprava = sprava, naUloz = model::ulozAkoVlastny)
                     }
                 }
             }
@@ -3313,7 +3338,15 @@ private fun PozastaveneVrstva(
 
 /** Celostránkový súhrn: čísla ako hrdinovia, rekordy a postupy, oslava len pri skutočnom úspechu. */
 @Composable
-private fun Zaver(detsky: DetskyStav?, suhrn: PrehravacSuhrn?, hotovo: () -> Unit) {
+private fun Zaver(
+    detsky: DetskyStav?,
+    suhrn: PrehravacSuhrn?,
+    hotovo: () -> Unit,
+    sprava: String? = null,
+    naUloz: (String) -> Unit = {},
+) {
+    var dialogUlozit by rememberSaveable { mutableStateOf(false) }
+    var ulozene by rememberSaveable { mutableStateOf(false) }
     val haptika = rememberHaptika()
     val oslava = suhrn != null && (suhrn.rekordy.isNotEmpty() || suhrn.postupy.any { it.vyssie })
     LaunchedEffect(oslava) {
@@ -3361,9 +3394,52 @@ private fun Zaver(detsky: DetskyStav?, suhrn: PrehravacSuhrn?, hotovo: () -> Uni
                 Spacer(Modifier.height(16.dp))
             }
             Spacer(Modifier.height(12.dp))
+            if (suhrn != null && suhrn.serie > 0 && !ulozene) {
+                // Obľúbený tréning (napr. kruh) sa dá uložiť a nabudúce spustiť presne takto.
+                OutlinedButton(
+                    onClick = { dialogUlozit = true },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                    shape = RoundedCornerShape(18.dp),
+                ) { Text("Uložiť ako vlastný tréning") }
+                Spacer(Modifier.height(8.dp))
+            }
+            if (sprava != null && ulozene) {
+                Text(sprava, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+                Spacer(Modifier.height(8.dp))
+            }
             VelkeTlacidlo(text = "Zavrieť", onClick = hotovo)
         }
         Konfety(spustit = oslava, modifier = Modifier.fillMaxSize(), kluc = "zaver")
+    }
+    if (dialogUlozit) {
+        var nazov by rememberSaveable { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { dialogUlozit = false },
+            title = { Text("Uložiť ako vlastný tréning") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "Uložia sa cviky, série a dávky z dnešného tréningu. Spustíš ho z Domova v Moje tréningy " +
+                            "a upraviť ho môžeš kedykoľvek.",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    androidx.compose.material3.OutlinedTextField(
+                        value = nazov,
+                        onValueChange = { nazov = it.take(40) },
+                        label = { Text("Názov (napr. Môj kruh)") },
+                        singleLine = true,
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(enabled = nazov.isNotBlank(), onClick = {
+                    naUloz(nazov)
+                    ulozene = true
+                    dialogUlozit = false
+                }) { Text("Uložiť") }
+            },
+            dismissButton = { TextButton(onClick = { dialogUlozit = false }) { Text("Zrušiť") } },
+        )
     }
 }
 

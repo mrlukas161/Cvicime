@@ -31,8 +31,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         PrekazkaEntity::class,
         UcastnikEntity::class,
         UrovenUcastnikaEntity::class,
+        VlastnyTreningEntity::class,
+        VlastnyCvikEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
 )
 abstract class DenikDatabase : RoomDatabase() {
@@ -50,7 +52,7 @@ abstract class DenikDatabase : RoomDatabase() {
                     "denik.db",
                 )
                     // Zámerne BEZ fallbackToDestructiveMigration - viď komentár vyššie.
-                    .addMigrations(MIGRACIA_1_2, MIGRACIA_2_3)
+                    .addMigrations(MIGRACIA_1_2, MIGRACIA_2_3, MIGRACIA_3_4)
                     .build()
                     .also { instancia = it }
             }
@@ -89,5 +91,19 @@ val MIGRACIA_1_2 = object : Migration(1, 2) {
 val MIGRACIA_2_3 = object : Migration(2, 3) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE `seria` ADD COLUMN `priznak` INTEGER NOT NULL DEFAULT 0")
+    }
+}
+
+/** 3 → 4: vlastné tréningy a vlastné cviky - len nové tabuľky, existujúce dáta sa nemenia. */
+val MIGRACIA_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `vlastny_trening` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "`nazov` TEXT NOT NULL, `styl` TEXT NOT NULL, `polozky` TEXT NOT NULL, `vytvorene_epoch_den` INTEGER NOT NULL)"
+        )
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `vlastny_cvik` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "`nazov` TEXT NOT NULL, `meranie` TEXT NOT NULL, `popis` TEXT NOT NULL, `pohyb` TEXT)"
+        )
     }
 }

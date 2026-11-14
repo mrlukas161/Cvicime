@@ -17,6 +17,8 @@ import sk.havrila.cvicime.data.denik.CielEntity
 import sk.havrila.cvicime.data.denik.DenikDatabase
 import sk.havrila.cvicime.data.denik.MIGRACIA_1_2
 import sk.havrila.cvicime.data.denik.MIGRACIA_2_3
+import sk.havrila.cvicime.data.denik.MIGRACIA_3_4
+import sk.havrila.cvicime.data.denik.VlastnyTreningEntity
 import java.io.File
 
 /**
@@ -54,7 +56,7 @@ class DenikMigraciaTest {
         }
 
         val room = Room.databaseBuilder(ctx, DenikDatabase::class.java, nazov)
-            .addMigrations(MIGRACIA_1_2, MIGRACIA_2_3)
+            .addMigrations(MIGRACIA_1_2, MIGRACIA_2_3, MIGRACIA_3_4)
             .allowMainThreadQueries()
             .build()
         val dao = room.dao()
@@ -104,7 +106,7 @@ class DenikMigraciaTest {
         }
 
         val room = Room.databaseBuilder(ctx, DenikDatabase::class.java, nazov)
-            .addMigrations(MIGRACIA_1_2, MIGRACIA_2_3)
+            .addMigrations(MIGRACIA_1_2, MIGRACIA_2_3, MIGRACIA_3_4)
             .allowMainThreadQueries()
             .build()
         val dao = room.dao()
@@ -119,6 +121,41 @@ class DenikMigraciaTest {
         // Príznak sa dá dodatočne nastaviť a prežije načítanie.
         dao.nastavPriznak(serie[1].id, true)
         assertTrue(dao.serieTreningu(1)[1].priznak)
+        room.close()
+    }
+
+    @Test
+    fun `migracia 3 na 4 prida vlastne treningy a nic nezmaze`() = runTest {
+        val ctx = ApplicationProvider.getApplicationContext<Context>()
+        val nazov = "migracia-3-4-test.db"
+        val subor = ctx.getDatabasePath(nazov)
+        subor.parentFile?.mkdirs()
+        subor.delete()
+
+        postavPodlaSchemy(subor, verzia = 3) { db ->
+            db.execSQL(
+                "INSERT INTO trening(id, zaciatok, koniec, epoch_den, minuty_dna, planovane_minuty, rodinny, dokonceny, poznamka) " +
+                    "VALUES (1, 1000, 2000, 20000, 1080, 30, 0, 1, '')"
+            )
+            db.execSQL(
+                "INSERT INTO seria(trening_id, epoch_den, blok, poradie, cvik_id, rebrik_id, uroven, meranie, partie, " +
+                    "plan_hodnota, skutocna_hodnota, rir, preskocena, ucastnik_id, priznak) VALUES (1, 20000, 'sila', 1, " +
+                    "'kliky-5', 'kliky', 5, 'opakovania', 'hrudnik:1.0', 10, 11, 1, 0, 0, 1)"
+            )
+        }
+
+        val room = Room.databaseBuilder(ctx, DenikDatabase::class.java, nazov)
+            .addMigrations(MIGRACIA_1_2, MIGRACIA_2_3, MIGRACIA_3_4)
+            .allowMainThreadQueries()
+            .build()
+        val dao = room.dao()
+        val serie = dao.serieTreningu(1)
+        assertEquals(1, serie.size)
+        assertTrue(serie.single().priznak)
+        assertEquals(11, serie.single().skutocnaHodnota)
+
+        val id = dao.ulozVlastnyTrening(VlastnyTreningEntity(nazov = "Kruh", styl = "kruh", polozky = "[]", vytvoreneEpochDen = 20000))
+        assertEquals("Kruh", dao.vlastnyTrening(id)?.nazov)
         room.close()
     }
 

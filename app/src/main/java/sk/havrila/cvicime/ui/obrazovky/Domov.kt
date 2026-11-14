@@ -113,6 +113,7 @@ import sk.havrila.cvicime.data.denik.CielEntity
 import sk.havrila.cvicime.data.denik.DietaEntity
 import sk.havrila.cvicime.data.denik.TreningEntity
 import sk.havrila.cvicime.data.denik.UcastnikEntity
+import sk.havrila.cvicime.data.denik.VlastnyTreningEntity
 import sk.havrila.cvicime.domain.DlzkaPauz
 import sk.havrila.cvicime.domain.NastavenieTreningu
 import sk.havrila.cvicime.domain.PONUKA_PRACE_S
@@ -185,6 +186,12 @@ class DomovModel(app: Application) : AndroidViewModel(app) {
 
     private val _deti = MutableStateFlow<List<DietaEntity>>(emptyList())
     val deti = _deti.asStateFlow()
+
+    /** Vlastné tréningy (šablóny) - „Moje tréningy" na Domove. */
+    val vlastne: StateFlow<List<VlastnyTreningEntity>> = repo.vlastneTreningyTok()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun pocetCvikov(t: VlastnyTreningEntity): Int = repo.polozkyVlastneho(t).size
 
     /** Ďalší dospelí, ktorí sú aktívni - ponúknu sa v „Kto dnes cvičí". */
     private val _dospeli = MutableStateFlow<List<UcastnikEntity>>(emptyList())
@@ -360,6 +367,8 @@ fun DomovObrazovka(
     /** minúty, dieťa (-1 = žiadne), druhý dospelý (-1 = nikto), hlavný cvičiaci (0 = ty) */
     naPrehravac: (Int, Long, Long, Long) -> Unit,
     naRodinu: () -> Unit = {},
+    naVlastny: (Long) -> Unit = {},
+    naSpustiVlastny: (Long, Long, Long) -> Unit = { _, _, _ -> },
     model: DomovModel = viewModel(),
 ) {
     val profil by model.profil.collectAsStateWithLifecycle()
@@ -380,6 +389,7 @@ fun DomovObrazovka(
     var popriNaCas by remember(dospeli) { mutableStateOf(dospeli.associate { it.id to model.naCasUcastnika(it.id) }) }
     val nastavenie by model.nastavenie.collectAsStateWithLifecycle()
     val nedokonceny by model.nedokonceny.collectAsStateWithLifecycle()
+    val vlastne by model.vlastne.collectAsStateWithLifecycle()
 
     // Kto dnes cvičí: ty (vypnuteľný), najviac jeden ďalší dospelý a najviac jedno dieťa
     // (deti sa nestriedajú o displej, prehrávač vedie dve dospelé stopy).
@@ -488,6 +498,13 @@ fun DomovObrazovka(
                     mozeZacat = !niktoDospely,
                     naStart = { naPrehravac(minuty, vybraneDieta ?: -1L, dospelyPopri, hlavny) },
                     naOnboarding = naOnboarding,
+                )
+
+                MojeTreningy(
+                    treningy = vlastne,
+                    pocet = model::pocetCvikov,
+                    naSpusti = { id -> naSpustiVlastny(id, vybraneDieta ?: -1L, dospelyPopri) },
+                    naUprav = naVlastny,
                 )
 
                 TyzdenKarta(suhrn = suhrnTyzdna, dni = dniTyzdna)
@@ -989,6 +1006,43 @@ private fun NedokoncenyKarta(t: TreningEntity, naUloz: () -> Unit, naZahod: () -
 }
 
 // ------------------------------------------------------------------ rodinný režim
+
+/** Moje tréningy: uložené vlastné tréningy na jedno ťuknutie + nový. */
+@Composable
+private fun MojeTreningy(
+    treningy: List<VlastnyTreningEntity>,
+    pocet: (VlastnyTreningEntity) -> Int,
+    naSpusti: (Long) -> Unit,
+    naUprav: (Long) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        NadpisSekcie("Moje tréningy")
+        treningy.forEach { t ->
+            TonovanaKarta(vnutorneOdsadenie = 14.dp) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(t.nazov, style = MaterialTheme.typography.titleMedium)
+                        val n = pocet(t)
+                        Text(
+                            "$n ${sklonuj(n, "cvik", "cviky", "cvikov")} · ${StylTreningu.z(t.styl).nazov}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    TextButton(onClick = { naUprav(t.id) }) { Text("Upraviť") }
+                    Button(onClick = { naSpusti(t.id) }) {
+                        Icon(Icons.Filled.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Spustiť")
+                    }
+                }
+            }
+        }
+        OutlinedButton(onClick = { naUprav(0L) }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+            Text(if (treningy.isEmpty()) "Zostaviť vlastný tréning (napr. obľúbený kruh)" else "Nový vlastný tréning")
+        }
+    }
+}
 
 /** „+ Pridať" - vedie do Nastavení, sekcia Rodina (partner aj deti). */
 @Composable

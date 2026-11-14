@@ -319,6 +319,29 @@ interface DenikDao {
 
     @Query("SELECT * FROM uroven_ucastnika WHERE ucastnik_id = :ucastnikId")
     fun urovneUcastnikaTok(ucastnikId: Long): Flow<List<UrovenUcastnikaEntity>>
+
+    // ---------- vlastné tréningy a cviky ----------
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun ulozVlastnyTrening(t: VlastnyTreningEntity): Long
+
+    @Query("SELECT * FROM vlastny_trening ORDER BY nazov")
+    fun vlastneTreningyTok(): Flow<List<VlastnyTreningEntity>>
+
+    @Query("SELECT * FROM vlastny_trening WHERE id = :id")
+    suspend fun vlastnyTrening(id: Long): VlastnyTreningEntity?
+
+    @Query("DELETE FROM vlastny_trening WHERE id = :id")
+    suspend fun zmazVlastnyTrening(id: Long)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun ulozVlastnyCvik(c: VlastnyCvikEntity): Long
+
+    @Query("SELECT * FROM vlastny_cvik ORDER BY nazov")
+    suspend fun vlastneCviky(): List<VlastnyCvikEntity>
+
+    @Query("SELECT * FROM vlastny_cvik WHERE id = :id")
+    suspend fun vlastnyCvik(id: Long): VlastnyCvikEntity?
 }
 
 /** Súhrn dokončených tréningov. */

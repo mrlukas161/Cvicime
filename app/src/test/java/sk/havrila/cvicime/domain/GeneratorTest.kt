@@ -457,4 +457,27 @@ class GeneratorTest {
         assertTrue(hlavny.bloky.first { it.blok == Blok.SILA }.polozky.all { it.naCasS == null })
         assertTrue(sila.filter { it.cvik.meranie == "opakovania" }.all { it.naCasS == 45 })
     }
+
+    // ---------------------------------------------------------------- 0.10: vlastný tréning
+
+    @Test
+    fun `vlastny kruh ide v kolach a drzi davky`() {
+        val polozky = listOf(
+            cviky.getValue("kliky")[0] to VlastnaPolozka("kliky-1", serie = 3, ciel = 12),
+            cviky.getValue("drep")[0] to VlastnaPolozka("drep-1", serie = 2, ciel = 15, naCasS = 40),
+        )
+        val plan = Generator.zVlastneho(StylTreningu.KRUH, polozky)
+        val kroky = Rozvrh.kroky(plan)
+        assertEquals(Blok.KRUH, plan.bloky.single().blok)
+        assertEquals(6, kroky.size) // 3 kolá × 2 stanovištia
+        assertEquals(listOf("kliky-1", "drep-1", "kliky-1"), kroky.take(3).map { it.polozka.cvik.id })
+        assertEquals(40, kroky[1].polozka.naCasS)
+        assertEquals(12, kroky[0].polozka.ciel)
+    }
+
+    @Test
+    fun `doplnok sily neopakuje dnesny rebrik ked je z coho vyberat`() {
+        val d = Generator.doplnok(vstup(), Blok.SILA, setOf("kliky"))
+        assertTrue(d != null && d.polozky.none { it.rebrikId == "kliky" })
+    }
 }

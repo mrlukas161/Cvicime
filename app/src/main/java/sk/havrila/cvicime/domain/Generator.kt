@@ -57,6 +57,17 @@ data class PlanPolozka(
 
 data class PlanBloku(val blok: Blok, val polozky: List<PlanPolozka>)
 
+/** Položka vlastného tréningu: cvik (z knižnice alebo „vlastny-<id>"), série a dávka. */
+data class VlastnaPolozka(
+    val cvikId: String,
+    val serie: Int,
+    /** opakovania alebo sekundy výdrže */
+    val ciel: Int,
+    /** opakovania cvičené na čas; null = podľa merania cviku */
+    val naCasS: Int? = null,
+    val pauzaS: Int = Pravidla.PAUZA_SILA_S,
+)
+
 /**
  * Plán druhého dospelého zladený s hlavným: pre každú položku bloku hlavného plánu jeho položka
  * na tom istom mieste (null = v tom kroku nič). Série, pauzy a páry sú prevzaté, aby sa
@@ -146,6 +157,35 @@ object Generator {
                 )
             })
         }
+    }
+
+    // ---------------------------------------------------------------- vlastný tréning
+
+    /**
+     * Plán z vlastného tréningu (šablóny): presne tie cviky, série a dávky, ktoré si uložil.
+     * Štýl rozhodne o poradí: kruh = kolá so stanovišťami, páry = striedanie, klasika = série za sebou.
+     */
+    fun zVlastneho(styl: StylTreningu, polozky: List<Pair<CvikEntity, VlastnaPolozka>>): PlanTreningu {
+        val plan = polozky.map { (cvik, vp) ->
+            PlanPolozka(
+                cvik = cvik,
+                rebrikId = cvik.rebrikId,
+                rebrikNazov = cvik.rebrikId,
+                serie = vp.serie.coerceAtLeast(1),
+                ciel = vp.ciel.coerceAtLeast(1),
+                pauzaS = if (styl == StylTreningu.KRUH) Pravidla.PAUZA_KOLO_S else vp.pauzaS,
+                cielRir = Pravidla.CIEL_RIR_SILA,
+                naCasS = vp.naCasS,
+                prechodS = if (styl == StylTreningu.KRUH) Pravidla.PRECHOD_KRUH_S else 0,
+            )
+        }
+        val blok = when (styl) {
+            StylTreningu.KRUH -> PlanBloku(Blok.KRUH, plan.map { it.copy(serie = plan.maxOf { p -> p.serie }) })
+            StylTreningu.PARY -> PlanBloku(Blok.SILA, sparuj(plan, mutableListOf()))
+            StylTreningu.KLASIKA -> PlanBloku(Blok.SILA, plan)
+        }
+        val p = PlanTreningu(listOfNotNull(blok.takeIf { it.polozky.isNotEmpty() }), 0, emptyList(), false)
+        return p.copy(odhadMinut = Rozvrh.odhadMinut(Rozvrh.kroky(p)))
     }
 
     // ---------------------------------------------------------------- „Pridať ešte"

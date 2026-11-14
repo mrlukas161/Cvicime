@@ -222,3 +222,30 @@ data class UrovenUcastnikaEntity(
     val uroven: Int,
     @ColumnInfo(name = "zmenene_epoch_den") val zmeneneEpochDen: Long,
 )
+
+/**
+ * Vlastný tréning (šablóna), ktorý si cvičiaci uložil alebo zostavil - napr. obľúbený kruh.
+ * Položky sú JSON (viď [sk.havrila.cvicime.domain.VlastnaPolozka]) - poradie, série a dávka
+ * sa menia spolu a samostatná tabuľka by nič nepridala.
+ */
+@Entity(tableName = "vlastny_trening")
+data class VlastnyTreningEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val nazov: String,
+    /** viď [sk.havrila.cvicime.domain.StylTreningu] - klasika / pary / kruh */
+    val styl: String,
+    val polozky: String,
+    @ColumnInfo(name = "vytvorene_epoch_den") val vytvoreneEpochDen: Long,
+)
+
+/** Vlastný cvik, ktorý v knižnici nie je. Do postupov v rebríkoch sa neráta (nemá rebrík). */
+@Entity(tableName = "vlastny_cvik")
+data class VlastnyCvikEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val nazov: String,
+    /** opakovania / vydrz */
+    val meranie: String,
+    val popis: String = "",
+    /** voliteľný pohyb z galérie (pohyby.json) */
+    val pohyb: String? = null,
+)

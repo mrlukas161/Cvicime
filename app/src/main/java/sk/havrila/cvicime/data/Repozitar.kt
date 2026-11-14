@@ -12,6 +12,8 @@ import sk.havrila.cvicime.data.denik.TreningEntity
 import sk.havrila.cvicime.data.denik.UcastnikEntity
 import sk.havrila.cvicime.data.denik.UrovenRebrikaEntity
 import sk.havrila.cvicime.data.denik.UrovenUcastnikaEntity
+import sk.havrila.cvicime.data.denik.VlastnyCvikEntity
+import sk.havrila.cvicime.data.denik.VlastnyTreningEntity
 import sk.havrila.cvicime.data.denik.ZvieraEntity
 import sk.havrila.cvicime.data.katalog.CvikEntity
 import sk.havrila.cvicime.data.katalog.KatalogDatabase
@@ -28,6 +30,8 @@ import sk.havrila.cvicime.domain.PlanPartnera
 import sk.havrila.cvicime.domain.PlanPolozka
 import sk.havrila.cvicime.domain.PlanTreningu
 import sk.havrila.cvicime.domain.Pravidla
+import sk.havrila.cvicime.domain.StylTreningu
+import sk.havrila.cvicime.domain.VlastnaPolozka
 import sk.havrila.cvicime.domain.VstupGeneratora
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -346,6 +350,85 @@ class Repozitar(context: Context) {
         return zmeny
     }
 
+    // ---------------------------------------------------------------- vlastné tréningy a cviky
+
+    fun vlastneTreningyTok() = denik.vlastneTreningyTok()
+
+    suspend fun vlastnyTrening(id: Long) = denik.vlastnyTrening(id)
+
+    suspend fun zmazVlastnyTrening(id: Long) = denik.zmazVlastnyTrening(id)
+
+    suspend fun ulozVlastnyTrening(id: Long, nazov: String, styl: StylTreningu, polozky: List<VlastnaPolozka>): Long =
+        denik.ulozVlastnyTrening(
+            VlastnyTreningEntity(
+                id = id,
+                nazov = nazov,
+                styl = styl.kluc,
+                polozky = polozkyNaJson(polozky),
+                vytvoreneEpochDen = dnes(),
+            )
+        )
+
+    suspend fun ulozVlastnyCvik(c: VlastnyCvikEntity): Long = denik.ulozVlastnyCvik(c)
+
+    suspend fun vlastneCviky() = denik.vlastneCviky()
+
+    /**
+     * Cvik podľa id - z knižnice, alebo vlastný („vlastny-<id>"). Vlastný sa tvári ako cvik
+     * bez rebríka (rebrik „vlastne"): dá sa cvičiť a zapisovať, do postupov sa neráta.
+     */
+    suspend fun cvikPreVlastny(id: String): CvikEntity? {
+        if (!id.startsWith(PREFIX_VLASTNY)) return katalog.cvik(id)
+        val v = denik.vlastnyCvik(id.removePrefix(PREFIX_VLASTNY).toLongOrNull() ?: return null) ?: return null
+        return CvikEntity(
+            id = id,
+            rebrikId = REBRIK_VLASTNE,
+            uroven = 1,
+            nazov = v.nazov,
+            meranie = v.meranie,
+            cielMin = 1,
+            cielMax = 999,
+            naradie = "ziadne",
+            partie = "",
+            cue = v.popis.lines().filter { it.isNotBlank() }.joinToString("|"),
+            chyby = "",
+            pohyb = v.pohyb,
+        )
+    }
+
+    /** Plán z uloženého vlastného tréningu; null = šablóna neexistuje alebo nemá cviky. */
+    suspend fun vlastnyPlan(id: Long): PlanTreningu? {
+        val t = denik.vlastnyTrening(id) ?: return null
+        val polozky = jsonNaPolozky(t.polozky).mapNotNull { vp -> cvikPreVlastny(vp.cvikId)?.let { it to vp } }
+        if (polozky.isEmpty()) return null
+        return Generator.zVlastneho(StylTreningu.z(t.styl), polozky)
+    }
+
+    fun polozkyVlastneho(t: VlastnyTreningEntity): List<VlastnaPolozka> = jsonNaPolozky(t.polozky)
+
+    private fun polozkyNaJson(polozky: List<VlastnaPolozka>): String = org.json.JSONArray().apply {
+        polozky.forEach { p ->
+            put(org.json.JSONObject().apply {
+                put("cvik", p.cvikId); put("serie", p.serie); put("ciel", p.ciel); put("pauza", p.pauzaS)
+                p.naCasS?.let { put("naCas", it) }
+            })
+        }
+    }.toString()
+
+    private fun jsonNaPolozky(json: String): List<VlastnaPolozka> = runCatching {
+        val pole = org.json.JSONArray(json)
+        (0 until pole.length()).map { i ->
+            val o = pole.getJSONObject(i)
+            VlastnaPolozka(
+                cvikId = o.getString("cvik"),
+                serie = o.optInt("serie", 3),
+                ciel = o.optInt("ciel", 10),
+                naCasS = if (o.has("naCas")) o.getInt("naCas") else null,
+                pauzaS = o.optInt("pauza", Pravidla.PAUZA_SILA_S),
+            )
+        }
+    }.getOrDefault(emptyList())
+
     // ---------------------------------------------------------------- testy
 
     suspend fun zapisTest(cvik: CvikEntity, hodnota: Int, jeVstupny: Boolean) {
@@ -590,6 +673,10 @@ data class Rekord(
 )
 
 private val BLOKY_S_REKORDOM = setOf("sila", "skill", "kondicia")
+
+/** Vlastné cviky majú id „vlastny-<id>" a falošný rebrík - do postupov sa nerátajú. */
+const val PREFIX_VLASTNY = "vlastny-"
+const val REBRIK_VLASTNE = "vlastne"
 
 /** Rebrík nácviku panvového dna (katalóg v3, obsah z rešerše 19.10.2026). */
 const val REBRIK_PANVOVE_DNO = "panvove-dno"

@@ -109,6 +109,7 @@ import sk.havrila.cvicime.ui.obrazovky.ProgresObrazovka
 import sk.havrila.cvicime.ui.obrazovky.RebrikObrazovka
 import sk.havrila.cvicime.ui.obrazovky.TeoriaObrazovka
 import sk.havrila.cvicime.ui.obrazovky.TestObrazovka
+import sk.havrila.cvicime.ui.obrazovky.VlastnyTreningObrazovka
 import sk.havrila.cvicime.ui.obrazovky.ZbierkaObrazovka
 import sk.havrila.cvicime.ui.theme.CvicimeTheme
 import sk.havrila.cvicime.ui.theme.Grotesk
@@ -268,7 +269,9 @@ object Cesty {
     const val DOMOV = "domov"
     const val PROGRES = "progres"
     /** dospely = druhý dospelý popri hlavnom (-1 = nikto), hlavny = čí plán vedie (0 = tvoj). */
-    const val PREHRAVAC = "prehravac/{minuty}/{dieta}?dospely={dospely}&hlavny={hlavny}"
+    const val PREHRAVAC = "prehravac/{minuty}/{dieta}?dospely={dospely}&hlavny={hlavny}&vlastny={vlastny}"
+    /** Editor vlastného tréningu; id 0 = nový. */
+    const val VLASTNY = "vlastny/{id}"
     const val KNIZNICA = "kniznica"
     const val REBRIK = "kniznica/{rebrikId}"
     const val HISTORIA = "historia"
@@ -278,6 +281,8 @@ object Cesty {
     const val ZBIERKA = "zbierka"
 
     fun prehravac(minuty: Int, dieta: Long) = "prehravac/$minuty/$dieta"
+    fun vlastny(id: Long) = "vlastny/$id"
+    fun prehravacVlastny(id: Long, dieta: Long, dospely: Long) = "prehravac/30/$dieta?dospely=$dospely&hlavny=0&vlastny=$id"
     fun prehravac(minuty: Int, dieta: Long, dospely: Long, hlavny: Long) =
         "prehravac/$minuty/$dieta?dospely=$dospely&hlavny=$hlavny"
     fun rebrik(id: String) = "kniznica/$id"
@@ -480,6 +485,10 @@ private fun Navigacia(navigacia: NavHostController, vypln: PaddingValues) {
                     naPrehravac = { minuty, dieta, dospely, hlavny ->
                         navigacia.navigate(Cesty.prehravac(minuty, dieta, dospely, hlavny))
                     },
+                    naVlastny = { id -> navigacia.navigate(Cesty.vlastny(id)) },
+                    naSpustiVlastny = { id, dieta, dospely ->
+                        navigacia.navigate(Cesty.prehravacVlastny(id, dieta, dospely))
+                    },
                     // Rovnako ako ťuk na záložku Nastavenia (sekcia Rodina).
                     naRodinu = {
                         navigacia.navigate(Cesty.NASTAVENIA) {
@@ -512,12 +521,14 @@ private fun Navigacia(navigacia: NavHostController, vypln: PaddingValues) {
             arguments = listOf(
                 navArgument("dospely") { type = NavType.StringType; defaultValue = "-1" },
                 navArgument("hlavny") { type = NavType.StringType; defaultValue = "0" },
+                navArgument("vlastny") { type = NavType.StringType; defaultValue = "-1" },
             ),
         ) { zaznam ->
             val minuty = zaznam.arguments?.getString("minuty")?.toIntOrNull() ?: 30
             val dieta = zaznam.arguments?.getString("dieta")?.toLongOrNull() ?: -1L
             val dospely = zaznam.arguments?.getString("dospely")?.toLongOrNull() ?: -1L
             val hlavny = zaznam.arguments?.getString("hlavny")?.toLongOrNull() ?: 0L
+            val vlastny = zaznam.arguments?.getString("vlastny")?.toLongOrNull() ?: -1L
             Plocha(vyplnStav, sListou = false) {
                 PrehravacObrazovka(
                     minuty = minuty,
@@ -525,6 +536,7 @@ private fun Navigacia(navigacia: NavHostController, vypln: PaddingValues) {
                     hotovo = { navigacia.popBackStack() },
                     dospelyId = dospely,
                     hlavnyId = hlavny,
+                    vlastnyId = vlastny,
                 )
             }
         }
@@ -560,6 +572,12 @@ private fun Navigacia(navigacia: NavHostController, vypln: PaddingValues) {
             val id = zaznam.arguments?.getString("clanokId").orEmpty()
             Plocha(vyplnStav, sListou = false) {
                 ClanokObrazovka(clanokId = id, spat = { navigacia.popBackStack() })
+            }
+        }
+        composable(Cesty.VLASTNY) { zaznam ->
+            val id = zaznam.arguments?.getString("id")?.toLongOrNull() ?: 0L
+            Plocha(vyplnStav, sListou = false) {
+                VlastnyTreningObrazovka(id = id, spat = { navigacia.popBackStack() })
             }
         }
         composable(Cesty.ZBIERKA) {
