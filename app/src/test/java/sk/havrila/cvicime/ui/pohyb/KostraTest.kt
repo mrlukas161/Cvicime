@@ -118,4 +118,44 @@ class KostraTest {
         // po cykle späť na začiatok
         assertEquals(0.5, Kinematika.pozaVCase(v, 2500.0 + 100.0).bok.y, 1e-9)
     }
+
+    @Test
+    fun `uhly sa miesaju najkratsou cestou a smer vynuti dlhy obluk`() {
+        // zadná noha -95 -> 186 (= -174): ide 79° dozadu, nie 281° dopredu cez hlavu
+        val v = vzor(
+            poza(Bod(0.0, 0.5), 90.0, Koncatina.Uhly(-95.0, -95.0), Koncatina.Uhly(-129.0, 143.0)),
+            poza(Bod(0.0, 0.5), 90.0, Koncatina.Uhly(186.0, 186.0), Koncatina.Uhly(214.75, 126.8)),
+        )
+        for (i in 0..100) {
+            val p = Kinematika.pozaVCase(v, 1000.0 * i / 100)
+            val u1 = Kinematika.vyries(v, Clen.NP, p[Clen.NP], p.bok).first
+            assertTrue("noha ide cez predok: $u1", Kinematika.najblizsi(u1, -135.0) in -180.0..-90.0)
+            val r = Kinematika.vyries(v, Clen.RP, p[Clen.RP], p.bok).first
+            assertTrue("ruka sa točí dookola: $r", Kinematika.najblizsi(r, -137.0) in -150.0..-125.0)
+        }
+        val s = vzor(
+            Poza(Bod(0.0, 0.5), 90.0, 90.0, 0.0, 0.0, mapOf(Clen.NP to Koncatina.Uhly(-90.0, -90.0), Clen.NZ to Koncatina.Uhly(-90.0, -90.0),
+                Clen.RP to Koncatina.Uhly(-130.0, -130.0), Clen.RZ to Koncatina.Uhly(-130.0, -130.0)), 1000, 0, mapOf(Clen.RP to 1)),
+            poza(Bod(0.0, 0.5), 90.0, Koncatina.Uhly(-90.0, -90.0), Koncatina.Uhly(90.0, 90.0)),
+        )
+        val stred = Kinematika.pozaVCase(s, 500.0)
+        // s vynúteným smerom ide ruka dopredu (cez 0°), bez neho (RZ) dozadu (cez 180°)
+        assertEquals(-20.0, Kinematika.vyries(s, Clen.RP, stred[Clen.RP], stred.bok).first, 1e-9)
+        assertEquals(-200.0, Kinematika.vyries(s, Clen.RZ, stred[Clen.RZ], stred.bok).first, 1e-9)
+    }
+
+    @Test
+    fun `pri miesani IK a uhlov sa koleno nelomi dozadu`() {
+        // stoj (IK) -> noha vystretá hore v stojke; stehno a holeň sa neotočia proti sebe
+        val v = vzor(
+            poza(Bod(0.0, 0.52), 90.0, Koncatina.Ik(0.02, 0.03, 1), Koncatina.Uhly(-90.0, -90.0)),
+            poza(Bod(0.0, 0.67), -90.0, Koncatina.Uhly(90.0, 90.0), Koncatina.Ik(0.0, 0.03, -1, 0.0)),
+        )
+        for (i in 0..200) {
+            val p = Kinematika.pozaVCase(v, v.cyklus * i / 200.0)
+            val (u1, u2) = Kinematika.vyries(v, Clen.NP, p[Clen.NP], p.bok)
+            val f = Kinematika.ohyb(Clen.NP, u1, u2)
+            assertTrue("koleno $f° v t=$i", f in -1e-6..30.0)
+        }
+    }
 }

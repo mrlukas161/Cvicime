@@ -67,6 +67,12 @@ data class Poza(
     val t: Int,
     /** ms výdrže v tejto póze pred presunom */
     val drz: Int,
+    /**
+     * Vynútený smer otáčania prvého segmentu pri presune z tejto pózy do ďalšej (+1 = proti
+     * smeru hodinových ručičiek, -1 = v smere), napr. švih rúk dopredu nad hlavu. Bez neho ide
+     * končatina najkratšou cestou (relatívne k otočeniu trupu).
+     */
+    val smer: Map<Clen, Int> = emptyMap(),
 ) {
     operator fun get(c: Clen): Koncatina = koncatiny.getValue(c)
 }
@@ -203,33 +209,23 @@ object Kinematika {
 
     fun zmiesaj(v: Vzor, a: Poza, b: Poza, e: Double): Poza {
         fun m(x: Double, y: Double) = x + (y - x) * e
-        fun mn(x: Double?, y: Double?) = if (x != null && y != null) m(x, y) else null
         val konc = Clen.entries.associateWith { c ->
             val ka = a[c]
             val kb = b[c]
             when {
+                // Rovnaký typ cieľa: mieša sa cieľ, takže kontakt (dlaň na zemi, ruka na hrazde) drží.
                 ka is Koncatina.Ik && kb is Koncatina.Ik ->
-                    Koncatina.Ik(m(ka.x, kb.x), m(ka.y, kb.y), oPre(c, ka), mn(ka.c, kb.c))
+                    Koncatina.Ik(m(ka.x, kb.x), m(ka.y, kb.y), oPre(c, ka), koniecCiela(v, c, a, b, ka.c, kb.c, e))
                 ka is Koncatina.Na && kb is Koncatina.Na ->
-                    Koncatina.Na(m(ka.x, kb.x), m(ka.y, kb.y), m(ka.u2, kb.u2), mn(ka.c, kb.c))
-                else -> {
-                    val ra = vyries(v, c, ka, koren(v, c, a.bok, a.trup, a.lopatky))
-                    val rb = vyries(v, c, kb, koren(v, c, b.bok, b.trup, b.lopatky))
-                    var a1 = ra.first
-                    var a2 = ra.second
-                    var b1 = rb.first
-                    var b2 = rb.second
-                    if (ka !is Koncatina.Uhly) {
-                        a1 = najblizsi(a1, b1)
-                        a2 = najblizsi(a2, b2)
-                    } else if (kb !is Koncatina.Uhly) {
-                        b1 = najblizsi(b1, a1)
-                        b2 = najblizsi(b2, a2)
-                    }
-                    val a3 = ra.third ?: predvolenyKoniec(v, c, a2)
-                    val b3 = rb.third ?: predvolenyKoniec(v, c, b2)
-                    Koncatina.Uhly(m(a1, b1), m(a2, b2), m(a3, b3))
-                }
+                    Koncatina.Na(m(ka.x, kb.x), m(ka.y, kb.y), m(ka.u2, kb.u2), koniecCiela(v, c, a, b, ka.c, kb.c, e))
+                else -> zmiesajKlby(
+                    c,
+                    uhlyKoncatiny(v, c, a),
+                    uhlyKoncatiny(v, c, b),
+                    b.trup - a.trup,
+                    a.smer[c] ?: 0,
+                    e,
+                )
             }
         }
         return Poza(
@@ -242,6 +238,59 @@ object Kinematika {
             t = a.t,
             drz = 0,
         )
+    }
+
+    /** Uhly končatiny v póze vrátane chodidla/dlane (predvolené, ak nie je zadané). */
+    private fun uhlyKoncatiny(v: Vzor, c: Clen, p: Poza): Triple<Double, Double, Double> {
+        val (u1, u2, u3) = vyries(v, c, p[c], koren(v, c, p.bok, p.trup, p.lopatky))
+        return Triple(u1, u2, u3 ?: predvolenyKoniec(v, c, u2))
+    }
+
+    /** Uhol chodidla/dlane pri miešaní cieľov; zadaný len na jednej strane = druhú doplní predvolený. */
+    private fun koniecCiela(v: Vzor, c: Clen, a: Poza, b: Poza, ca: Double?, cb: Double?, e: Double): Double? {
+        if (ca == null && cb == null) return null
+        if (ca != null && cb != null) return ca + (cb - ca) * e
+        val x = ca ?: uhlyKoncatiny(v, c, a).third
+        val y = najblizsi(cb ?: uhlyKoncatiny(v, c, b).third, x)
+        return x + (y - x) * e
+    }
+
+    /**
+     * Ohnutie kĺbu v stupňoch: koleno u1 - u2, lakeť u2 - u1 (0 = vystretý, + = prirodzený smer).
+     * Rozsah (-150, 210]: aj priemet úplne ohnutého kĺbu (~180) sa mieša bez preklopenia cez 0.
+     */
+    fun ohyb(c: Clen, u1: Double, u2: Double): Double = najblizsi(if (c.noha) u1 - u2 else u2 - u1, 30.0)
+
+    /**
+     * Miešanie v priestore kĺbov: prvý segment najkratšou cestou relatívne k otočeniu trupu
+     * (alebo vynútene [smer] +1/-1 pri zámernom dlhom oblúku), ohnutie kĺbu lineárne,
+     * chodidlo/dlaň relatívne k druhému segmentu. Stehno a holeň (rameno a predlaktie)
+     * sa tak nikdy neotočia proti sebe a koleno sa neohne dozadu.
+     */
+    fun zmiesajKlby(
+        c: Clen,
+        a: Triple<Double, Double, Double>,
+        b: Triple<Double, Double, Double>,
+        dTrup: Double,
+        smer: Int,
+        e: Double,
+    ): Koncatina.Uhly {
+        val (a1, a2, a3) = a
+        val (b1, b2, b3) = b
+        val d = b1 - a1
+        val d1 = when {
+            smer > 0 -> ((d % 360) + 360) % 360
+            smer < 0 -> -((((-d) % 360) + 360) % 360)
+            else -> najblizsi(d, dTrup)
+        }
+        val fa = ohyb(c, a1, a2)
+        val fb = ohyb(c, b1, b2)
+        val ka = najblizsi(a3 - a2, 0.0)
+        val kb = najblizsi(b3 - b2, ka)
+        val u1 = a1 + d1 * e
+        val f = fa + (fb - fa) * e
+        val u2 = if (c.noha) u1 - f else u1 + f
+        return Koncatina.Uhly(u1, u2, u2 + ka + (kb - ka) * e)
     }
 
     /** Jemné dýchanie pri výdržiach. */
