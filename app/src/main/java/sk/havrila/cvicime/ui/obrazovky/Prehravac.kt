@@ -64,6 +64,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.NotificationsActive
+import androidx.compose.material.icons.rounded.PersonAdd
 import androidx.compose.material.icons.rounded.RecordVoiceOver
 import androidx.compose.material.icons.rounded.ScreenLockLandscape
 import androidx.compose.material.icons.rounded.Tv
@@ -144,7 +145,9 @@ import sk.havrila.cvicime.data.model.Meranie
 import sk.havrila.cvicime.data.model.Rir
 import sk.havrila.cvicime.deti.Zviera
 import sk.havrila.cvicime.deti.Zvierata
+import sk.havrila.cvicime.domain.PlanBloku
 import sk.havrila.cvicime.domain.PlanPolozka
+import sk.havrila.cvicime.domain.PlanTreningu
 import sk.havrila.cvicime.domain.Pravidla
 import sk.havrila.cvicime.domain.Rozvrh
 import sk.havrila.cvicime.trening.Povel
@@ -185,6 +188,8 @@ data class KrokTreningu(
     val partner: PartnerKrok? = null,
     /** oddych po tejto sérii - pri pároch a v kruhu krátky prechod, inak pauza položky */
     val pauzaPoS: Int = polozka.pauzaS,
+    /** poloha položky v bloku plánu - podľa nej sa dá neskôr pridať zladený druhý dospelý */
+    val miesto: Int = 0,
 )
 
 /** Séria ide na odpočet: výdrž, alebo cvik na opakovania cvičený na čas. */
@@ -241,7 +246,7 @@ data class OtazkaPriznaku(
  * DOPLNENIE = posledná séria je odcvičená, ale ešte treba dopísať druhého dospelého
  * alebo odpovedať na otázku príznaku - až potom súhrn.
  */
-enum class StavPrehravaca { NACITAVA, CVICENIE, OTAZKA, PAUZA, DOPLNENIE, HOTOVO, PRAZDNY }
+enum class StavPrehravaca { NACITAVA, CVICENIE, OTAZKA, PAUZA, DOPLNENIE, PRIDAT, HOTOVO, PRAZDNY }
 
 /** Bloky, v ktorých sa zapisuje skutočný výkon (inde sa plán zapíše ako skutočnosť). */
 private val BLOKY_S_VYKONOM = setOf(Blok.SKILL, Blok.SILA, Blok.KONDICIA)
@@ -266,7 +271,27 @@ data class DetskyStav(
     val spravene: List<String> = emptyList(),
     /** zviera sa dnes už odhalilo - ďalšie cvičenie („Ešte!") je bez ďalšej odmeny */
     val zvieraDnes: Boolean = false,
+    /** vek dieťaťa - podľa neho dĺžka odpočtu (2-ročný 15 s, 6-ročný 30 s) */
+    val vek: Int = 4,
+    /** „3, 2, 1" pred cvikom: 3..1, 0 = už cvičí */
+    val priprava: Int = 0,
+    /** koniec detského odpočtu (elapsedRealtime), 0 = nebeží */
+    val koniecMs: Long = 0L,
+    val celkomMs: Long = 0L,
 )
+
+/**
+ * Ako dlho cvičí dieťa jeden cvik. Malé deti sa hýbu v krátkych dávkach (3-15 s, Bailey 1995),
+ * preto je to hra na chvíľu, nie séria.
+ */
+fun DetskyStav.sekundCviku(): Int = when {
+    vek <= 3 -> 15
+    vek <= 5 -> 20
+    else -> 30
+}
+
+/** Kto sa dá pridať do bežiaceho tréningu (id 0 + dieta=false = „Ja", keď vedie dospelý). */
+data class Pridatelny(val id: Long, val meno: String, val farba: Int, val dieta: Boolean)
 
 /** Zmena stupňa v rebríku po tréningu; [vyssie] = postup na ťažší stupeň (dôvod na oslavu). */
 data class PrehravacPostup(val text: String, val vyssie: Boolean)
@@ -499,6 +524,22 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
 
     /** Kto je hlavný cvičiaci tréningu: 0 = ty, inak id dospelého (keď ty dnes necvičíš). */
     private var hlavnyId: Long = 0
+    private var minutyTreningu: Int = 30
+
+    /** Plán hlavného (aj s doplnkami) - podľa neho sa zladí dospelý pridaný uprostred tréningu. */
+    private var bloky: List<PlanBloku> = emptyList()
+
+    /** Kto sa ešte dá pridať uprostred tréningu (aktívni dospelí a deti, čo práve necvičia). */
+    private val _naPridanie = MutableStateFlow<List<Pridatelny>>(emptyList())
+    val naPridanie = _naPridanie.asStateFlow()
+
+    private val _sprava = MutableStateFlow<String?>(null)
+    /** Krátka správa pre používateľa (napr. „Zručnosť nemáš v cieľoch"). */
+    val sprava = _sprava.asStateFlow()
+
+    fun spravaVidena() {
+        _sprava.value = null
+    }
     private var otazkaHlavneho: String? = null
 
     /** Zápis poslednej série hlavného cvičiaceho - id série pre dodatočný príznak. */
@@ -549,8 +590,10 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             // Neexistujúci (medzičasom zmazaný) dospelý nesmie viesť tréning - vtedy vedieš ty.
             hlavnyId = if (hlavny > 0 && repo.ucastnik(hlavny) != null) hlavny else 0L
+            minutyTreningu = minuty
             otazkaHlavneho = repo.obmedzenia(hlavnyId).firstNotNullOfOrNull { it.otazkaPoSerii }
             val plan = repo.zostavPlan(minuty, hlavnyId)
+            bloky = plan.bloky
 
             // Druhý dospelý: plán ZLADENÝ s hlavným (ten istý rebrík na jeho stupni, inak šetrná
             // náhrada) - položka na tom istom mieste bloku. Chýbajúca = v tom kroku nič.
@@ -581,6 +624,7 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
                         zoSerii = k.zoSerii,
                         partner = jeho?.let { PartnerKrok(it, minOf(k.cisloSerie, it.serie), it.serie) },
                         pauzaPoS = k.pauzaPoS,
+                        miesto = miesto,
                     )
                 }
             }
@@ -591,19 +635,10 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
             }
 
             val rodinny = dietaId > 0
-            if (rodinny) {
-                val dieta = repo.denik.deti().firstOrNull { it.id == dietaId }
-                if (dieta != null) {
-                    detskeCviky = repo.katalog.detskeCviky()
-                    _detsky.value = DetskyStav(
-                        dietaId = dieta.id,
-                        meno = dieta.meno,
-                        moznosti = vyberDvoch(emptyList()),
-                    )
-                }
-            }
+            if (rodinny) zapojDieta(dietaId)
             _zaciatok.value = System.currentTimeMillis()
             treningId = repo.zacniTrening(minuty, rodinny = rodinny)
+            obnovNaPridanie()
             spustiSluzbu()
             // Krátke „priprav sa" pred prvým cvikom - stihne sa predstaviť a človek sa postaví.
             zacniPauzu(0, Pravidla.PRIPRAV_SA_S)
@@ -763,7 +798,113 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
 
     /** Doplnenie po poslednej sérii je hotové - až teraz súhrn. */
     fun doplnenieHotove() {
-        if (_stav.value == StavPrehravaca.DOPLNENIE) ukonci()
+        if (_stav.value != StavPrehravaca.DOPLNENIE) return
+        potvrdZapisPartnera()
+        _otazkaPriznaku.value = null
+        _stav.value = StavPrehravaca.PRIDAT
+    }
+
+    // ------------------------------------------------------------ „Pridať ešte" a pridanie cvičiaceho
+
+    /**
+     * Plán je odcvičený, ale ešte je čas: jeden blok navyše (sila, zručnosť, mobilita) do toho
+     * istého tréningu - bez zakladania nového. Druhý dospelý dostane zladený doplnok.
+     */
+    fun pridajEste(blok: Blok) {
+        if (_stav.value != StavPrehravaca.PRIDAT) return
+        viewModelScope.launch {
+            val pouzite = _kroky.value.flatMap { listOf(it.polozka.rebrikId, it.polozka.cvik.id) }.toSet()
+            val doplnok = repo.doplnok(hlavnyId, blok, pouzite)
+            if (doplnok == null) {
+                _sprava.value = if (blok == Blok.SKILL) {
+                    "Nemáš zvolenú žiadnu zručnosť ako cieľ — pridáš ju v Nastaveniach → Ciele."
+                } else {
+                    "Teraz neviem nič vhodné pridať."
+                }
+                return@launch
+            }
+            val p = _partner.value
+            val jeho = p?.let { repo.doplnokPartnera(it.ucastnikId, doplnok) }.orEmpty()
+            bloky = bloky + doplnok
+            val nove = Rozvrh.kroky(doplnok).map { k ->
+                val miesto = doplnok.polozky.indexOfFirst { it === k.polozka }
+                KrokTreningu(
+                    blok = k.blok,
+                    polozka = k.polozka,
+                    cisloSerie = k.cisloSerie,
+                    zoSerii = k.zoSerii,
+                    partner = jeho.getOrNull(miesto)?.let { PartnerKrok(it, minOf(k.cisloSerie, it.serie), it.serie) },
+                    pauzaPoS = k.pauzaPoS,
+                    miesto = miesto,
+                )
+            }
+            val prvy = _kroky.value.size
+            _kroky.value = _kroky.value + nove
+            zacniPauzu(prvy, Pravidla.PRIPRAV_SA_S)
+        }
+    }
+
+    /** Ponuka „pridať ešte" odmietnutá - súhrn. */
+    fun skoncitPoPlane() {
+        if (_stav.value == StavPrehravaca.PRIDAT) ukonci()
+    }
+
+    private suspend fun obnovNaPridanie() {
+        val p = _partner.value
+        val d = _detsky.value
+        val dospeli = repo.ucastnici()
+            .filter { it.aktivny && it.id != hlavnyId && p == null }
+            .map { Pridatelny(it.id, it.meno, it.farba, dieta = false) }
+        val deti = if (d == null) repo.denik.deti().map { Pridatelny(it.id, it.meno, it.farba, dieta = true) } else emptyList()
+        // Keď vedie dospelý (ty dnes necvičíš), dá sa pridať aj „Ja".
+        val ja = if (hlavnyId != 0L && p == null) listOf(Pridatelny(0L, "Ja", 0, dieta = false)) else emptyList()
+        _naPridanie.value = ja + dospeli + deti
+    }
+
+    /**
+     * Pridanie cvičiaceho uprostred tréningu: dospelý dostane plán zladený s tvojím
+     * od aktuálneho kroku ďalej, dieťa svoj detský pruh. Už odcvičené sa nemení.
+     */
+    fun pridaj(kto: Pridatelny) {
+        viewModelScope.launch {
+            if (kto.dieta) {
+                if (_detsky.value == null) zapojDieta(kto.id)
+            } else if (_partner.value == null) {
+                val u = if (kto.id == 0L) null else repo.ucastnik(kto.id)
+                if (kto.id != 0L && u == null) return@launch
+                _partner.value = PartnerStopa(
+                    ucastnikId = kto.id,
+                    meno = u?.meno ?: "Ja",
+                    farba = u?.farba ?: 0xFF2E7D6E.toInt(),
+                    otazka = repo.obmedzenia(kto.id).firstNotNullOfOrNull { it.otazkaPoSerii },
+                )
+                val plan = PlanTreningu(bloky, 0, emptyList(), false)
+                val jeho = repo.zostavPlanPartnera(minutyTreningu, kto.id, plan).bloky
+                // Od aktuálneho kroku (v pauze je to ten nasledujúci) - odcvičené sa nemení.
+                val odKroku = _index.value
+                _kroky.value = _kroky.value.mapIndexed { i, k ->
+                    if (i < odKroku) {
+                        k
+                    } else {
+                        val p = jeho[k.blok]?.getOrNull(k.miesto)
+                        k.copy(partner = p?.let { PartnerKrok(it, minOf(k.cisloSerie, it.serie), it.serie) })
+                    }
+                }
+                hlas.povedzPotom("${_partner.value?.meno} sa pridáva.", hlasZapnuty)
+            }
+            obnovNaPridanie()
+        }
+    }
+
+    private suspend fun zapojDieta(dietaId: Long) {
+        val dieta = repo.denik.deti().firstOrNull { it.id == dietaId } ?: return
+        if (detskeCviky.isEmpty()) detskeCviky = repo.katalog.detskeCviky()
+        _detsky.value = DetskyStav(
+            dietaId = dieta.id,
+            meno = dieta.meno,
+            vek = dieta.vek,
+            moznosti = vyberDvoch(emptyList()),
+        )
     }
 
     private fun dalej() {
@@ -772,11 +913,12 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
         val dalsi = _kroky.value.getOrNull(dalsiIndex)
         if (dalsi == null) {
             // Posledná séria: ak ešte niečo čaká na doplnenie, súhrn počká.
-            if (_partnerZapis.value != null || _otazkaPriznaku.value != null) {
-                _koniecOdpoctu.value = 0L
-                _stav.value = StavPrehravaca.DOPLNENIE
+            _koniecOdpoctu.value = 0L
+            // Posledná séria: ak ešte niečo čaká na doplnenie, ponuka „pridať ešte" a súhrn počkajú.
+            _stav.value = if (_partnerZapis.value != null || _otazkaPriznaku.value != null) {
+                StavPrehravaca.DOPLNENIE
             } else {
-                ukonci()
+                StavPrehravaca.PRIDAT
             }
             return
         }
@@ -845,6 +987,7 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
     }
 
     fun ukonci() {
+        detskyOdpocet?.cancel()
         val id = treningId
         // Rozpracovaný zápis druhého dospelého sa pri ukončení neztratí.
         potvrdZapisPartnera()
@@ -932,8 +1075,46 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
         return (kandidati.ifEmpty { detskeCviky }).shuffled().take(2)
     }
 
+    private var detskyOdpocet: Job? = null
+
+    /**
+     * Dieťa si vybralo - appka ráta za neho: „3, 2, 1" nahlas, potom odpočet podľa veku
+     * a na konci sama pripíše labku. Nikto dospelý nemusí nič ťukať (spätná väzba z tréningu).
+     * „Spravené" ostáva na skoršie ukončenie.
+     */
     fun dietaVybralo(cvik: CvikEntity) {
-        _detsky.value = _detsky.value?.copy(krok = DetskyKrok.CVICI, aktualny = cvik)
+        val d = _detsky.value ?: return
+        _detsky.value = d.copy(krok = DetskyKrok.CVICI, aktualny = cvik, priprava = 3, koniecMs = 0L, celkomMs = 0L)
+        detskyOdpocet?.cancel()
+        detskyOdpocet = viewModelScope.launch {
+            for (i in 3 downTo 1) {
+                cakajNaPokracovanie()
+                _detsky.value = _detsky.value?.copy(priprava = i)
+                hlas.povedzPotom("$i", hlasZapnuty)
+                hlas.pipni(pipanieZapnute)
+                delay(1000)
+            }
+            val ms = (_detsky.value ?: return@launch).sekundCviku() * 1000L
+            var zostava = ms
+            _detsky.value = _detsky.value?.copy(priprava = 0, koniecMs = SystemClock.elapsedRealtime() + ms, celkomMs = ms)
+            hlas.povedzPotom("Štart!", hlasZapnuty)
+            while (zostava > 0) {
+                if (_pozastavene.value) {
+                    // Pozastavený tréning = aj detský odpočet stojí.
+                    cakajNaPokracovanie()
+                    _detsky.value = _detsky.value?.copy(koniecMs = SystemClock.elapsedRealtime() + zostava)
+                }
+                delay(100)
+                val koniec = _detsky.value?.koniecMs ?: return@launch
+                zostava = koniec - SystemClock.elapsedRealtime()
+            }
+            hlas.pipniKoniec(pipanieZapnute)
+            zapisLabku()
+        }
+    }
+
+    private suspend fun cakajNaPokracovanie() {
+        while (_pozastavene.value) delay(100)
     }
 
     /**
@@ -941,7 +1122,14 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
      * Po tretej labke sa odomkne zviera JEDNÉHO z cvikov, ktoré dieťa reálne robilo -
      * náhodné a vopred neprezradené (Lepperov efekt: očakávaná odmena škodí, nečakaná nie).
      */
+    /** Ťuk „Spravené" - aj počas odpočtu (ten sa zruší, aby nepripísal druhú labku). */
     fun dietaSpravilo() {
+        detskyOdpocet?.cancel()
+        detskyOdpocet = null
+        zapisLabku()
+    }
+
+    private fun zapisLabku() {
         val d = _detsky.value ?: return
         val cvik = d.aktualny ?: return
         val spravene = d.spravene + cvik.id
@@ -973,6 +1161,8 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
                 spravene = spravene,
                 moznosti = vyberDvoch(spravene),
                 aktualny = null,
+                priprava = 0,
+                koniecMs = 0L,
             )
         }
     }
@@ -1074,6 +1264,8 @@ fun PrehravacObrazovka(
     val partnerCelkom by model.partnerCelkom.collectAsStateWithLifecycle()
     val popisZapnuty by model.popis.collectAsStateWithLifecycle()
     val hlasomPocet by model.hlasomPocet.collectAsStateWithLifecycle()
+    val sprava by model.sprava.collectAsStateWithLifecycle()
+    val naPridanie by model.naPridanie.collectAsStateWithLifecycle()
     val pocuva by model.pocuva.collectAsStateWithLifecycle()
 
     val zvuk by model.zvuk.collectAsStateWithLifecycle()
@@ -1104,7 +1296,7 @@ fun PrehravacObrazovka(
     val krok = kroky.getOrNull(index)
     val vTreningu = kroky.isNotEmpty() &&
         (stav == StavPrehravaca.CVICENIE || stav == StavPrehravaca.OTAZKA || stav == StavPrehravaca.PAUZA ||
-            stav == StavPrehravaca.DOPLNENIE)
+            stav == StavPrehravaca.DOPLNENIE || stav == StavPrehravaca.PRIDAT)
 
     // Hlas pri zmene cviku - názov + dávka. Bez pozerania na displej.
     LaunchedEffect(stav, index) {
@@ -1141,6 +1333,9 @@ fun PrehravacObrazovka(
                     if (kratka) "Priprav sa: ${dalsi?.polozka?.cvik?.nazov ?: ""}." else "Pauza.",
                     model.hlasZapnuty,
                 )
+            }
+            StavPrehravaca.PRIDAT -> {
+                hlas.povedz("Plán je hotový. Ak máš ešte čas, pridaj si niečo.", model.hlasZapnuty)
             }
             StavPrehravaca.HOTOVO -> {
                 hlas.povedz("Hotovo. Dobrá práca.", model.hlasZapnuty)
@@ -1324,6 +1519,8 @@ fun PrehravacObrazovka(
                     popis = popisZapnuty,
                     naPopis = model::prepniPopis,
                     pocuva = pocuva,
+                    naPridanie = naPridanie,
+                    naPridaj = model::pridaj,
                     ovladanie = if (naLezato && (stav == StavPrehravaca.CVICENIE || stav == StavPrehravaca.PAUZA)) {
                         { SpodneOvladanie(model::preskoc, model::skrat, pytajSaNaKoniec, vHlavicke = true) }
                     } else {
@@ -1402,6 +1599,12 @@ fun PrehravacObrazovka(
                             model = model,
                             naUpravu = { delta -> model.akAktualny(k) { model.upravPauzu(delta) } },
                             naPreskocenie = { model.akAktualny(k) { model.pauzaSkoncila() } },
+                        )
+
+                        StavPrehravaca.PRIDAT -> PridatEste(
+                            sprava = sprava,
+                            naBlok = { b -> model.akAktualny(k) { model.spravaVidena(); model.pridajEste(b) } },
+                            naKoniec = { model.akAktualny(k) { model.skoncitPoPlane() } },
                         )
 
                         StavPrehravaca.DOPLNENIE -> Doplnenie(
@@ -1520,6 +1723,8 @@ private fun Hlavicka(
     popis: Boolean,
     naPopis: () -> Unit,
     pocuva: Boolean = false,
+    naPridanie: List<Pridatelny> = emptyList(),
+    naPridaj: (Pridatelny) -> Unit = {},
     /** na ležato idú Vynechať / Nevládzem / Ukončiť do hlavičky - dole by zjedli výšku */
     ovladanie: (@Composable () -> Unit)? = null,
 ) {
@@ -1587,6 +1792,14 @@ private fun Hlavicka(
                     Icon(Icons.Rounded.MoreVert, contentDescription = "Ďalšie možnosti")
                 }
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    // Kto sa pridáva uprostred tréningu (manželka, dieťa) - bez zakladania nového.
+                    naPridanie.forEach { kto ->
+                        DropdownMenuItem(
+                            text = { Text("Pridať do tréningu: ${kto.meno}") },
+                            leadingIcon = { Icon(Icons.Rounded.PersonAdd, contentDescription = null) },
+                            onClick = { menu = false; naPridaj(kto) },
+                        )
+                    }
                     DropdownMenuItem(
                         text = { Text("Režim TV (väčšie písmo)") },
                         leadingIcon = { Icon(Icons.Rounded.Tv, contentDescription = null) },
@@ -2463,6 +2676,58 @@ private fun MalaVolba(text: String, vybrana: Boolean, farba: Color, modifier: Mo
     }
 }
 
+/**
+ * Plán je odcvičený: ešte niečo pridať do toho istého tréningu (sila, zručnosť, mobilita),
+ * alebo súhrn. Kondícia a strečing sa tu zámerne neponúkajú.
+ */
+@Composable
+private fun PridatEste(sprava: String?, naBlok: (Blok) -> Unit, naKoniec: () -> Unit) {
+    val haptika = rememberHaptika()
+    Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+        RolovatelnyStred(Modifier.weight(1f).fillMaxWidth()) {
+            ZnakHotovo()
+            Spacer(Modifier.height(12.dp))
+            Text("Plán je hotový", style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "Ešte máš čas a chuť? Pridaj si blok do tohto tréningu.",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(16.dp))
+            listOf(
+                Triple(Blok.SILA, "Sila", "1 cvik × 3 série · ~6 min"),
+                Triple(Blok.SKILL, "Zručnosť", "tvoja zručnosť · 3 série · ~5 min"),
+                Triple(Blok.MOBILITA, "Mobilita", "2 cviky · ~3 min"),
+            ).forEach { (blok, nazov, popis) ->
+                val farba = FarbyBlokov.pre(blok)
+                TonovanaKarta(
+                    farba = farba,
+                    vnutorneOdsadenie = 14.dp,
+                    onClick = { haptika.potvrdenie(); naBlok(blok) },
+                    modifier = Modifier.padding(vertical = 4.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Rounded.Add, contentDescription = null, tint = farba, modifier = Modifier.size(28.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Column {
+                            Text("Pridať: $nazov", style = MaterialTheme.typography.titleMedium)
+                            Text(popis, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+            if (sprava != null) {
+                Spacer(Modifier.height(8.dp))
+                Text(sprava, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        VelkeTlacidlo(text = "Ukončiť a ukázať súhrn", onClick = naKoniec, ikona = Icons.Rounded.Flag)
+    }
+}
+
 /** Po poslednej sérii: dopísať druhého dospelého (a príznak), až potom súhrn. */
 @Composable
 private fun Doplnenie(o: PrehravacObraz, model: PrehravacModel, naHotovo: () -> Unit) {
@@ -2656,7 +2921,7 @@ private fun DetskyPruhKompaktny(d: DetskyStav, model: PrehravacModel) {
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
                             verticalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
-                            DetskyOdpocet(cvik?.id, farba, model, kompaktny = true)
+                            DetskyOdpocet(d, farba, model.pozastavene.collectAsStateWithLifecycle().value)
                             Button(
                                 onClick = { haptika.potvrdenie(); model.dietaSpravilo() },
                                 modifier = Modifier.heightIn(min = 48.dp),
@@ -2675,44 +2940,32 @@ private fun DetskyPruhKompaktny(d: DetskyStav, model: PrehravacModel) {
 }
 
 /**
- * Voliteľný krátky odpočet pre dieťa („Skúsiš to, kým zapípa?"). Deti sa hýbu v krátkych
- * dávkach - 20 s je hra, nie výkon. Labka sa dáva za pokus ďalej, odpočet nič nehodnotí.
+ * Detský odpočet - ráta appka sama: „3, 2, 1" a potom kruh so zostávajúcimi sekundami.
+ * Na konci pripíše labku bez ťukania (spätná väzba z tréningu). Labka je za pokus, nie za výkon.
  */
 @Composable
-private fun DetskyOdpocet(cvikId: String?, farba: Color, model: PrehravacModel, kompaktny: Boolean = false) {
-    var koniec by remember(cvikId) { mutableStateOf(0L) }
-    var zostava by remember(cvikId) { mutableIntStateOf(0) }
-    LaunchedEffect(koniec) {
-        if (koniec <= 0L) return@LaunchedEffect
-        while (true) {
-            val ms = koniec - SystemClock.elapsedRealtime()
-            zostava = ((ms + 999) / 1000).toInt().coerceAtLeast(0)
-            if (ms <= 0) break
-            delay(100)
-        }
-        model.hlas.pipniKoniec(model.pipanieZapnute)
-        model.hlas.povedzPotom("Hotovo! Výborne.", model.hlasZapnuty)
-        koniec = 0L
-    }
-    val bezi = koniec > 0L
-    OutlinedButton(
-        onClick = {
-            if (!bezi) {
-                koniec = SystemClock.elapsedRealtime() + DETSKY_ODPOCET_S * 1000L
-                zostava = DETSKY_ODPOCET_S
+private fun DetskyOdpocet(d: DetskyStav, farba: Color, pozastavene: Boolean, velkost: Dp = 56.dp) {
+    Box(Modifier.size(velkost), contentAlignment = Alignment.Center) {
+        if (d.priprava > 0) {
+            Text(
+                "${d.priprava}",
+                style = MaterialTheme.typography.headlineMedium.copy(fontFamily = Grotesk, fontWeight = FontWeight.Bold),
+                color = farba,
+            )
+        } else if (d.koniecMs > 0L) {
+            val zostatok = rememberZostatokMs(d.koniecMs, pozastavene, 0L)
+            KruhPostupu(
+                postup = 1f - zostatok.toFloat() / d.celkomMs.coerceAtLeast(1L).toFloat(),
+                modifier = Modifier.size(velkost),
+                farba = farba,
+                hrubka = 5.dp,
+            ) {
+                Text(
+                    "${(zostatok + 999) / 1000}",
+                    style = MaterialTheme.typography.titleLarge.copy(fontFamily = Grotesk, fontWeight = FontWeight.Bold),
+                )
             }
-        },
-        modifier = Modifier.heightIn(min = 48.dp),
-        shape = RoundedCornerShape(16.dp),
-        contentPadding = PaddingValues(horizontal = if (kompaktny) 10.dp else 16.dp),
-        border = BorderStroke(1.5.dp, farba),
-    ) {
-        Icon(Icons.Rounded.Timer, contentDescription = null, modifier = Modifier.size(18.dp))
-        Spacer(Modifier.width(4.dp))
-        Text(
-            if (bezi) "$zostava s" else if (kompaktny) "${DETSKY_ODPOCET_S} s" else "Skúsiš ${DETSKY_ODPOCET_S} s?",
-            style = MaterialTheme.typography.labelLarge,
-        )
+        }
     }
 }
 
@@ -2858,7 +3111,7 @@ private fun DetskeCvicenie(s: DetskyStav, farba: Color, model: PrehravacModel) {
         Text(it, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
     }
     Spacer(Modifier.height(10.dp))
-    DetskyOdpocet(cvik?.id, farba, model)
+    DetskyOdpocet(s, farba, model.pozastavene.collectAsStateWithLifecycle().value, velkost = 72.dp)
     Spacer(Modifier.height(10.dp))
     Button(
         onClick = {

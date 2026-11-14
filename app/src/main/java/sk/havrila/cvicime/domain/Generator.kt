@@ -124,8 +124,14 @@ object Generator {
      * Pauzy sa násobia AŽ tu, aby každý blok mohol rátať s pravidlami z [Pravidla].
      */
     private fun dokonci(v: VstupGeneratora, bloky: List<PlanBloku>, zdovodnenie: List<String>): PlanTreningu {
+        val upravene = upravPodlaNastavenia(v, bloky)
+        val plan = vtesnajDoCasu(PlanTreningu(upravene, 0, zdovodnenie, v.deload), v.dostupneMinuty)
+        return plan.copy(odhadMinut = Rozvrh.odhadMinut(Rozvrh.kroky(plan)))
+    }
+
+    private fun upravPodlaNastavenia(v: VstupGeneratora, bloky: List<PlanBloku>): List<PlanBloku> {
         val n = v.nastavenie
-        val upravene = bloky.map { b ->
+        return bloky.map { b ->
             b.copy(polozky = b.polozky.map { p ->
                 val naCas = p.naCasS ?: if (n.vsetkoNaCas && Meranie.z(p.cvik.meranie) != Meranie.VYDRZ) n.pracaS else null
                 p.copy(
@@ -135,8 +141,53 @@ object Generator {
                 )
             })
         }
-        val plan = vtesnajDoCasu(PlanTreningu(upravene, 0, zdovodnenie, v.deload), v.dostupneMinuty)
-        return plan.copy(odhadMinut = Rozvrh.odhadMinut(Rozvrh.kroky(plan)))
+    }
+
+    // ---------------------------------------------------------------- „Pridať ešte"
+
+    /**
+     * Doplnok na konci tréningu, keď ešte je čas a chuť: jeden blok navyše (~5-8 min).
+     * Len sila, zručnosť alebo mobilita - kondícia a strečing na koniec nie (zadanie).
+     * [pouzite] = rebríky, ktoré už dnes boli - doplnok ich neopakuje, kým je z čoho vyberať.
+     * Vracia null, keď niet čo pridať (napr. zručnosť bez cieľa).
+     */
+    fun doplnok(v: VstupGeneratora, blok: Blok, pouzite: Set<String>): PlanBloku? {
+        val polozky = when (blok) {
+            Blok.SILA -> {
+                val vyber = zostavSilu(v.copy(dostupneMinuty = 30), 16, mutableListOf())
+                    .sortedBy { if (it.rebrikId in pouzite) 1 else 0 }
+                    .take(if (v.nastavenie.styl == StylTreningu.PARY) 2 else 1)
+                    .map { it.copy(serie = 3) }
+                if (v.nastavenie.styl == StylTreningu.PARY) sparuj(vyber, mutableListOf()) else vyber
+            }
+            Blok.SKILL -> {
+                // Zručnosti z cieľov; najprv tá, ktorá dnes ešte nebola. Bez cieľa nič.
+                val vsetky = v.cieleZrucnosti.mapNotNull { id -> v.rebriky.firstOrNull { it.id == id } }
+                    .filter { jeDostupny(v, it) }
+                    .sortedBy { if (it.id in pouzite) 1 else 0 }
+                vsetky.firstOrNull()?.let { rebrik ->
+                    aktualnyCvik(v, rebrik)?.let { cvik ->
+                        listOf(
+                            PlanPolozka(
+                                cvik = cvik,
+                                rebrikId = rebrik.id,
+                                rebrikNazov = rebrik.nazov,
+                                serie = 3,
+                                ciel = cielProCvik(cvik, konzervativne = true),
+                                pauzaS = Pravidla.PAUZA_SKILL_S,
+                                cielRir = Pravidla.CIEL_RIR_SKILL,
+                            ),
+                        )
+                    }
+                }.orEmpty()
+            }
+            Blok.MOBILITA -> zostavMobilitu(v.copy(dnesEpochDen = v.dnesEpochDen + 3), 4)
+                .sortedBy { if (it.cvik.id in pouzite) 1 else 0 }
+                .take(2)
+            else -> emptyList()
+        }
+        if (polozky.isEmpty()) return null
+        return upravPodlaNastavenia(v, listOf(PlanBloku(blok, polozky))).first()
     }
 
     /**
@@ -481,7 +532,8 @@ object Generator {
         val zrucnosti = v.cieleZrucnosti
             .mapNotNull { id -> v.rebriky.firstOrNull { it.id == id } }
             .filter { jeDostupny(v, it) }
-            .take(if (minuty >= 7) 2 else 1)
+            // Dve zručnosti sa zmestia aj do kratšieho tréningu (3 série každá); jedna len pri 10 min.
+            .take(if (minuty >= 4) 2 else 1)
 
         if (zrucnosti.isEmpty()) return emptyList()
 

@@ -66,7 +66,10 @@ class NahladyObrazoviekTest {
         val krokCas = KrokTreningu(Blok.SILA, drep, 2, 3, partner = jej, pauzaPoS = 90)
         val krokPocet = KrokTreningu(Blok.SILA, kliky, 1, 3, partner = PartnerKrok(polozka("kliky-3", 8), 1, 3), pauzaPoS = 90)
         val detskyCvik = runBlocking { Repozitar.ziskaj(app).katalog.detskeCviky() }
-        val dieta = DetskyStav(dietaId = 1, meno = "Dieťa", krok = DetskyKrok.CVICI, aktualny = detskyCvik.first(), labky = 2)
+        val dieta = DetskyStav(
+            dietaId = 1, meno = "Dieťa", krok = DetskyKrok.CVICI, aktualny = detskyCvik.first(), labky = 2,
+            koniecMs = android.os.SystemClock.elapsedRealtime() + 12_000, celkomMs = 20_000,
+        )
         val vyber = dieta.copy(krok = DetskyKrok.VYBER, aktualny = null, moznosti = detskyCvik.take(2))
 
         compose.mainClock.autoAdvance = false
@@ -97,6 +100,8 @@ class NahladyObrazoviekTest {
         odfot("3-pauza")
         model.nastavNahlad(listOf(krokCas, krokPocet), 1, StavPrehravaca.OTAZKA, detsky = dieta, partner = partner)
         odfot("4-otazka")
+        model.nastavNahlad(listOf(krokCas, krokPocet), 1, StavPrehravaca.PRIDAT, detsky = vyber, partner = partner)
+        odfot("5-pridat-este")
     }
 
     @Test @Config(qualifiers = "w360dp-h640dp-port-xhdpi")

@@ -22,7 +22,10 @@ import sk.havrila.cvicime.data.model.Naradie
 import sk.havrila.cvicime.data.model.Obmedzenie
 import sk.havrila.cvicime.data.model.Partia
 import sk.havrila.cvicime.domain.Generator
+import sk.havrila.cvicime.data.model.Blok
+import sk.havrila.cvicime.domain.PlanBloku
 import sk.havrila.cvicime.domain.PlanPartnera
+import sk.havrila.cvicime.domain.PlanPolozka
 import sk.havrila.cvicime.domain.PlanTreningu
 import sk.havrila.cvicime.domain.Pravidla
 import sk.havrila.cvicime.domain.VstupGeneratora
@@ -143,6 +146,16 @@ class Repozitar(context: Context) {
      */
     suspend fun zostavPlanPartnera(dostupneMinuty: Int, ucastnikId: Long, hlavny: PlanTreningu): PlanPartnera =
         Generator.zladPartnera(hlavny, vstupGeneratora(dostupneMinuty, ucastnikId, popri = true))
+
+    /** „Pridať ešte" na konci tréningu - jeden blok navyše pre hlavného cvičiaceho. */
+    suspend fun doplnok(ucastnikId: Long, blok: Blok, pouzite: Set<String>): PlanBloku? =
+        Generator.doplnok(vstupGeneratora(30, ucastnikId, popri = false), blok, pouzite)
+
+    /** Ten istý doplnok zladený pre druhého dospelého (na každú položku jeho položka alebo null). */
+    suspend fun doplnokPartnera(ucastnikId: Long, doplnok: PlanBloku): List<PlanPolozka?> {
+        val hlavny = PlanTreningu(listOf(doplnok), 0, emptyList(), false)
+        return Generator.zladPartnera(hlavny, vstupGeneratora(30, ucastnikId, popri = true)).bloky[doplnok.blok].orEmpty()
+    }
 
     /** Vstup generátora pre cvičiaceho; [popri] = cvičí popri hlavnom (vlastná voľba „na čas"). */
     private suspend fun vstupGeneratora(dostupneMinuty: Int, ucastnikId: Long, popri: Boolean): VstupGeneratora {
