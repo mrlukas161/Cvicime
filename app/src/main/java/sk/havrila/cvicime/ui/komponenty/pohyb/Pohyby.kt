@@ -171,7 +171,20 @@ object PohybyJson {
             koncatiny = mapOf(Clen.NP to nP, Clen.NZ to nZ, Clen.RP to rP, Clen.RZ to rZ),
             t = o.optInt("t", 1000),
             drz = o.optInt("drz", 0),
+            smer = smer(o.optJSONObject("smer")),
         )
+    }
+
+    /** "smer": {"rP": 1, "rZ": -1} - vynútený smer otáčania končatiny pri presune do ďalšej pózy. */
+    private fun smer(o: JSONObject?): Map<Clen, Int> {
+        if (o == null) return emptyMap()
+        val mena = mapOf("nP" to Clen.NP, "nZ" to Clen.NZ, "rP" to Clen.RP, "rZ" to Clen.RZ)
+        return buildMap {
+            for (kluc in o.keys()) {
+                val c = mena[kluc] ?: error("Neznáma končatina v smer: $kluc")
+                put(c, o.getInt(kluc))
+            }
+        }
     }
 
     private fun koncatina(h: Any): Koncatina = when (h) {

@@ -16,6 +16,11 @@ Konvencie (musia sedieť s Kotlinom):
 - uhly segmentov v stupňoch v súradniciach sveta: 0 = dopredu, 90 = hore, -90 = dole,
 - končatina = [uhol1, uhol2(, uhol3)] alebo {"ik": [x, y], "o": +1/-1, "c": uhol3}
   (2-kĺbová inverzná kinematika na cieľ; o = +1 kĺb vľavo od smeru koreň→cieľ),
+- póza môže mať "smer": {"rP": 1, ...} - vynútený smer otáčania prvého segmentu pri presune
+  do ďalšej pózy (+1 proti hodinovým ručičkám, -1 v smere); inak ide končatina najkratšou cestou,
+- medzi pózami sa mieša v priestore kĺbov (ohnutie kolena/lakťa lineárne), okrem IK↔IK a na↔na,
+  kde sa mieša cieľ (kontakt drží); nohy majú o = +1 (koleno sa ohýba prirodzene),
+- anatomická kontrola (kontrola()) označí políčka s nefyziologickým kĺbom červeno, rovnako ako KlbyTest.kt,
 - dĺžky segmentov sú pevné (sekcia "kostra"), takže sa končatiny nikdy nenaťahujú.
 """
 import argparse
@@ -203,19 +208,52 @@ class Vzor:
                     k["u2"] = m(ka["u2"], kb["u2"])
                 if "c" in ka and "c" in kb:
                     k["c"] = m(ka["c"], kb["c"])
+                elif "c" in ka or "c" in kb:
+                    # chodidlo/dlaň zadané len na jednej strane: druhú doplní predvolený uhol tej pózy
+                    ca = ka["c"] if "c" in ka else self.koniec_pozy(meno, a)
+                    cb = kb["c"] if "c" in kb else self.koniec_pozy(meno, b)
+                    k["c"] = m(ca, najblizsi(cb, ca))
                 v[meno] = k
                 continue
-            ua = list(self.vyries(meno, ka, self.koren(meno, a["bok"], a["trup"], a["lopatky"])))
-            ub = list(self.vyries(meno, kb, self.koren(meno, b["bok"], b["trup"], b["lopatky"])))
-            for j in range(2):
-                if isinstance(ka, dict):
-                    ua[j] = najblizsi(ua[j], ub[j])
-                elif isinstance(kb, dict):
-                    ub[j] = najblizsi(ub[j], ua[j])
-            u3a = ua[2] if ua[2] is not None else self.predvoleny_koniec(meno, ua[1])
-            u3b = ub[2] if ub[2] is not None else self.predvoleny_koniec(meno, ub[1])
-            v[meno] = [m(ua[0], ub[0]), m(ua[1], ub[1]), m(u3a, u3b)]
+            ua = self.vyries(meno, ka, self.koren(meno, a["bok"], a["trup"], a["lopatky"]))
+            ub = self.vyries(meno, kb, self.koren(meno, b["bok"], b["trup"], b["lopatky"]))
+            smer_k = a.get("smer", {}).get(meno, 0)
+            v[meno] = self.zmiesaj_klby(meno, ua, ub, b["trup"] - a["trup"], smer_k, e)
         return v
+
+    def koniec_pozy(self, meno, poza):
+        """Predvolený uhol chodidla/dlane končatiny v danej póze."""
+        u = self.vyries(meno, poza[meno], self.koren(meno, poza["bok"], poza["trup"], poza["lopatky"]))
+        return self.predvoleny_koniec(meno, u[1])
+
+    def ohyb(self, meno, u1, u2):
+        """Ohnutie kĺbu v stupňoch: koleno u1 - u2, lakeť u2 - u1 (0 = vystretý, + = prirodzený smer).
+        Rozsah (-150, 210]: aj priemet úplne ohnutého kĺbu (~180) sa mieša bez preklopenia cez 0."""
+        return najblizsi(u1 - u2 if meno[0] == "n" else u2 - u1, 30.0)
+
+    def zmiesaj_klby(self, meno, ua, ub, d_trup, smer_k, e):
+        """Miešanie v priestore kĺbov: prvý segment najkratšou cestou (relatívne k otočeniu trupu,
+        alebo vynútene "smer" +1/-1 pri zámernom dlhom oblúku), ohnutie kĺbu lineárne,
+        chodidlo/dlaň relatívne k druhému segmentu. Stehno a holeň sa tak nikdy neotočia proti sebe."""
+        a1, a2 = ua[0], ua[1]
+        b1, b2 = ub[0], ub[1]
+        a3 = ua[2] if ua[2] is not None else self.predvoleny_koniec(meno, a2)
+        b3 = ub[2] if ub[2] is not None else self.predvoleny_koniec(meno, b2)
+        d1 = b1 - a1
+        if smer_k > 0:
+            d1 = d1 % 360.0
+        elif smer_k < 0:
+            d1 = -((-d1) % 360.0)
+        else:
+            d1 = najblizsi(d1, d_trup)
+        fa = self.ohyb(meno, a1, a2)
+        fb = self.ohyb(meno, b1, b2)
+        ka = najblizsi(a3 - a2, 0.0)
+        kb = najblizsi(b3 - b2, ka)
+        u1 = a1 + d1 * e
+        f = fa + (fb - fa) * e
+        u2 = u1 - f if meno[0] == "n" else u1 + f
+        return [u1, u2, u2 + ka + (kb - ka) * e]
 
     def dych_v_case(self, poza, cas):
         if not self.dych:
@@ -244,6 +282,94 @@ class Vzor:
             spicka = posun(koniec, u3, k["chodidlo"] if meno[0] == "n" else k["dlan"])
             body[meno] = (koren, klb, koniec, spicka)
         return body
+
+# ------------------------------------------------------------------ anatomická kontrola
+# Rovnaké pravidlá a výnimky ako KlbyTest.kt (app/src/test/.../ui/pohyb) - pri zmene upraviť oboje.
+
+KOLENO = (-3.0, 160.0)    # ohnutie kolena: stehno - holeň (záporné = koleno sa lomí dozadu)
+BEDRO = (-40.0, 150.0)    # stehno voči trupu: 0 = v predĺžení trupu, + = flexia (stehno dopredu)
+KROK_MAX = 25.0           # max. zmena uhla segmentu medzi dvoma vzorkami
+PRESAH = 20.0             # ohnutie počas presunu smie prekročiť rozsah koncových póz najviac o toľko
+
+# Vzory bez anatomickej kontroly: detské zvieratká sú zámerne štylizované (používateľ ich chce nechať tak).
+VYNIMKY = {
+    # detské chôdze a skoky: zámerná štylizácia zvieratiek
+    "medvedia-chodza", "krabia-chodza", "hadie-plazenie", "kacacia-chodza", "husenica", "krokodil",
+    "tucniak", "slon", "pavucia-chodza", "rak", "zirafa",
+    "zabie-skoky", "zajacie-skoky", "klokan", "delfin",
+    "bocian", "plameniak", "klbko", "psik", "kobra",
+}
+
+
+def vzorky(v):
+    """Časy vzoriek cyklu: aspoň 120 a najviac 20 ms od seba."""
+    cyk = v.cyklus()
+    n = max(120, int(math.ceil(cyk / 20.0)))
+    return [cyk * i / n for i in range(n)]
+
+
+def uhly_pozy(v, poza):
+    """Trup a pre každú končatinu (u1, u2, u3) po vyriešení IK."""
+    vys = {}
+    for meno in KONCATINY:
+        koren = v.koren(meno, poza["bok"], poza["trup"], poza["lopatky"])
+        u1, u2, u3 = v.vyries(meno, poza[meno], koren)
+        vys[meno] = (u1, u2, u3 if u3 is not None else v.predvoleny_koniec(meno, u2))
+    return vys
+
+
+def prechod_v_case(v, cas):
+    """Index presunu (z pózy i do i+1) v čase, alebo None počas výdrže."""
+    c = cas % max(1, v.cyklus())
+    for i, p in enumerate(v.pozy):
+        if c < p["drz"]:
+            return None
+        c -= p["drz"]
+        if c < p["t"] or i == len(v.pozy) - 1:
+            return i
+        c -= p["t"]
+    return None
+
+
+def pevny_kontakt(v, i, meno):
+    """Končatina drží počas presunu i ten istý bod (IK s rovnakým cieľom) - ohnutie určuje geometria."""
+    ka, kb = v.pozy[i][meno], v.pozy[(i + 1) % len(v.pozy)][meno]
+    return (isinstance(ka, dict) and isinstance(kb, dict) and "ik" in ka and "ik" in kb
+            and list(ka["ik"]) == list(kb["ik"]))
+
+
+def kontrola(v):
+    """Porušenia anatómie [(čas, text)] - prázdne pre vzory spredu/zhora a výnimky."""
+    if not v.zboku or v.id in VYNIMKY:
+        return []
+    chyby = []
+    kluc = [uhly_pozy(v, v.poza_v_case(sum(q["drz"] + q["t"] for q in v.pozy[:i]) + p["drz"]))
+            for i, p in enumerate(v.pozy)]
+    pred = None
+    for cas in vzorky(v):
+        poza = v.poza_v_case(cas)
+        uh = uhly_pozy(v, poza)
+        i = prechod_v_case(v, cas)
+        for meno, (u1, u2, u3) in uh.items():
+            f = v.ohyb(meno, u1, u2)
+            if meno[0] == "n":
+                if not KOLENO[0] <= f <= KOLENO[1]:
+                    chyby.append((cas, f"{meno} koleno {f:.0f}°"))
+                bedro = najblizsi(u1 - poza["trup"] + 180, 0.0)
+                if not BEDRO[0] <= bedro <= BEDRO[1]:
+                    chyby.append((cas, f"{meno} bedro {bedro:.0f}°"))
+            if i is not None and not pevny_kontakt(v, i, meno):
+                fa = v.ohyb(meno, *kluc[i][meno][:2])
+                fb = v.ohyb(meno, *kluc[(i + 1) % len(kluc)][meno][:2])
+                if not min(fa, fb) - PRESAH <= f <= max(fa, fb) + PRESAH:
+                    chyby.append((cas, f"{meno} ohnutie {f:.0f}° mimo {fa:.0f}..{fb:.0f}"))
+            if pred is not None:
+                for j, (x, y) in enumerate(zip(pred[meno], (u1, u2, u3))):
+                    if abs(najblizsi(y - x, 0.0)) > KROK_MAX:
+                        chyby.append((cas, f"{meno} segment {j + 1} skok {najblizsi(y - x, 0.0):.0f}°"))
+        pred = uh
+    return chyby
+
 
 # ------------------------------------------------------------------ rámec a kreslenie
 
@@ -476,13 +602,14 @@ def cviky_podla_pohybu():
     return mapa
 
 
-def casy_kluc(v):
-    """Časy kľúčových póz (po ich výdrži) + medzipózy."""
+def casy_kluc(v, husto=1):
+    """Časy kľúčových póz (po ich výdrži) + husto medzipóz v každom presune."""
     casy, t = [], 0
     for p in v.pozy:
         casy.append(("kľúč", t + p["drz"]))
         if p["t"] > 0:
-            casy.append(("medzi", t + p["drz"] + p["t"] / 2))
+            for j in range(1, husto + 1):
+                casy.append(("medzi", t + p["drz"] + p["t"] * j / (husto + 1)))
         t += p["drz"] + p["t"]
     return casy
 
@@ -492,19 +619,42 @@ def main():
     ap.add_argument("--vystup", default=os.path.join(KOREN, "build", "pohyby-nahlad.html"))
     ap.add_argument("--len", default="", help="čiarkou oddelené id vzorov")
     ap.add_argument("--velkost", type=int, default=150)
+    ap.add_argument("--husto", type=int, default=1, help="počet medzipóz v každom presune")
     a = ap.parse_args()
 
     d, vzory = nacitaj()
     mapa = cviky_podla_pohybu()
     vyber = set(filter(None, a.len.split(",")))
     riadky = []
+    zle = []
     for v in vzory:
         if vyber and v.id not in vyber:
             continue
+        # anatomická kontrola: políčka s porušením (a prvé porušenie každého druhu) červeno
+        chyby = kontrola(v)
+        krok = v.cyklus() / len(vzorky(v))
+        casy = casy_kluc(v, a.husto)
+        druhy = {}
+        for cas, text in chyby:
+            # pre každý druh porušenia ukáž najhoršiu vzorku
+            kluc, hodnota = " ".join(text.split(" ")[:2]), abs(float(text.split(" ")[-1 if "skok" in text else 2].split("°")[0]))
+            if kluc not in druhy or hodnota > druhy[kluc][0]:
+                druhy[kluc] = (hodnota, cas, text)
+        druhy = {k: (c, t) for k, (_, c, t) in druhy.items()}
+        for cas, _ in druhy.values():
+            if not any(abs(cas - c) <= krok for _, c in casy):
+                casy.append(("chyba", cas))
+        casy.sort(key=lambda x: x[1])
         obrazky = []
-        for druh, cas in casy_kluc(v):
+        for druh, cas in casy:
             okraj = "2px solid #d97706" if druh == "kľúč" else "1px dashed #bbb"
+            if any(abs(cas - c) <= krok for c, _ in chyby):
+                okraj = "3px solid #dc2626"
             obrazky.append(f'<div class="o" style="border:{okraj}">{kresli(v, cas, a.velkost)}</div>')
+        if chyby:
+            zle.append(v.id)
+            obrazky.append('<div class="chyby">' + "<br>".join(
+                html.escape(f"{c:.0f} ms: {t}") for c, t in sorted(druhy.values())) + "</div>")
         cviky = mapa.get(v.id, [])
         popis = "".join(
             f"<li><b>{html.escape(c['id'])}</b> {html.escape(c['nazov'])} – "
@@ -521,12 +671,15 @@ def main():
                "body{font:13px system-ui;margin:16px;background:#fff;color:#222}"
                "section{border-bottom:1px solid #ddd;padding:8px 0}h2{font-size:15px;margin:4px 0}"
                ".r{display:flex;flex-wrap:wrap;gap:6px}.o{line-height:0;border-radius:12px}"
+               ".chyby{color:#dc2626;font-size:12px;align-self:center}"
                "ul{margin:4px 0 0 0;padding-left:18px;max-width:1100px}</style>"
                f"<h1>Pohyby – kontaktný hárok</h1>{hlavicka}{''.join(riadky)}")
     os.makedirs(os.path.dirname(a.vystup), exist_ok=True)
     with open(a.vystup, "w", encoding="utf-8") as f:
         f.write(stranka)
     print(f"Zapísané: {a.vystup} ({len(riadky)} vzorov)")
+    if zle:
+        print("POZOR: nefyziologické kĺby (červené políčka):", ", ".join(zle), file=sys.stderr)
     if chybajuce:
         print("POZOR: cviky odkazujú na neexistujúce vzory:", chybajuce, file=sys.stderr)
         return 1
