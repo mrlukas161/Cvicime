@@ -190,6 +190,10 @@ class Repozitar(context: Context) {
             0
         }
 
+        // Pre každý cvik série z JEHO posledného tréningu (nie zo všetkých) - z nich sa ráta dnešná dávka.
+        val poslednyVykon = denik.posledneSerieSily(ucastnikId)
+            .groupBy { it.cvikId }
+            .mapValues { (_, serie) -> serie.filter { it.treningId == serie.first().treningId }.sortedBy { it.poradie } }
         val spolocne = prefs.nastavenieTreningu
         return VstupGeneratora(
                 dostupneMinuty = dostupneMinuty,
@@ -205,6 +209,7 @@ class Repozitar(context: Context) {
                 rebriky = rebriky,
                 cvikyPodlaRebrika = cvikyPodlaRebrika,
                 vylucitZnacky = obmedzenia.flatMap { it.vylucujeZnacky }.toSet(),
+                poslednyVykon = poslednyVykon,
                 // „Ako dnes" je spoločné pre všetkých, čo dnes cvičia - rovnaký štýl, každý svoj plán.
                 // Kto cvičí popri, má vlastnú voľbu „všetko na čas" (ty na počet, ona na čas).
                 nastavenie = if (popri) {

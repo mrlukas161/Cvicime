@@ -50,9 +50,33 @@ object Pravidla {
     fun maPostupitVyssie(serie: List<SeriaEntity>, cvik: CvikEntity): Boolean {
         if (serie.isEmpty()) return false
         if (serie.any { it.priznak }) return false
-        val vsetkySplnene = serie.all { (it.skutocnaHodnota ?: 0) >= cvik.cielMax }
-        val ostaloVZalohe = serie.any { (it.rir ?: 0) >= 1 }
-        return vsetkySplnene && ostaloVZalohe
+        // Horný cieľ s rezervou aspoň v dvoch sériách (pri jedinej sérii v nej) - posledná séria
+        // smie byť slabšia, únava na konci tréningu nie je dôvod zostať na stupni navždy.
+        val dobre = serie.count { (it.skutocnaHodnota ?: 0) >= cvik.cielMax && (it.rir ?: 0) >= 1 }
+        return dobre >= minOf(2, serie.size)
+    }
+
+    /**
+     * Dvojitá progresia: dávka na dnes z posledného výkonu na TOM ISTOM cviku.
+     *  - všetko splnené a ostala rezerva → o krok viac (1 opakovanie / 5 s),
+     *  - splnené na doraz → rovnako,
+     *  - nesplnené → toľko, koľko naposledy reálne išlo (najslabšia séria).
+     * Vždy v pásme cviku [cielMin, cielMax]; keď sa horný cieľ zvláda s rezervou, postúpi sa na stupeň.
+     * Bez histórie vráti [zaklad].
+     */
+    fun dalsiCiel(cvik: CvikEntity, posledne: List<SeriaEntity>, zaklad: Int): Int {
+        val platne = posledne.filter { it.skutocnaHodnota != null && !it.preskocena }
+        if (platne.isEmpty()) return zaklad
+        val krok = if (cvik.meranie == "vydrz") 5 else 1
+        val plan = platne.maxOf { it.planHodnota }
+        val najslabsia = platne.minOf { it.skutocnaHodnota!! }
+        val rezerva = platne.any { (it.rir ?: 0) >= 1 }
+        val ciel = when {
+            najslabsia >= plan && rezerva -> plan + krok
+            najslabsia >= plan -> plan
+            else -> najslabsia
+        }
+        return ciel.coerceIn(cvik.cielMin, maxOf(cvik.cielMin, cvik.cielMax))
     }
 
     /**

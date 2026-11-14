@@ -279,6 +279,16 @@ interface DenikDao {
     )
     suspend fun maximaCvikov(okremTreningu: Long, ucastnikId: Long = 0): List<MaxCviku>
 
+    /** Posledné odcvičené série sily a zručnosti (najnovšie prvé) - základ dvojitej progresie. */
+    @Query(
+        """
+        SELECT * FROM seria WHERE skutocna_hodnota IS NOT NULL AND preskocena = 0
+          AND ucastnik_id = :ucastnikId AND blok IN ('sila', 'skill')
+        ORDER BY epoch_den DESC, id DESC LIMIT 600
+        """
+    )
+    suspend fun posledneSerieSily(ucastnikId: Long): List<SeriaEntity>
+
     /** Všetky odcvičené série chronologicky - história osobných rekordov sa počíta v Kotline. */
     @Query("SELECT * FROM seria WHERE skutocna_hodnota IS NOT NULL AND preskocena = 0 AND ucastnik_id = :ucastnikId ORDER BY epoch_den, id")
     suspend fun vsetkyOdcviceneSerie(ucastnikId: Long = 0): List<SeriaEntity>

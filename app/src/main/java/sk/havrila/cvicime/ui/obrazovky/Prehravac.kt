@@ -198,9 +198,12 @@ fun KrokTreningu.jeNaCas(): Boolean = polozka.naCasS != null || Meranie.z(polozk
 /** Dĺžka odpočtu série v sekundách. */
 fun KrokTreningu.sekundOdpoctu(): Int = polozka.naCasS ?: polozka.ciel
 
-/** Po sérii sa pýta na počet a rezervu: sila, kondícia, a zručnosť na čas (počet sa inak nezistí). */
+/**
+ * Po sérii sa pýta na počet a rezervu: sila, kondícia aj zručnosť. Bez odpovede pri zručnosti
+ * by rebrík nikdy nepostúpil (revízia 0.10: zapisoval sa len plán bez rezervy).
+ */
 fun KrokTreningu.pytaSaPoSerii(): Boolean =
-    blok == Blok.SILA || blok == Blok.KONDICIA || (blok == Blok.SKILL && polozka.naCasS != null)
+    blok == Blok.SILA || blok == Blok.KONDICIA || blok == Blok.SKILL
 
 /** Séria druhého dospelého - z jeho vlastného plánu, spárovaná s krokom hlavného cvičiaceho. */
 data class PartnerKrok(
@@ -252,7 +255,7 @@ enum class StavPrehravaca { NACITAVA, CVICENIE, OTAZKA, PAUZA, DOPLNENIE, PRIDAT
 private val BLOKY_S_VYKONOM = setOf(Blok.SKILL, Blok.SILA, Blok.KONDICIA)
 
 /** Bloky, v ktorých sa po sérii pýta na rezervu (RIR). */
-private val BLOKY_S_REZERVOU = setOf(Blok.SILA, Blok.KONDICIA)
+private val BLOKY_S_REZERVOU = setOf(Blok.SILA, Blok.KONDICIA, Blok.SKILL)
 
 /** Detská vrstva rodinného režimu. */
 enum class DetskyKrok { VYBER, CVICI, ODHALENIE, HOTOVO }
@@ -305,6 +308,8 @@ data class PrehravacSuhrn(
     val rekordy: List<Rekord>,
     val postupy: List<PrehravacPostup>,
     val partner: SuhrnPartnera? = null,
+    /** „Kliky 11 · 11 · 10, rezerva 1–2 → nabudúce 12" - prečo sa dávka hýbe */
+    val nabuduce: List<String> = emptyList(),
 )
 
 /** Súhrn druhého dospelého - jeho série, rekordy a posuny v rebríkoch. */
@@ -1033,6 +1038,20 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
                     )
                 }
             val postupy = popisPostupov(hlavny, urovnePred, tykanie = true)
+            // Pre každý silový cvik a zručnosť: čo si spravil a koľko bude nabudúce (dvojitá progresia).
+            val nabuduce = repo.denik.serieTreningu(id)
+                .filter { it.ucastnikId == hlavny && (it.blok == "sila" || it.blok == "skill") && !it.preskocena && it.skutocnaHodnota != null }
+                .groupBy { it.cvikId }
+                .mapNotNull { (cvikId, serie) ->
+                    val cvik = repo.katalog.cvik(cvikId) ?: return@mapNotNull null
+                    // Postúpil v rebríku - nabudúce iný cvik, to povie karta „Rebríky".
+                    if (vsetkyPostupy.any { it.ucastnikId == hlavny && it.rebrikId == cvik.rebrikId }) return@mapNotNull null
+                    val dalsi = Pravidla.dalsiCiel(cvik, serie, serie.maxOf { it.planHodnota })
+                    val j = if (cvik.meranie == "vydrz") " s" else ""
+                    val rezerva = serie.mapNotNull { it.rir }.maxOrNull()?.let { r -> Rir.z(r).popis.lowercase() }
+                    "${cvik.nazov}: ${serie.joinToString(" · ") { "${it.skutocnaHodnota}" }}$j" +
+                        (rezerva?.let { ", $it" } ?: "") + " → nabudúce $dalsi$j"
+                }
 
             // Série hlavného cvičiaceho - rovnako ako postupy a rekordy.
             val vsetkySerie = repo.denik.serieTreningu(id)
@@ -1062,6 +1081,7 @@ class PrehravacModel(private val app: Application) : AndroidViewModel(app) {
                     .sumOf { it.skutocnaHodnota ?: 0 },
                 rekordy = rekordy,
                 postupy = postupy,
+                nabuduce = nabuduce,
                 partner = suhrnPartnera?.takeIf { it.serie > 0 || it.postupy.isNotEmpty() },
             )
         }
@@ -1992,6 +2012,25 @@ private fun HlavaCviku(krok: KrokTreningu, farba: Color) {
     )
 }
 
+/** „pásmo 8–15 · naposledy 11, 11, 10" - aby bolo vidieť, kam sa dávka hýbe a prečo. */
+@Composable
+private fun PasmoANaposledy(krok: KrokTreningu) {
+    val c = krok.polozka.cvik
+    if (krok.blok != Blok.SILA && krok.blok != Blok.SKILL) return
+    val jednotka = if (c.meranie == "vydrz") " s" else ""
+    val casti = buildList {
+        if (c.cielMax > c.cielMin) add("pásmo ${c.cielMin}–${c.cielMax}$jednotka")
+        if (krok.polozka.naposledy.isNotEmpty()) add("naposledy ${krok.polozka.naposledy.joinToString(", ")}")
+    }
+    if (casti.isEmpty()) return
+    Text(
+        casti.joinToString(" · "),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+    )
+}
+
 @Composable
 private fun Pokyny(krok: KrokTreningu) {
     // Na menšom displeji len dva pokyny - zvyšok povie hlas (popis cviku).
@@ -2096,6 +2135,7 @@ private fun CvicenieOpakovania(krok: KrokTreningu, o: PrehravacObraz, naHotovo: 
                     cislo()
                 }
             }
+            PasmoANaposledy(krok)
         },
         pravy = {
             if (naLezato) HlavaCviku(krok, farba)
@@ -2143,6 +2183,7 @@ private fun CvicenieVydrz(krok: KrokTreningu, o: PrehravacObraz) {
             },
             pravy = {
                 if (naLezato) HlavaCviku(krok, farba)
+                PasmoANaposledy(krok)
                 KartaPartnera(krok, o)
                 if (krok.polozka.naCasS != null && !krok.jeVydrz()) {
                     Spacer(Modifier.height(6.dp))
@@ -3390,6 +3431,21 @@ private fun SuhrnTreningu(s: PrehravacSuhrn) {
         if (s.postupy.isNotEmpty()) {
             NadpisSekcie("Rebríky")
             s.postupy.forEach { KartaPostupu(it) }
+        }
+        if (s.nabuduce.isNotEmpty()) {
+            NadpisSekcie("Nabudúce")
+            TonovanaKarta(vnutorneOdsadenie = 14.dp) {
+                s.nabuduce.forEach { riadok ->
+                    Text(riadok, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(vertical = 3.dp))
+                }
+                Text(
+                    "Dávka sa ráta z tvojich odpovedí: splnené s rezervou = o krok viac, na doraz = rovnako, " +
+                        "nesplnené = toľko, koľko išlo. Horný cieľ s rezervou v dvoch sériách = ťažší stupeň.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
+            }
         }
         s.partner?.let { SuhrnDruheho(it) }
     }

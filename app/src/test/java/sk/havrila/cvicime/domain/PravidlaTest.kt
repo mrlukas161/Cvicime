@@ -1,5 +1,6 @@
 package sk.havrila.cvicime.domain
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -52,10 +53,46 @@ class PravidlaTest {
         assertTrue(Pravidla.maPostupitVyssie(serie, cvik))
     }
 
+    /** Posledná séria smie byť slabšia - únava na konci tréningu nie je dôvod ostať na stupni navždy. */
     @Test
-    fun `ziadny postup ked jedna seria nesplnila horny ciel`() {
-        val serie = listOf(seria(12, 1), seria(11, 1), seria(12, 2))
+    fun `postup aj ked posledna seria nesplnila horny ciel`() {
+        val serie = listOf(seria(12, 1), seria(12, 2), seria(10, 1))
+        assertTrue(Pravidla.maPostupitVyssie(serie, cvik))
+    }
+
+    @Test
+    fun `ziadny postup ked horny ciel s rezervou padol len raz`() {
+        val serie = listOf(seria(12, 1), seria(11, 1), seria(10, 2))
         assertFalse(Pravidla.maPostupitVyssie(serie, cvik))
+    }
+
+    // ---------------------------------------------------------------- dvojitá progresia
+
+    private fun seriaPlan(plan: Int, hodnota: Int, rir: Int) = seria(hodnota, rir).copy(planHodnota = plan)
+
+    @Test
+    fun `dalsi ciel o krok vyssie ked bolo splnene s rezervou`() {
+        val posledne = listOf(seriaPlan(10, 10, 1), seriaPlan(10, 11, 1), seriaPlan(10, 10, 0))
+        assertEquals(11, Pravidla.dalsiCiel(cvik, posledne, zaklad = 10))
+    }
+
+    @Test
+    fun `dalsi ciel rovnako ked bolo splnene na doraz`() {
+        val posledne = listOf(seriaPlan(10, 10, 0), seriaPlan(10, 10, 0))
+        assertEquals(10, Pravidla.dalsiCiel(cvik, posledne, zaklad = 10))
+    }
+
+    @Test
+    fun `dalsi ciel podla najslabsej serie ked nebolo splnene`() {
+        val posledne = listOf(seriaPlan(10, 10, 0), seriaPlan(10, 9, 0), seriaPlan(10, 8, 0))
+        assertEquals(8, Pravidla.dalsiCiel(cvik, posledne, zaklad = 10))
+    }
+
+    @Test
+    fun `dalsi ciel ostava v pasme cviku`() {
+        assertEquals(12, Pravidla.dalsiCiel(cvik, listOf(seriaPlan(12, 14, 3)), zaklad = 10))
+        assertEquals(8, Pravidla.dalsiCiel(cvik, listOf(seriaPlan(8, 3, 0)), zaklad = 10))
+        assertEquals(10, Pravidla.dalsiCiel(cvik, emptyList(), zaklad = 10))
     }
 
     /** Toto je dôležité: splniť cieľ na doraz neznamená, že je čas na ťažšiu variáciu. */

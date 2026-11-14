@@ -1,5 +1,6 @@
 package sk.havrila.cvicime.domain
 
+import sk.havrila.cvicime.data.denik.SeriaEntity
 import sk.havrila.cvicime.data.katalog.CvikEntity
 import sk.havrila.cvicime.data.katalog.RebrikEntity
 import sk.havrila.cvicime.data.katalog.rozparsujPartie
@@ -31,6 +32,8 @@ data class VstupGeneratora(
     val vylucitZnacky: Set<String> = emptySet(),
     /** štýl, meranie a pauzy zvolené pred tréningom („Ako dnes") */
     val nastavenie: NastavenieTreningu = NastavenieTreningu(),
+    /** cvikId -> série z posledného tréningu, kde ho cvičiaci robil (dvojitá progresia) */
+    val poslednyVykon: Map<String, List<SeriaEntity>> = emptyMap(),
 )
 
 data class PlanPolozka(
@@ -44,6 +47,8 @@ data class PlanPolozka(
     val cielRir: Int,
     /** cvik na opakovania cvičený na odpočet („všetko na čas", kruh); null = podľa merania cviku */
     val naCasS: Int? = null,
+    /** posledný výkon na tomto cviku (napr. 11, 11, 10) - ukazuje sa v prehrávači */
+    val naposledy: List<Int> = emptyList(),
     /** pár (superset) - položky s rovnakým číslom sa striedajú, viď [Rozvrh] */
     val par: Int? = null,
     /** oddych po sérii, keď ďalej ide druhý cvik páru alebo ďalšie stanovište kruhu */
@@ -173,7 +178,8 @@ object Generator {
                                 rebrikId = rebrik.id,
                                 rebrikNazov = rebrik.nazov,
                                 serie = 3,
-                                ciel = cielProCvik(cvik, konzervativne = true),
+                                ciel = cielPre(v, cvik, konzervativne = true),
+                naposledy = naposledy(v, cvik),
                                 pauzaS = Pravidla.PAUZA_SKILL_S,
                                 cielRir = Pravidla.CIEL_RIR_SKILL,
                             ),
@@ -321,8 +327,8 @@ object Generator {
         val vydrz = Meranie.z(cvik.meranie) == Meranie.VYDRZ
         val praca = v.nastavenie.pracaS
         val ciel = when (blok) {
-            Blok.SKILL -> cielProCvik(cvik, konzervativne = true)
-            Blok.SILA -> cielProCvik(cvik, konzervativne = v.deload)
+            Blok.SKILL -> cielPre(v, cvik, konzervativne = true)
+            Blok.SILA -> cielPre(v, cvik, konzervativne = v.deload)
             Blok.KRUH -> if (vydrz) praca else cvik.cielMin
             Blok.MOBILITA -> if (vydrz) 40 else cvik.cielMin
             else -> if (vydrz) 30 else cvik.cielMin
@@ -340,6 +346,7 @@ object Generator {
             ciel = ciel,
             naCasS = naCas,
             cielRir = if (blok == Blok.SKILL) Pravidla.CIEL_RIR_SKILL else hlavna.cielRir,
+            naposledy = naposledy(v, cvik),
         )
     }
 
@@ -550,7 +557,8 @@ object Generator {
                 rebrikId = rebrik.id,
                 rebrikNazov = rebrik.nazov,
                 serie = serieNaZrucnost,
-                ciel = cielProCvik(cvik, konzervativne = true),
+                ciel = cielPre(v, cvik, konzervativne = true),
+                naposledy = naposledy(v, cvik),
                 pauzaS = Pravidla.PAUZA_SKILL_S,
                 cielRir = Pravidla.CIEL_RIR_SKILL,
             )
@@ -600,7 +608,8 @@ object Generator {
                 rebrikId = rebrik.id,
                 rebrikNazov = rebrik.nazov,
                 serie = if (v.deload) maxOf(1, serie - 1) else serie,
-                ciel = cielProCvik(cvik, konzervativne = v.deload),
+                ciel = cielPre(v, cvik, konzervativne = v.deload),
+                naposledy = naposledy(v, cvik),
                 pauzaS = if (cvik.cielMax <= 5) Pravidla.PAUZA_SILA_TAZKA_S else Pravidla.PAUZA_SILA_S,
                 cielRir = if (v.deload) 3 else Pravidla.CIEL_RIR_SILA,
             )
@@ -809,6 +818,20 @@ object Generator {
         }
         return skore
     }
+
+    /**
+     * Dávka na dnes: z posledného výkonu (dvojitá progresia, [Pravidla.dalsiCiel]), bez histórie
+     * stred pásma (zručnosť spodok). Pri deloade nikdy viac než základ.
+     */
+    private fun cielPre(v: VstupGeneratora, cvik: CvikEntity, konzervativne: Boolean): Int {
+        val zaklad = cielProCvik(cvik, konzervativne)
+        val posledne = v.poslednyVykon[cvik.id].orEmpty()
+        val ciel = Pravidla.dalsiCiel(cvik, posledne, zaklad)
+        return if (v.deload) minOf(ciel, zaklad) else ciel
+    }
+
+    private fun naposledy(v: VstupGeneratora, cvik: CvikEntity): List<Int> =
+        v.poslednyVykon[cvik.id].orEmpty().mapNotNull { it.skutocnaHodnota }
 
     private fun cielProCvik(cvik: CvikEntity, konzervativne: Boolean): Int =
         if (konzervativne) cvik.cielMin else ((cvik.cielMin + cvik.cielMax) / 2).coerceAtLeast(1)
